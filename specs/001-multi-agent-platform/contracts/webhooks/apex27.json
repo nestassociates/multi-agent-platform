@@ -1,0 +1,266 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Apex27 Property Webhook",
+  "description": "Schema for property webhook events from Apex27 CRM",
+  "type": "object",
+  "required": ["event", "timestamp", "branch_id", "property"],
+  "properties": {
+    "event": {
+      "type": "string",
+      "enum": ["property.created", "property.updated", "property.deleted"],
+      "description": "Type of webhook event"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when event occurred"
+    },
+    "branch_id": {
+      "type": "string",
+      "description": "Apex27 branch identifier (maps to agent via agents.apex27_branch_id)",
+      "pattern": "^[A-Z0-9]+$",
+      "example": "BR123"
+    },
+    "property": {
+      "type": "object",
+      "required": ["id", "transaction_type", "title", "price", "address"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique property identifier from Apex27",
+          "example": "PROP-12345"
+        },
+        "transaction_type": {
+          "type": "string",
+          "enum": ["sale", "let", "commercial"],
+          "description": "Type of property transaction"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "description": "Property title/headline",
+          "example": "Stunning 3 Bedroom Victorian House"
+        },
+        "description": {
+          "type": "string",
+          "description": "Full property description (HTML or plain text)"
+        },
+        "price": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Property price in GBP",
+          "example": 450000
+        },
+        "bedrooms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of bedrooms",
+          "example": 3
+        },
+        "bathrooms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of bathrooms",
+          "example": 2
+        },
+        "property_type": {
+          "type": "string",
+          "description": "Type of property",
+          "enum": [
+            "house",
+            "flat",
+            "apartment",
+            "bungalow",
+            "cottage",
+            "terraced",
+            "semi-detached",
+            "detached",
+            "maisonette",
+            "studio",
+            "commercial",
+            "land",
+            "other"
+          ],
+          "example": "terraced"
+        },
+        "address": {
+          "type": "object",
+          "required": ["line1", "city", "postcode"],
+          "properties": {
+            "line1": {
+              "type": "string",
+              "description": "First line of address",
+              "example": "123 High Street"
+            },
+            "line2": {
+              "type": "string",
+              "description": "Second line of address (optional)",
+              "example": "Flat 2"
+            },
+            "city": {
+              "type": "string",
+              "description": "City or town",
+              "example": "London"
+            },
+            "county": {
+              "type": "string",
+              "description": "County (optional)",
+              "example": "Greater London"
+            },
+            "postcode": {
+              "type": "string",
+              "pattern": "^[A-Z]{1,2}[0-9]{1,2}[A-Z]?\\s?[0-9][A-Z]{2}$",
+              "description": "UK postcode",
+              "example": "SW1A 1AA"
+            },
+            "country": {
+              "type": "string",
+              "default": "United Kingdom",
+              "description": "Country"
+            }
+          }
+        },
+        "postcode": {
+          "type": "string",
+          "pattern": "^[A-Z]{1,2}[0-9]{1,2}[A-Z]?\\s?[0-9][A-Z]{2}$",
+          "description": "UK postcode (for convenience, duplicates address.postcode)",
+          "example": "SW1A 1AA"
+        },
+        "latitude": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90,
+          "description": "Property latitude (WGS84)",
+          "example": 51.5074
+        },
+        "longitude": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180,
+          "description": "Property longitude (WGS84)",
+          "example": -0.1278
+        },
+        "images": {
+          "type": "array",
+          "description": "Array of image URLs",
+          "items": {
+            "type": "object",
+            "required": ["url"],
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Image URL"
+              },
+              "order": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Display order (1 = primary image)"
+              },
+              "alt": {
+                "type": "string",
+                "description": "Alt text for accessibility"
+              }
+            }
+          },
+          "example": [
+            {
+              "url": "https://cdn.apex27.com/properties/123/image1.jpg",
+              "order": 1,
+              "alt": "Living room"
+            },
+            {
+              "url": "https://cdn.apex27.com/properties/123/image2.jpg",
+              "order": 2,
+              "alt": "Kitchen"
+            }
+          ]
+        },
+        "features": {
+          "type": "array",
+          "description": "Array of property features",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "Garden",
+            "Parking",
+            "Central Heating",
+            "Double Glazing"
+          ]
+        },
+        "floor_plan_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to floor plan PDF or image"
+        },
+        "virtual_tour_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to virtual tour (e.g., Matterport)"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["available", "under_offer", "sold", "let", "withdrawn"],
+          "default": "available",
+          "description": "Current property status"
+        },
+        "is_featured": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether property should be featured on agent's homepage"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "event": "property.created",
+      "timestamp": "2025-10-29T14:30:00Z",
+      "branch_id": "BR123",
+      "property": {
+        "id": "PROP-12345",
+        "transaction_type": "sale",
+        "title": "Stunning 3 Bedroom Victorian House in Clapham",
+        "description": "A beautifully presented Victorian terraced house offering spacious accommodation over three floors...",
+        "price": 850000,
+        "bedrooms": 3,
+        "bathrooms": 2,
+        "property_type": "terraced",
+        "address": {
+          "line1": "45 Clapham High Street",
+          "city": "London",
+          "county": "Greater London",
+          "postcode": "SW4 7UR",
+          "country": "United Kingdom"
+        },
+        "postcode": "SW4 7UR",
+        "latitude": 51.4617,
+        "longitude": -0.1377,
+        "images": [
+          {
+            "url": "https://cdn.apex27.com/properties/12345/living-room.jpg",
+            "order": 1,
+            "alt": "Spacious living room with period features"
+          },
+          {
+            "url": "https://cdn.apex27.com/properties/12345/kitchen.jpg",
+            "order": 2,
+            "alt": "Modern kitchen with island"
+          }
+        ],
+        "features": [
+          "Period Features",
+          "Large Garden",
+          "Off-Street Parking",
+          "Close to Transport"
+        ],
+        "floor_plan_url": "https://cdn.apex27.com/properties/12345/floorplan.pdf",
+        "virtual_tour_url": "https://my.matterport.com/show/?m=abc123",
+        "status": "available",
+        "is_featured": true
+      }
+    }
+  ]
+}

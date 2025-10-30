@@ -1,0 +1,1213 @@
+openapi: 3.1.0
+info:
+  title: Nest Associates Multi-Agent Real Estate Platform API
+  version: 1.0.0
+  description: |
+    API for the Multi-Agent Real Estate Platform, enabling admin team management of 1,000+ independent real estate agents, each with their own branded microsite.
+
+    ## Authentication
+
+    All authenticated endpoints require a valid Supabase JWT token in the Authorization header:
+    ```
+    Authorization: Bearer <jwt_token>
+    ```
+
+    ## Rate Limiting
+
+    - Authentication endpoints: 5 requests per 15 minutes per IP
+    - API endpoints: 100 requests per minute per IP
+    - Webhook endpoints: 10 requests per second
+
+    ## Roles
+
+    - **super_admin**: Full system access, can manage admins
+    - **admin**: Manage agents, territories, content, builds
+    - **agent**: Manage own profile, content, view own data
+
+  contact:
+    name: Nest Associates API Support
+    email: dev@nestassociates.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.nestassociates.com
+    description: Production server
+  - url: https://staging-api.nestassociates.com
+    description: Staging server
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Agents
+    description: Agent management (admin only)
+  - name: Content
+    description: Content creation and moderation
+  - name: Properties
+    description: Property listings and webhooks
+  - name: Territories
+    description: Geographic territory management
+  - name: Build System
+    description: Static site build queue and monitoring
+  - name: Public
+    description: Public API endpoints (unauthenticated)
+
+paths:
+  # Authentication Endpoints
+  /api/auth/login:
+    post:
+      tags: [Authentication]
+      summary: User login
+      description: Authenticate user with email and password, returns JWT token
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 12
+                  example: SecureP@ssw0rd123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT access token (1 hour expiry)
+                  refresh_token:
+                    type: string
+                    description: Refresh token for obtaining new access token
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/auth/logout:
+    post:
+      tags: [Authentication]
+      summary: User logout
+      description: Invalidate current session
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Agent Management Endpoints (Admin Only)
+  /api/admin/agents:
+    get:
+      tags: [Agents]
+      summary: List all agents
+      description: Get paginated list of agents with search and filter capabilities
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: search
+          in: query
+          description: Search by name, email, or subdomain
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by agent status
+          schema:
+            type: string
+            enum: [active, suspended, archived]
+      responses:
+        '200':
+          description: List of agents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Agent'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Agents]
+      summary: Create new agent
+      description: Create a new agent account with profile and send welcome email
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAgentRequest'
+      responses:
+        '201':
+          description: Agent created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Conflict - email or subdomain already exists
+
+  /api/admin/agents/{agent_id}:
+    get:
+      tags: [Agents]
+      summary: Get agent details
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      responses:
+        '200':
+          description: Agent details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Agents]
+      summary: Update agent
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAgentRequest'
+      responses:
+        '200':
+          description: Agent updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Agents]
+      summary: Delete agent
+      description: Delete agent account and all associated data (cascade delete)
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      responses:
+        '204':
+          description: Agent deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Content Management Endpoints
+  /api/agent/content:
+    get:
+      tags: [Content]
+      summary: List agent's content
+      description: Get list of content submissions for authenticated agent
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, pending_review, approved, rejected, published]
+        - name: content_type
+          in: query
+          schema:
+            type: string
+            enum: [blog_post, area_guide, review, fee_structure]
+      responses:
+        '200':
+          description: List of content submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentSubmission'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Content]
+      summary: Create content
+      description: Create new content submission (blog post, area guide, etc.)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContentRequest'
+      responses:
+        '201':
+          description: Content created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentSubmission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/agent/content/{content_id}:
+    patch:
+      tags: [Content]
+      summary: Update content
+      description: Update existing content submission (only if status is draft or rejected)
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ContentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateContentRequest'
+      responses:
+        '200':
+          description: Content updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentSubmission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Cannot edit content in current status
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/admin/content/moderation:
+    get:
+      tags: [Content]
+      summary: Get moderation queue
+      description: Get list of content submissions pending review
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: agent_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: content_type
+          in: query
+          schema:
+            type: string
+            enum: [blog_post, area_guide, review, fee_structure]
+      responses:
+        '200':
+          description: List of pending content submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentSubmission'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/content/{content_id}/approve:
+    post:
+      tags: [Content]
+      summary: Approve content
+      description: Approve content submission and queue site rebuild
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ContentId'
+      responses:
+        '200':
+          description: Content approved and build queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    $ref: '#/components/schemas/ContentSubmission'
+                  build_job_id:
+                    type: string
+                    format: uuid
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/admin/content/{content_id}/reject:
+    post:
+      tags: [Content]
+      summary: Reject content
+      description: Reject content submission with feedback
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ContentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rejection_reason]
+              properties:
+                rejection_reason:
+                  type: string
+                  minLength: 10
+                  maxLength: 500
+                  example: "Contains spelling errors and needs more detail about the local area."
+      responses:
+        '200':
+          description: Content rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentSubmission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Property Webhook Endpoint
+  /api/webhooks/apex27:
+    post:
+      tags: [Properties]
+      summary: Apex27 property webhook
+      description: Receive property create/update/delete events from Apex27 CRM
+      security:
+        - WebhookSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Apex27WebhookPayload'
+      responses:
+        '200':
+          description: Webhook processed successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid webhook signature
+
+  # Territory Management Endpoints
+  /api/admin/territories:
+    get:
+      tags: [Territories]
+      summary: List territories
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: agent_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of territories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Territory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Territories]
+      summary: Create territory
+      description: Create new territory with polygon boundary and calculate property count
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTerritoryRequest'
+      responses:
+        '201':
+          description: Territory created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Territory'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # Build Queue Endpoints
+  /api/admin/build-queue:
+    get:
+      tags: [Build System]
+      summary: Get build queue status
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, processing, completed, failed]
+        - name: agent_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Build queue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BuildJob'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/admin/build-queue/{agent_id}/trigger:
+    post:
+      tags: [Build System]
+      summary: Manually trigger build
+      description: Create a manual build job for specific agent
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      responses:
+        '201':
+          description: Build job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildJob'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Public API Endpoints
+  /api/public/agents:
+    get:
+      tags: [Public]
+      summary: List active agents
+      description: Public endpoint to get list of active agents (for WordPress integration)
+      responses:
+        '200':
+          description: List of active agents
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: public, max-age=300
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicAgent'
+
+  /api/public/properties:
+    get:
+      tags: [Public]
+      summary: Search properties
+      description: Public endpoint to search properties across all agents (for WordPress integration)
+      parameters:
+        - name: transaction_type
+          in: query
+          schema:
+            type: string
+            enum: [sale, let, commercial]
+        - name: min_price
+          in: query
+          schema:
+            type: number
+        - name: max_price
+          in: query
+          schema:
+            type: number
+        - name: bedrooms
+          in: query
+          schema:
+            type: integer
+        - name: postcode
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of properties
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: public, max-age=300
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicProperty'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    WebhookSignature:
+      type: apiKey
+      in: header
+      name: X-Webhook-Signature
+      description: HMAC-SHA256 signature of request body
+
+  parameters:
+    AgentId:
+      name: agent_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ContentId:
+      name: content_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [super_admin, admin, agent]
+        first_name:
+          type: string
+        last_name:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+          nullable: true
+
+    Agent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        subdomain:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+        apex27_branch_id:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        qualifications:
+          type: array
+          items:
+            type: string
+        social_media_links:
+          type: object
+          properties:
+            facebook:
+              type: string
+              format: uri
+            twitter:
+              type: string
+              format: uri
+            linkedin:
+              type: string
+              format: uri
+            instagram:
+              type: string
+              format: uri
+        status:
+          type: string
+          enum: [active, suspended, archived]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AgentDetail:
+      allOf:
+        - $ref: '#/components/schemas/Agent'
+        - type: object
+          properties:
+            profile:
+              $ref: '#/components/schemas/User'
+            property_count:
+              type: integer
+            territory_count:
+              type: integer
+            content_count:
+              type: integer
+
+    CreateAgentRequest:
+      type: object
+      required: [email, password, first_name, last_name, subdomain]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 12
+        first_name:
+          type: string
+          minLength: 1
+        last_name:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+          pattern: '^[0-9\s\-\+\(\)]+$'
+        subdomain:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+          minLength: 3
+        apex27_branch_id:
+          type: string
+        bio:
+          type: string
+        qualifications:
+          type: array
+          items:
+            type: string
+        social_media_links:
+          type: object
+
+    UpdateAgentRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone:
+          type: string
+        bio:
+          type: string
+        qualifications:
+          type: array
+          items:
+            type: string
+        social_media_links:
+          type: object
+        status:
+          type: string
+          enum: [active, suspended, archived]
+
+    ContentSubmission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        agent_id:
+          type: string
+          format: uuid
+        content_type:
+          type: string
+          enum: [blog_post, area_guide, review, fee_structure]
+        title:
+          type: string
+          maxLength: 100
+        slug:
+          type: string
+        content_body:
+          type: string
+          description: HTML content from Tiptap editor
+        excerpt:
+          type: string
+          maxLength: 250
+          nullable: true
+        featured_image_url:
+          type: string
+          format: uri
+          nullable: true
+        seo_meta_title:
+          type: string
+          nullable: true
+        seo_meta_description:
+          type: string
+          maxLength: 160
+          nullable: true
+        status:
+          type: string
+          enum: [draft, pending_review, approved, rejected, published]
+        rejection_reason:
+          type: string
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        reviewed_at:
+          type: string
+          format: date-time
+          nullable: true
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateContentRequest:
+      type: object
+      required: [content_type, title, content_body]
+      properties:
+        content_type:
+          type: string
+          enum: [blog_post, area_guide, review, fee_structure]
+        title:
+          type: string
+          maxLength: 100
+        slug:
+          type: string
+        content_body:
+          type: string
+        excerpt:
+          type: string
+          maxLength: 250
+        featured_image_url:
+          type: string
+          format: uri
+        seo_meta_title:
+          type: string
+        seo_meta_description:
+          type: string
+          maxLength: 160
+
+    UpdateContentRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        slug:
+          type: string
+        content_body:
+          type: string
+        excerpt:
+          type: string
+          maxLength: 250
+        featured_image_url:
+          type: string
+          format: uri
+        seo_meta_title:
+          type: string
+        seo_meta_description:
+          type: string
+          maxLength: 160
+        status:
+          type: string
+          enum: [draft, pending_review]
+
+    Apex27WebhookPayload:
+      type: object
+      required: [event, branch_id, property]
+      properties:
+        event:
+          type: string
+          enum: [property.created, property.updated, property.deleted]
+        branch_id:
+          type: string
+        property:
+          type: object
+          required: [id, type, title, price]
+          properties:
+            id:
+              type: string
+            type:
+              type: string
+              enum: [sale, let, commercial]
+            title:
+              type: string
+            description:
+              type: string
+            price:
+              type: number
+            bedrooms:
+              type: integer
+            bathrooms:
+              type: integer
+            property_type:
+              type: string
+            address:
+              type: object
+            postcode:
+              type: string
+            latitude:
+              type: number
+            longitude:
+              type: number
+            images:
+              type: array
+              items:
+                type: string
+                format: uri
+            features:
+              type: array
+              items:
+                type: string
+
+    Territory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        agent_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        boundary:
+          type: object
+          description: GeoJSON Polygon
+          properties:
+            type:
+              type: string
+              enum: [Polygon]
+            coordinates:
+              type: array
+              items:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+        property_count:
+          type: integer
+          nullable: true
+        property_count_updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateTerritoryRequest:
+      type: object
+      required: [agent_id, name, boundary]
+      properties:
+        agent_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        boundary:
+          type: object
+          description: GeoJSON Polygon
+
+    BuildJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        agent_id:
+          type: string
+          format: uuid
+        priority:
+          type: integer
+          minimum: 1
+          maximum: 4
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+        trigger_reason:
+          type: string
+        build_logs:
+          type: string
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        error_message:
+          type: string
+          nullable: true
+        retry_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PublicAgent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        bio:
+          type: string
+        subdomain:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+
+    PublicProperty:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        agent:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            subdomain:
+              type: string
+        title:
+          type: string
+        price:
+          type: number
+        bedrooms:
+          type: integer
+        bathrooms:
+          type: integer
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        link:
+          type: string
+          format: uri
+          description: URL to property detail page on agent's microsite
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: Invalid request body
+              details:
+                field: email
+                issue: Invalid email format
+
+    Unauthorized:
+      description: Unauthorized - missing or invalid JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: UNAUTHORIZED
+              message: Authentication required
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: FORBIDDEN
+              message: You do not have permission to access this resource
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: NOT_FOUND
+              message: Resource not found
+
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: RATE_LIMIT_EXCEEDED
+              message: Too many requests, please try again later
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Number of seconds to wait before retrying

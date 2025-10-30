@@ -1,0 +1,28 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "ES2022"],
+    "jsx": "preserve",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./app/*", "./components/*", "./lib/*"],
+      "@nest/shared-types": ["../../packages/shared-types/src"],
+      "@nest/ui": ["../../packages/ui/components"],
+      "@nest/validation": ["../../packages/validation/src"],
+      "@nest/database": ["../../packages/database/lib"],
+      "@nest/build-system": ["../../packages/build-system/src"],
+      "@nest/email": ["../../packages/email/lib"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
