@@ -1,0 +1,88 @@
+{
+  "mcpServers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "description": "Official GitHub MCP - Manage repos, PRs, issues, Actions"
+    },
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?read_only=false",
+      "description": "Official Supabase MCP - Database management, migrations, SQL queries, PostGIS"
+    },
+    "vercel": {
+      "type": "http",
+      "url": "https://mcp.vercel.com/",
+      "description": "Official Vercel MCP - Deployment management, logs analysis"
+    },
+    "postgres": {
+      "command": "postgres-mcp",
+      "args": ["${SUPABASE_DATABASE_URL}"],
+      "description": "PostgreSQL with PostGIS - Direct database access, geospatial queries"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/dan/Documents/Websites/Nest Associates/Project Nest/Nest",
+        "/Users/dan/Documents/Websites/Nest Associates/Project Nest/Nest/specs:ro"
+      ],
+      "description": "Filesystem access - Read/write project files, read-only specs"
+    },
+    "git": {
+      "command": "git-mcp-server",
+      "args": [
+        "--repository",
+        "/Users/dan/Documents/Websites/Nest Associates/Project Nest/Nest"
+      ],
+      "description": "Git operations - Branch, commit, diff, merge, push/pull"
+    },
+    "mapbox": {
+      "command": "npx",
+      "args": ["-y", "@mapbox/mcp-server"],
+      "env": {
+        "MAPBOX_ACCESS_TOKEN": "${MAPBOX_ACCESS_TOKEN}"
+      },
+      "description": "Mapbox API - Geocoding, routing, POI search, isochrones"
+    },
+    "resend": {
+      "command": "node",
+      "args": ["/Users/dan/.mcp-servers/mcp-send-email/build/index.js"],
+      "env": {
+        "RESEND_API_KEY": "${RESEND_API_KEY}",
+        "SENDER_EMAIL_ADDRESS": "noreply@nestassociates.com",
+        "REPLY_TO_EMAIL_ADDRESS": "dev@nestassociates.com"
+      },
+      "description": "Resend Email - Send transactional emails"
+    },
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"],
+      "description": "Next.js DevTools - Upgrades, diagnostics, dev server monitoring"
+    },
+    "astro-docs": {
+      "type": "http",
+      "url": "https://mcp.docs.astro.build/mcp",
+      "description": "Astro Documentation - Latest Astro 4.x docs via kapa.ai"
+    },
+    "playwright": {
+      "command": "playwright-mcp",
+      "description": "Playwright - Browser automation and testing"
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "description": "Knowledge Graph - Persistent memory across sessions"
+    },
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "description": "Web Fetch - Fetch and convert web content to markdown"
+    },
+    "time": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-time"],
+      "description": "Time - Timezone conversions and date handling"
+    }
+  }
+}
