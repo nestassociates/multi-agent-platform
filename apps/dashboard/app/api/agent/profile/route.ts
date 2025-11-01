@@ -7,7 +7,7 @@ import { updateAgentProfileSchema } from '@nest/validation';
  * GET /api/agent/profile
  * Get current agent's profile
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const agent = await getCurrentAgent();
 
