@@ -20,6 +20,7 @@ import type {
   SocialMediaLinks,
   PropertyAddress,
   PropertyImage,
+  GeoJSON,
 } from './entities';
 
 /**
