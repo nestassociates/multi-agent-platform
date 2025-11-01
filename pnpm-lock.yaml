@@ -176,7 +176,7 @@ importers:
   packages/build-system:
     dependencies:
       '@nest/shared-types':
-        specifier: file:../shared-types
+        specifier: workspace:*
         version: link:../shared-types
       '@supabase/supabase-js':
         specifier: ^2.38.4
@@ -205,7 +205,7 @@ importers:
   packages/email:
     dependencies:
       '@nest/shared-types':
-        specifier: file:../shared-types
+        specifier: workspace:*
         version: link:../shared-types
       '@react-email/components':
         specifier: ^0.0.11
