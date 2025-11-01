@@ -1,10 +1,14 @@
-import { requireRole } from '@/lib/auth';
+import { getUser } from '@/lib/auth';
 import CreateAgentForm from '@/components/admin/create-agent-form';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 export default async function NewAgentPage() {
-  // Require admin role
-  await requireRole(['super_admin', 'admin']);
+  const user = await getUser();
+  
+  if (!user) {
+    redirect('/login');
+  }
 
   return (
     <div className="p-8">
