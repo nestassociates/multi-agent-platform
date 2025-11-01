@@ -144,11 +144,11 @@ Based on Turborepo monorepo structure from plan.md:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T076 [P] [US1] E2E test for admin creates agent flow in tests/e2e/agent-creation.spec.ts
-- [ ] T077 [P] [US1] E2E test for agent first login and password change in tests/e2e/agent-first-login.spec.ts
-- [ ] T078 [P] [US1] E2E test for agent profile update in tests/e2e/agent-profile-update.spec.ts
-- [ ] T079 [P] [US1] Contract test for POST /api/admin/agents in tests/contract/agent-creation.spec.ts
-- [ ] T080 [P] [US1] Contract test for PATCH /api/agent/profile in tests/contract/agent-profile.spec.ts
+- [x] T076 [P] [US1] E2E test for admin creates agent flow in tests/e2e/agent-creation.spec.ts
+- [x] T077 [P] [US1] E2E test for agent first login and password change in tests/e2e/agent-first-login.spec.ts
+- [x] T078 [P] [US1] E2E test for agent profile update in tests/e2e/agent-profile-update.spec.ts
+- [x] T079 [P] [US1] Contract test for POST /api/admin/agents in tests/contract/agent-creation.spec.ts
+- [x] T080 [P] [US1] Contract test for PATCH /api/agent/profile in tests/contract/agent-profile.spec.ts
 
 ### Implementation for User Story 1
 
