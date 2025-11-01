@@ -15,7 +15,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -rf node_modules .turbo",
-    "prepare": "husky install"
+    "prepare": "node -e \"if (process.env.CI !== 'true') { const { execSync } = require('child_process'); try { execSync('husky install', { stdio: 'inherit' }); } catch (e) {} }\""
   },
   "workspaces": [
     "apps/*",
