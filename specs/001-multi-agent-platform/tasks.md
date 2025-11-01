@@ -154,36 +154,36 @@ Based on Turborepo monorepo structure from plan.md:
 
 **Admin: Agent Creation Form**
 
-- [ ] T081 [P] [US1] Create agent creation form component in apps/dashboard/components/admin/create-agent-form.tsx
-- [ ] T082 [P] [US1] Create agent list page in apps/dashboard/app/(admin)/agents/page.tsx
-- [ ] T083 [US1] Create create agent page in apps/dashboard/app/(admin)/agents/new/page.tsx
-- [ ] T084 [US1] Implement POST /api/admin/agents endpoint (create agent, profile, send email) in apps/dashboard/app/api/admin/agents/route.ts
-- [ ] T085 [US1] Implement GET /api/admin/agents endpoint (list with pagination, search, filters) in apps/dashboard/app/api/admin/agents/route.ts
+- [x] T0*81 [P] [US1] Create agent creation form component in apps/dashboard/components/admin/create-agent-form.tsx
+- [x] T0*82 [P] [US1] Create agent list page in apps/dashboard/app/(admin)/agents/page.tsx
+- [x] T0*83 [US1] Create create agent page in apps/dashboard/app/(admin)/agents/new/page.tsx
+- [x] T0*84 [US1] Implement POST /api/admin/agents endpoint (create agent, profile, send email) in apps/dashboard/app/api/admin/agents/route.ts
+- [x] T0*85 [US1] Implement GET /api/admin/agents endpoint (list with pagination, search, filters) in apps/dashboard/app/api/admin/agents/route.ts
 
 **Email: Welcome Email**
 
-- [ ] T086 [P] [US1] Create welcome email template using React Email in packages/email/templates/welcome.tsx
-- [ ] T087 [US1] Create email sender utility with Resend in packages/email/lib/sender.ts
+- [x] T0*86 [P] [US1] Create welcome email template using React Email in packages/email/templates/welcome.tsx
+- [x] T0*87 [US1] Create email sender utility with Resend in packages/email/lib/sender.ts
 
 **Agent: First Login & Password Change**
 
-- [ ] T088 [P] [US1] Create force password change page in apps/dashboard/app/(auth)/change-password/page.tsx
-- [ ] T089 [US1] Implement password change API route in apps/dashboard/app/api/auth/change-password/route.ts
-- [ ] T090 [US1] Add middleware redirect for agents with temporary passwords in apps/dashboard/middleware.ts
+- [x] T0*88 [P] [US1] Create force password change page in apps/dashboard/app/(auth)/change-password/page.tsx
+- [x] T0*89 [US1] Implement password change API route in apps/dashboard/app/api/auth/change-password/route.ts
+- [x] T0*90 [US1] Add middleware redirect for agents with temporary passwords in apps/dashboard/middleware.ts
 
 **Agent: Profile Editor**
 
-- [ ] T091 [P] [US1] Create agent profile editor form component in apps/dashboard/components/agent/profile-editor.tsx
-- [ ] T092 [P] [US1] Create agent profile page in apps/dashboard/app/(agent)/profile/page.tsx
-- [ ] T093 [US1] Implement GET /api/agent/profile endpoint in apps/dashboard/app/api/agent/profile/route.ts
-- [ ] T094 [US1] Implement PATCH /api/agent/profile endpoint (update bio, qualifications, social links) in apps/dashboard/app/api/agent/profile/route.ts
-- [ ] T095 [P] [US1] Create image upload component for avatar in apps/dashboard/components/shared/image-upload.tsx
-- [ ] T096 [US1] Implement image upload to Supabase Storage with auto-crop in apps/dashboard/lib/storage.ts
+- [x] T0*91 [P] [US1] Create agent profile editor form component in apps/dashboard/components/agent/profile-editor.tsx
+- [x] T0*92 [P] [US1] Create agent profile page in apps/dashboard/app/(agent)/profile/page.tsx
+- [x] T0*93 [US1] Implement GET /api/agent/profile endpoint in apps/dashboard/app/api/agent/profile/route.ts
+- [x] T0*94 [US1] Implement PATCH /api/agent/profile endpoint (update bio, qualifications, social links) in apps/dashboard/app/api/agent/profile/route.ts
+- [x] T0*95 [P] [US1] Create image upload component for avatar in apps/dashboard/components/shared/image-upload.tsx
+- [x] T0*96 [US1] Implement image upload to Supabase Storage with auto-crop in apps/dashboard/lib/storage.ts
 
 **Validation & Error Handling**
 
-- [ ] T097 [US1] Add validation for agent creation (email uniqueness, subdomain format) in apps/dashboard/app/api/admin/agents/route.ts
-- [ ] T098 [US1] Add error handling and logging for agent creation flow in apps/dashboard/lib/error-handler.ts
+- [x] T0*97 [US1] Add validation for agent creation (email uniqueness, subdomain format) in apps/dashboard/app/api/admin/agents/route.ts
+- [x] T0*98 [US1] Add error handling and logging for agent creation flow in apps/dashboard/lib/error-handler.ts
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently. Admins can create agents, agents can log in and update profiles.
 
