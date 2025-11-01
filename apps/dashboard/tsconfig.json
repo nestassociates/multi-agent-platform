@@ -14,7 +14,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./app/*", "./components/*", "./lib/*"],
+      "@/*": ["./"],
       "@nest/shared-types": ["../../packages/shared-types/src"],
       "@nest/ui": ["../../packages/ui/components"],
       "@nest/validation": ["../../packages/validation/src"],
