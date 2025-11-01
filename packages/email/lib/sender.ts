@@ -16,10 +16,15 @@ export interface WelcomeEmailData {
   loginUrl?: string;
 }
 
+export interface EmailResponse {
+  id?: string;
+  [key: string]: any;
+}
+
 /**
  * Send welcome email to new agent
  */
-export async function sendWelcomeEmail(data: WelcomeEmailData) {
+export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<EmailResponse> {
   const html = render(
     WelcomeEmail({
       agentName: data.agentName,
@@ -37,7 +42,7 @@ export async function sendWelcomeEmail(data: WelcomeEmailData) {
       html,
     });
 
-    return result;
+    return result as EmailResponse;
   } catch (error) {
     console.error('Failed to send welcome email:', error);
     throw error;

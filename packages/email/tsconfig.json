@@ -2,12 +2,12 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./lib",
+    "rootDir": ".",
     "declaration": true,
     "declarationMap": true,
     "composite": true,
     "jsx": "react-jsx"
   },
-  "include": ["lib/**/*"],
+  "include": ["lib/**/*", "templates/**/*"],
   "exclude": ["node_modules", "dist"]
 }
