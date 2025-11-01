@@ -6,6 +6,7 @@
     "jsx": "preserve",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "baseUrl": ".",
     "noEmit": true,
     "incremental": true,
     "plugins": [
@@ -14,7 +15,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./"],
+      "@/*": ["./*"],
       "@nest/shared-types": ["../../packages/shared-types/src"],
       "@nest/ui": ["../../packages/ui/components"],
       "@nest/validation": ["../../packages/validation/src"],

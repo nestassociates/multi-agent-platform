@@ -385,17 +385,4 @@ export function isValidationError(error: ErrorResponse): boolean {
   return error.error.code === ErrorCode.VALIDATION_ERROR;
 }
 
-/**
- * GeoJSON namespace (for consistency with entities.ts)
- */
-export declare namespace GeoJSON {
-  interface Point {
-    type: 'Point';
-    coordinates: [number, number];
-  }
-
-  interface Polygon {
-    type: 'Polygon';
-    coordinates: number[][][];
-  }
-}
+// GeoJSON types imported from entities.ts to avoid duplicate exports
