@@ -10,7 +10,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@nest/shared-types": "workspace:*",
+    "@nest/shared-types": "file:../shared-types",
     "@react-email/components": "^0.0.11",
     "@react-email/render": "^0.0.10",
     "react": "^18.2.0",
