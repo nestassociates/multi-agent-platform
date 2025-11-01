@@ -10,7 +10,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@nest/shared-types": "file:../shared-types",
+    "@nest/shared-types": "workspace:*",
     "@supabase/supabase-js": "^2.38.4"
   },
   "devDependencies": {
