@@ -1,11 +1,48 @@
 # Architecture Corrections: Apex27 Integration
 
-**Date**: 2025-10-29
-**Reason**: Discovered Apex27 uses REST API polling, not webhooks
+**Latest Update**: 2025-11-03 - **WEBHOOKS ARE SUPPORTED**
+**Previous Update**: 2025-10-29 - Discovered polling approach with Portal API
 
-## Summary of Changes
+## Latest Findings (2025-11-03) - FINAL ARCHITECTURE ✅
 
-Based on reviewing actual Apex27 API documentation (`apex27.apib` and `APEX27-API-DOCUMENTATION.md`), the integration approach has been corrected from **webhook-based** to **polling-based**.
+### Main API Discovered
+
+Apex27 provides **TWO distinct APIs**:
+
+1. **Main API** (Standard API)
+   - URL: `https://api.apex27.co.uk`
+   - Authentication: `X-Api-Key` header
+   - **Webhooks**: ✅ SUPPORTED (per James @ Apex27)
+   - Properties: 10,880 total (ALL statuses)
+   - Flag Objects: ✅ Has rentalFlags, saleFlags, residentialFlags
+   - Branch Data: ✅ Complete with user/agent details
+
+2. **Portal API**
+   - URL: `https://portals-XXXXX.apex27.co.uk`
+   - Authentication: Form-encoded `api_key` parameter
+   - **Webhooks**: ❌ NOT supported
+   - Properties: ~188 (marketed only, GDPR-compliant)
+   - Flag Objects: ❌ Not available
+   - Branch Data: Basic only
+
+### Final Architecture: Hybrid Approach
+
+Per James's recommendation: **"Do a full sync once every 6 hours, then just use webhooks to keep things up to date"**
+
+**Implementation**:
+- ✅ Webhook endpoint: `POST /api/webhooks/apex27` (real-time updates)
+- ✅ Cron job: Every 6 hours full reconciliation sync
+- ✅ No signature validation (per James: "the customer has to trust the endpoint")
+- ✅ Main API for all data access
+- ⚠️ **TODO**: Filter to marketed properties only (~200 vs 10,880 total)
+
+---
+
+## Historical Context (2025-10-29)
+
+### Original Assumptions (Pre-Portal API Testing)
+
+Based on reviewing actual Apex27 API documentation (`apex27.apib` and `APEX27-API-DOCUMENTATION.md`), the integration approach was initially corrected from **webhook-based** to **polling-based** when only Portal API was known.
 
 ---
 

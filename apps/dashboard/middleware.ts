@@ -71,8 +71,19 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
+  // Public/system endpoints that don't require auth
+  const publicPaths = [
+    '/login',
+    '/reset-password',
+    '/api/public',
+    '/api/cron',
+    '/api/webhooks',
+  ];
+
+  const isPublicPath = publicPaths.some(publicPath => path.startsWith(publicPath));
+
   // Redirect to login if accessing protected routes without auth
-  if (!user && !path.startsWith('/login') && !path.startsWith('/reset-password') && !path.startsWith('/api/public')) {
+  if (!user && !isPublicPath) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
     redirectUrl.searchParams.set('redirectTo', path);
