@@ -9,20 +9,20 @@
 ### Main API (Primary - Use This)
 - **Base URL**: `https://api.apex27.co.uk`
 - **API Key**: `e66d531515e195b90f38975e0a7e2d75`
-- **Authentication**: Header `X-Api-Key: e66d531515e195b90f38975e0a7e2d75`
+- **Authentication**: Header `X-Api-Key: e66d53151...`
 - **Request Type**: GET
 - **Features**: Webhooks supported, full data access, structured flags
 
 **Test Command**:
 ```bash
 curl -X GET 'https://api.apex27.co.uk/listings?page=1&pageSize=5' \
-  -H 'X-Api-Key: e66d531515e195b90f38975e0a7e2d75'
+  -H 'X-Api-Key: e66d531515e...'
 ```
 
 ### Portal API (Optional - Reference Only)
 - **Base URL**: `https://portals-60b92e71.apex27.co.uk`
-- **API Key**: `9836a370901f3d514b9c0beef1e15e7d`
-- **Authentication**: Form body `api_key=9836a370901f3d514b9c0beef1e15e7d`
+- **API Key**: `9836a3...`
+- **Authentication**: Form body `api_key=9836...`
 - **Request Type**: POST
 - **Features**: Marketed properties only (188), no webhooks
 
@@ -32,8 +32,8 @@ curl -X GET 'https://api.apex27.co.uk/listings?page=1&pageSize=5' \
 
 **Project**: Nest Associates Multi-Agent Platform
 - **Project URL**: `https://mdxusjaxhypvuprmzgif.supabase.co`
-- **Anon Key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1keHVzamF4aHlwdnVwcm16Z2lmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4MTIwMjMsImV4cCI6MjA3NzM4ODAyM30.sH_8_nnjOW50fgigfn1JyjdJg-rygZp-0XOEZVsCcnY`
-- **Service Role Key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1keHVzamF4aHlwdnVwcm16Z2lmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTgxMjAyMywiZXhwIjoyMDc3Mzg4MDIzfQ.TUyQe471jE5ixfwJ_L75t3keZQXmJVcuDQOAoe4fxMc`
+- **Anon Key**: `eyJhbGc...`
+- **Service Role Key**: `eyJhbGci...`
 
 **MCP Server**: You have access via Supabase MCP tools
 - Use `mcp__supabase__execute_sql` for queries
@@ -87,18 +87,18 @@ You have GitHub MCP tools available:
 ## Other Services
 
 ### Mapbox
-- **Access Token**: `pk.eyJ1IjoibmVzdGFzc29jaWF0ZXMiLCJhIjoiY21oZGM2Y3RxMDFjYzJsc2Qwd2oxZXNnNiJ9.Ix9-F2PL3T9CHDBDZ2x2nA`
+- **Access Token**: `pk.eyJ1IjoibmVzdGFzc29jaWF0...`
 
 ### Resend (Email)
-- **API Key**: `re_ZcEDb4H8_73vXhtYUzwLJ3muiKfpK8T98`
+- **API Key**: `re_ZcEDb4H8_73v...`
 - **From Email**: `noreply@nestassociates.co.uk`
 
 ### OS Data Hub
-- **API Key**: `2IQxYrJUYbBkImHRT38W0zb8mnb9g45Z`
+- **API Key**: `2IQxYrJUY...`
 - **API Secret**: `kZpbVf6aIPadQsMQ`
 
 ### Cron Security
-- **Secret**: `a8145ade729160cf152eb7d58d18dc919ee28ea2d9b21b35d0bedf178b2151fd`
+- **Secret**: `a8145ade729160...`
 
 ---
 
