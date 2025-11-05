@@ -8,7 +8,7 @@
 
 ### Main API (Primary - Use This)
 - **Base URL**: `https://api.apex27.co.uk`
-- **API Key**: `e66d531515e195b90f38975e0a7e2d75`
+- **API Key**: `e66d53151...`
 - **Authentication**: Header `X-Api-Key: e66d53151...`
 - **Request Type**: GET
 - **Features**: Webhooks supported, full data access, structured flags
