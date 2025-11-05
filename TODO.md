@@ -6,35 +6,51 @@
 
 ---
 
+## 🤖 Tasks for Web Agent (GitHub Web Interface Only)
+
+**What web agent CAN do**: Edit code files via GitHub web interface
+
+**See `docs/WEB_AGENT_TASKS.md` for exact code changes**
+
+---
+
+## 👤 Tasks Requiring Your Access (Supabase/Vercel/API Testing)
+
+**What requires local/dashboard access**: Database updates, API testing, deployment verification
+
+---
+
 ## Tasks (Execute in Order)
 
-### 1. [ ] Add status filter to Main API client (only sync marketed properties, not all 10,880)
+### 1. [🤖 WEB AGENT] Add status filter to Main API client (only sync marketed properties, not all 10,880)
 
 **File**: `apps/dashboard/lib/apex27/client.ts`
 
 **Action**: Add status parameter to filter out valuations/pending properties
 
-**Details**: See NEXT_SESSION_GUIDE.md section 1
+**Details**: **See `docs/WEB_AGENT_TASKS.md` Task 1 for exact code changes**
 
 ---
 
-### 2. [ ] Test filtered API call returns ~200 properties (not 10,880)
+### 2. [👤 YOU] Test filtered API call returns ~200 properties (not 10,880)
 
-**Action**: Verify filter works correctly
+**Action**: Verify filter works correctly (requires curl/API access)
 
 **Test Command**:
 ```bash
-curl -X GET 'https://api.apex27.co.uk/listings?page=1&pageSize=10&status=available' \
+curl -X GET 'https://api.apex27.co.uk/listings?page=1&pageSize=10&websiteStatus=active' \
   -H 'X-Api-Key: e66d531515e195b90f38975e0a7e2d75'
 ```
 
-**Expected**: ~200 total properties
+**Expected**: ~200 total properties (not 10,880)
 
 ---
 
-### 3. [ ] Update existing test agent with real branch ID (710 or 707) in database
+### 3. [👤 YOU] Update existing test agent with real branch ID (710 or 707) in database
 
 **Agent ID**: `5d5a7d6f-4d38-4dce-941a-564b94cf7f2d`
+
+**Action**: Update via Supabase Dashboard → SQL Editor
 
 **SQL**:
 ```sql
@@ -43,7 +59,7 @@ SET apex27_branch_id = '710'  -- Tom Lawrence - South Somerset
 WHERE id = '5d5a7d6f-4d38-4dce-941a-564b94cf7f2d';
 ```
 
-**Available branches**: 707, 709, 710, 713, 715, 716, 717, 1210, 1790, 1954, 1983
+**Available branches**: 707, 709, 710 (recommended - most properties)
 
 ---
 
@@ -66,13 +82,19 @@ WHERE agent_id = '5d5a7d6f-4d38-4dce-941a-564b94cf7f2d';
 
 ---
 
-### 5. [ ] Add APEX27_API_KEY to Vercel environment variables
+### 5. [👤 YOU] Add APEX27_API_KEY to Vercel environment variables
 
-**Value**: `e66d531515e195b90f38975e0a7e2d75`
+**Action**: Add via Vercel Dashboard (web agent cannot do this)
 
-**Method**: Vercel Dashboard → Settings → Environment Variables
+**Steps**:
+1. Go to https://vercel.com/nestassociates/multi-agent-platform/settings/environment-variables
+2. Click "Add New"
+3. Name: `APEX27_API_KEY`
+4. Value: `e66d531515e195b90f38975e0a7e2d75`
+5. Scopes: Production, Preview, Development
+6. Save
 
-**Scopes**: Production, Preview, Development
+**Why needed**: Production build requires this env var
 
 ---
 
@@ -123,22 +145,13 @@ curl -X POST https://api.apex27.co.uk/webhooks \
 
 ---
 
-### 10. [ ] Document which branch IDs should be assigned to which agents
+### 10. [🤖 WEB AGENT] Document which branch IDs should be assigned to which agents
 
 **File**: Create `docs/branch-agent-mapping.md`
 
-**Content**: Map Apex27 branches to actual Nest Associates agents
+**Action**: Create documentation file with branch mappings
 
-**Branches found**:
-- 707: George Bailey (george.bailey@nestassociates.co.uk)
-- 709: James Warne (james.warne@nestassociates.co.uk)
-- 710: Tom Lawrence (tom.lawrence@nestassociates.co.uk)
-- 713: Ellie Wills (ellie.wills@nestassociates.co.uk)
-- 715: Matt Hollow (matt.hollow@nestassociates.co.uk)
-- 716: Libby Last (libby.last@nestassociates.co.uk)
-- 717: Lyn Parent (lyn.parent@nestassociates.co.uk)
-- 1983: Georgina Davie (georgina.davie@nestassociates.co.uk)
-- Others: 1210, 1790, 1954, 1963, 2342, 2610, 2741
+**Details**: **See `docs/WEB_AGENT_TASKS.md` Task 2 for full content to add**
 
 ---
 
