@@ -1,6 +1,8 @@
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import WelcomeEmail from '../templates/welcome';
+import ContentApprovedEmail from '../templates/content-approved';
+import ContentRejectedEmail from '../templates/content-rejected';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -58,12 +60,31 @@ export async function sendContentApprovedEmail(
     agentName: string;
     contentTitle: string;
     contentType: string;
-    viewUrl?: string;
+    dashboardUrl?: string;
   }
-) {
-  // Placeholder - will implement when we have the template
-  console.log('Content approved email:', agentEmail, data);
-  return { id: 'placeholder' };
+): Promise<EmailResponse> {
+  const html = render(
+    ContentApprovedEmail({
+      agentName: data.agentName,
+      contentTitle: data.contentTitle,
+      contentType: data.contentType,
+      dashboardUrl: data.dashboardUrl || process.env.NEXT_PUBLIC_APP_URL + '/content' || 'https://multi-agent-platform-eight.vercel.app/content',
+    })
+  );
+
+  try {
+    const result = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@nestassociates.co.uk',
+      to: agentEmail,
+      subject: `Your ${data.contentType} has been approved!`,
+      html,
+    });
+
+    return result as EmailResponse;
+  } catch (error) {
+    console.error('Failed to send content approved email:', error);
+    throw error;
+  }
 }
 
 /**
@@ -76,11 +97,32 @@ export async function sendContentRejectedEmail(
     contentTitle: string;
     contentType: string;
     rejectionReason: string;
+    dashboardUrl?: string;
   }
-) {
-  // Placeholder - will implement when we have the template
-  console.log('Content rejected email:', agentEmail, data);
-  return { id: 'placeholder' };
+): Promise<EmailResponse> {
+  const html = render(
+    ContentRejectedEmail({
+      agentName: data.agentName,
+      contentTitle: data.contentTitle,
+      contentType: data.contentType,
+      rejectionReason: data.rejectionReason,
+      dashboardUrl: data.dashboardUrl || process.env.NEXT_PUBLIC_APP_URL + '/content' || 'https://multi-agent-platform-eight.vercel.app/content',
+    })
+  );
+
+  try {
+    const result = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@nestassociates.co.uk',
+      to: agentEmail,
+      subject: `Your ${data.contentType} requires revision`,
+      html,
+    });
+
+    return result as EmailResponse;
+  } catch (error) {
+    console.error('Failed to send content rejected email:', error);
+    throw error;
+  }
 }
 
 /**
