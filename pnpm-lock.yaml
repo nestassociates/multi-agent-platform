@@ -256,6 +256,18 @@ importers:
       '@radix-ui/react-tabs':
         specifier: ^1.0.4
         version: 1.1.13(@types/react-dom@18.3.7(@types/react@18.3.26))(@types/react@18.3.26)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@supabase/supabase-js':
+        specifier: ^2.78.0
+        version: 2.78.0
+      '@tiptap/core':
+        specifier: ^2.1.13
+        version: 2.27.1(@tiptap/pm@2.27.1)
+      '@tiptap/extension-image':
+        specifier: ^2.1.13
+        version: 2.27.1(@tiptap/core@2.27.1(@tiptap/pm@2.27.1))
+      '@tiptap/pm':
+        specifier: ^2.1.13
+        version: 2.27.1
       '@tiptap/react':
         specifier: ^2.1.13
         version: 2.27.1(@tiptap/core@2.27.1(@tiptap/pm@2.27.1))(@tiptap/pm@2.27.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -265,6 +277,9 @@ importers:
       '@types/react':
         specifier: ^18.2.42
         version: 18.3.26
+      '@types/react-dom':
+        specifier: ^18.2.18
+        version: 18.3.7(@types/react@18.3.26)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1

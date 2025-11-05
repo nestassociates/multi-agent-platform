@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import { updateContentSchema } from '@nest/validation';
 
 /**
@@ -11,7 +11,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createServerClient();
+    const supabase = createServiceRoleClient();
     const contentId = params.id;
 
     // Get authenticated user
@@ -137,7 +137,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createServerClient();
+    const supabase = createServiceRoleClient();
     const contentId = params.id;
 
     // Get authenticated user

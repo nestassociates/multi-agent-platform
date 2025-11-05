@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import { rejectContentSchema } from '@nest/validation';
 import { sendContentRejectedEmail } from '@nest/email';
 
@@ -12,7 +12,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createServerClient();
+    const supabase = createServiceRoleClient();
     const contentId = params.id;
 
     // Get authenticated user

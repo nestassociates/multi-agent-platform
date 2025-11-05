@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { createServerClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import { Button } from '@nest/ui';
 
 export const metadata: Metadata = {
@@ -44,7 +44,7 @@ const contentTypeLabels = {
 };
 
 export default async function AgentContentPage() {
-  const supabase = await createServerClient();
+  const supabase = createServiceRoleClient();
 
   // Get current user
   const {

@@ -91,8 +91,10 @@ export const ImageUploadExtension = (options: ImageUploadOptions) => {
         // Remove placeholder on error
         const transaction = view.state.tr.delete(pos, pos + 1);
         view.dispatch(transaction);
-        // You could show an error message to the user here
-        alert(`Image upload failed: ${error.message}`);
+        // Log error for debugging
+        if (typeof window !== 'undefined') {
+          window.alert(`Image upload failed: ${error.message}`);
+        }
       });
   }
 
@@ -102,9 +104,9 @@ export const ImageUploadExtension = (options: ImageUploadOptions) => {
   const uploadPlugin = new Plugin({
     key: new PluginKey('imageUpload'),
     props: {
-      handlePaste(view, event) {
+      handlePaste(view: any, event: ClipboardEvent) {
         const items = Array.from(event.clipboardData?.items || []);
-        const imageItems = items.filter((item) => item.type.startsWith('image/'));
+        const imageItems = items.filter((item: DataTransferItem) => item.type.startsWith('image/'));
 
         if (imageItems.length === 0) {
           return false;
@@ -112,7 +114,7 @@ export const ImageUploadExtension = (options: ImageUploadOptions) => {
 
         event.preventDefault();
 
-        imageItems.forEach((item) => {
+        imageItems.forEach((item: DataTransferItem) => {
           const file = item.getAsFile();
           if (file) {
             const pos = view.state.selection.from;
@@ -122,14 +124,14 @@ export const ImageUploadExtension = (options: ImageUploadOptions) => {
 
         return true;
       },
-      handleDrop(view, event) {
+      handleDrop(view: any, event: DragEvent) {
         const hasFiles = event.dataTransfer?.files?.length;
 
         if (!hasFiles) {
           return false;
         }
 
-        const images = Array.from(event.dataTransfer.files).filter((file) =>
+        const images = Array.from(event.dataTransfer.files).filter((file: File) =>
           file.type.startsWith('image/')
         );
 
@@ -145,7 +147,7 @@ export const ImageUploadExtension = (options: ImageUploadOptions) => {
           top: event.clientY,
         });
 
-        images.forEach((file) => {
+        images.forEach((file: File) => {
           const pos = coordinates?.pos ?? view.state.selection.from;
           handleImageUpload(file, view, pos);
         });

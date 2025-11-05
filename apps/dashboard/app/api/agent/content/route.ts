@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import { createContentSchema } from '@nest/validation';
 import { generateSlug, generateUniqueSlug } from '@/lib/slug-generator';
 
@@ -9,7 +9,7 @@ import { generateSlug, generateUniqueSlug } from '@/lib/slug-generator';
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerClient();
+    const supabase = createServiceRoleClient();
 
     // Get authenticated user
     const {
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerClient();
+    const supabase = createServiceRoleClient();
 
     // Get authenticated user
     const {
