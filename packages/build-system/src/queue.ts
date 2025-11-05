@@ -1,0 +1,182 @@
+/**
+ * Build Queue System
+ * Manages site rebuild requests for agents
+ */
+
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+// Use service role client for admin operations
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+export interface BuildRequest {
+  agent_id: string;
+  trigger: 'content_approved' | 'profile_updated' | 'manual' | 'property_sync';
+  priority: 'low' | 'normal' | 'high';
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Add a build request to the queue
+ * Prevents duplicate builds for the same agent within 5 minutes
+ */
+export async function addBuild(request: BuildRequest): Promise<{ success: boolean; id?: string; message?: string }> {
+  try {
+    // Check for recent builds for this agent
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+    const { data: recentBuilds } = await supabase
+      .from('build_queue')
+      .select('id')
+      .eq('agent_id', request.agent_id)
+      .eq('status', 'queued')
+      .gte('created_at', fiveMinutesAgo);
+
+    if (recentBuilds && recentBuilds.length > 0) {
+      return {
+        success: false,
+        message: 'Build already queued for this agent within the last 5 minutes',
+      };
+    }
+
+    // Add to queue
+    const { data, error } = await supabase
+      .from('build_queue')
+      .insert({
+        agent_id: request.agent_id,
+        trigger: request.trigger,
+        priority: request.priority,
+        status: 'queued',
+        metadata: request.metadata || {},
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Error adding build to queue:', error);
+      return { success: false, message: error.message };
+    }
+
+    return {
+      success: true,
+      id: data.id,
+      message: 'Build queued successfully',
+    };
+  } catch (error: any) {
+    console.error('Error in addBuild:', error);
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Get next build from the queue
+ * Prioritizes high priority builds, then by creation time
+ */
+export async function getNextBuild(): Promise<any | null> {
+  try {
+    const { data, error } = await supabase
+      .from('build_queue')
+      .select('*, agent:agents(subdomain, user_id)')
+      .eq('status', 'queued')
+      .order('priority', { ascending: false }) // high > normal > low
+      .order('created_at', { ascending: true }) // oldest first
+      .limit(1)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows found
+        return null;
+      }
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error getting next build:', error);
+    return null;
+  }
+}
+
+/**
+ * Mark a build as in progress
+ */
+export async function startBuild(buildId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('build_queue')
+      .update({
+        status: 'building',
+        started_at: new Date().toISOString(),
+      })
+      .eq('id', buildId);
+
+    return !error;
+  } catch (error) {
+    console.error('Error starting build:', error);
+    return false;
+  }
+}
+
+/**
+ * Mark a build as completed
+ */
+export async function completeBuild(buildId: string, result: {
+  success: boolean;
+  build_url?: string;
+  error_message?: string;
+}): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('build_queue')
+      .update({
+        status: result.success ? 'completed' : 'failed',
+        completed_at: new Date().toISOString(),
+        build_url: result.build_url,
+        error_message: result.error_message,
+      })
+      .eq('id', buildId);
+
+    return !error;
+  } catch (error) {
+    console.error('Error completing build:', error);
+    return false;
+  }
+}
+
+/**
+ * Get queue stats
+ */
+export async function getQueueStats(): Promise<{
+  queued: number;
+  building: number;
+  completed_today: number;
+  failed_today: number;
+}> {
+  const today = new Date().toISOString().split('T')[0];
+
+  try {
+    const [queued, building, completedToday, failedToday] = await Promise.all([
+      supabase.from('build_queue').select('id', { count: 'exact', head: true }).eq('status', 'queued'),
+      supabase.from('build_queue').select('id', { count: 'exact', head: true }).eq('status', 'building'),
+      supabase.from('build_queue').select('id', { count: 'exact', head: true })
+        .eq('status', 'completed')
+        .gte('completed_at', `${today}T00:00:00`),
+      supabase.from('build_queue').select('id', { count: 'exact', head: true })
+        .eq('status', 'failed')
+        .gte('completed_at', `${today}T00:00:00`),
+    ]);
+
+    return {
+      queued: queued.count || 0,
+      building: building.count || 0,
+      completed_today: completedToday.count || 0,
+      failed_today: failedToday.count || 0,
+    };
+  } catch (error) {
+    console.error('Error getting queue stats:', error);
+    return { queued: 0, building: 0, completed_today: 0, failed_today: 0 };
+  }
+}

@@ -2,12 +2,13 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./components",
+    "rootDir": ".",
     "declaration": true,
     "declarationMap": true,
     "composite": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "lib": ["ES2020", "DOM"]
   },
-  "include": ["components/**/*"],
+  "include": ["components/**/*", "lib/**/*"],
   "exclude": ["node_modules", "dist"]
 }
