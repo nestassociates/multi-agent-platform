@@ -199,11 +199,11 @@ Based on Turborepo monorepo structure from plan.md:
 
 ### Tests for User Story 2
 
-- [ ] T099 [P] [US2] Integration test for Apex27 webhook (no signature validation - per James)
-- [ ] T100 [P] [US2] Integration test for property create event in tests/integration/property-sync-create.spec.ts
-- [ ] T101 [P] [US2] Integration test for property update event in tests/integration/property-sync-update.spec.ts
-- [ ] T102 [P] [US2] Integration test for property delete event in tests/integration/property-sync-delete.spec.ts
-- [ ] T103 [P] [US2] Contract test for POST /api/webhooks/apex27 in tests/contract/apex27-webhook.spec.ts
+- [x] T099 [P] [US2] Integration test for Apex27 webhook (no signature validation - per James)
+- [x] T100 [P] [US2] Integration test for property create event in tests/integration/property-sync-create.spec.ts
+- [x] T101 [P] [US2] Integration test for property update event in tests/integration/property-sync-update.spec.ts
+- [x] T102 [P] [US2] Integration test for property delete event in tests/integration/property-sync-delete.spec.ts
+- [x] T103 [P] [US2] Contract test for POST /api/webhooks/apex27 in tests/contract/apex27-webhook.spec.ts
 
 ### Implementation for User Story 2
 
@@ -248,51 +248,51 @@ Based on Turborepo monorepo structure from plan.md:
 
 ### Tests for User Story 3
 
-- [ ] T119 [P] [US3] E2E test for agent creates blog post and submits in tests/e2e/content-creation.spec.ts
-- [ ] T120 [P] [US3] E2E test for admin approves content in tests/e2e/content-approval.spec.ts
-- [ ] T121 [P] [US3] E2E test for admin rejects content with feedback in tests/e2e/content-rejection.spec.ts
-- [ ] T122 [P] [US3] Contract test for POST /api/agent/content in tests/contract/content-creation.spec.ts
-- [ ] T123 [P] [US3] Contract test for POST /api/admin/content/:id/approve in tests/contract/content-approval.spec.ts
+- [x] T119 [P] [US3] E2E test for agent creates blog post and submits in tests/e2e/content-creation.spec.ts
+- [x] T120 [P] [US3] E2E test for admin approves content in tests/e2e/content-approval.spec.ts
+- [x] T121 [P] [US3] E2E test for admin rejects content with feedback in tests/e2e/content-rejection.spec.ts
+- [x] T122 [P] [US3] Contract test for POST /api/agent/content in tests/contract/content-creation.spec.ts
+- [x] T123 [P] [US3] Contract test for POST /api/admin/content/:id/approve in tests/contract/content-approval.spec.ts
 
 ### Implementation for User Story 3
 
 **Rich Text Editor Component**
 
-- [ ] T124 [P] [US3] Install Tiptap dependencies: @tiptap/react, @tiptap/starter-kit, @tiptap/extension-image
-- [ ] T125 [P] [US3] Create reusable RichTextEditor component in packages/ui/components/rich-text-editor.tsx
-- [ ] T126 [US3] Add image upload extension for Tiptap (uploads to Supabase Storage) in packages/ui/components/rich-text-editor-image-extension.ts
-- [ ] T127 [US3] Add auto-save functionality (30-second interval) to editor component
+- [x] T124 [P] [US3] Install Tiptap dependencies: @tiptap/react, @tiptap/starter-kit, @tiptap/extension-image
+- [x] T125 [P] [US3] Create reusable RichTextEditor component in packages/ui/components/rich-text-editor.tsx
+- [x] T126 [US3] Add image upload extension for Tiptap (uploads to Supabase Storage) in packages/ui/components/rich-text-editor-image-extension.ts
+- [x] T127 [US3] Add auto-save functionality (30-second interval) to editor component
 
 **Agent: Content Creation**
 
-- [ ] T128 [P] [US3] Create content creation form component in apps/dashboard/components/agent/content-form.tsx
-- [ ] T129 [P] [US3] Create slug generator utility (auto-generate from title) in apps/dashboard/lib/slug-generator.ts
-- [ ] T130 [P] [US3] Create character counter component for limited fields in packages/ui/components/character-counter.tsx
-- [ ] T131 [P] [US3] Create agent content management page in apps/dashboard/app/(agent)/content/page.tsx
-- [ ] T132 [P] [US3] Create new content page in apps/dashboard/app/(agent)/content/new/page.tsx
-- [ ] T133 [US3] Implement POST /api/agent/content endpoint (create draft) in apps/dashboard/app/api/agent/content/route.ts
-- [ ] T134 [US3] Implement PATCH /api/agent/content/:id endpoint (update, submit for review) in apps/dashboard/app/api/agent/content/[id]/route.ts
-- [ ] T135 [US3] Implement GET /api/agent/content endpoint (list with status filter) in apps/dashboard/app/api/agent/content/route.ts
+- [x] T128 [P] [US3] Create content creation form component in apps/dashboard/components/agent/content-form.tsx
+- [x] T129 [P] [US3] Create slug generator utility (auto-generate from title) in apps/dashboard/lib/slug-generator.ts
+- [x] T130 [P] [US3] Create character counter component for limited fields in packages/ui/components/character-counter.tsx
+- [x] T131 [P] [US3] Create agent content management page in apps/dashboard/app/(agent)/content/page.tsx
+- [x] T132 [P] [US3] Create new content page in apps/dashboard/app/(agent)/content/new/page.tsx
+- [x] T133 [US3] Implement POST /api/agent/content endpoint (create draft) in apps/dashboard/app/api/agent/content/route.ts
+- [x] T134 [US3] Implement PATCH /api/agent/content/:id endpoint (update, submit for review) in apps/dashboard/app/api/agent/content/[id]/route.ts
+- [x] T135 [US3] Implement GET /api/agent/content endpoint (list with status filter) in apps/dashboard/app/api/agent/content/route.ts
 
 **Admin: Content Moderation**
 
-- [ ] T136 [P] [US3] Create moderation queue component in apps/dashboard/components/admin/moderation-queue.tsx
-- [ ] T137 [P] [US3] Create content preview pane component in apps/dashboard/components/admin/content-preview.tsx
-- [ ] T138 [P] [US3] Create admin content moderation page in apps/dashboard/app/(admin)/content-moderation/page.tsx
-- [ ] T139 [US3] Implement GET /api/admin/content/moderation endpoint in apps/dashboard/app/api/admin/content/moderation/route.ts
-- [ ] T140 [US3] Implement POST /api/admin/content/:id/approve endpoint (change status, queue build) in apps/dashboard/app/api/admin/content/[id]/approve/route.ts
-- [ ] T141 [US3] Implement POST /api/admin/content/:id/reject endpoint (change status, send email) in apps/dashboard/app/api/admin/content/[id]/reject/route.ts
+- [x] T136 [P] [US3] Create moderation queue component in apps/dashboard/components/admin/moderation-queue.tsx
+- [x] T137 [P] [US3] Create content preview pane component in apps/dashboard/components/admin/content-preview.tsx
+- [x] T138 [P] [US3] Create admin content moderation page in apps/dashboard/app/(admin)/content-moderation/page.tsx
+- [x] T139 [US3] Implement GET /api/admin/content/moderation endpoint in apps/dashboard/app/api/admin/content/moderation/route.ts
+- [x] T140 [US3] Implement POST /api/admin/content/:id/approve endpoint (change status, queue build) in apps/dashboard/app/api/admin/content/[id]/approve/route.ts
+- [x] T141 [US3] Implement POST /api/admin/content/:id/reject endpoint (change status, send email) in apps/dashboard/app/api/admin/content/[id]/reject/route.ts
 
 **Email: Content Feedback**
 
-- [ ] T142 [P] [US3] Create content approved email template in packages/email/templates/content-approved.tsx
-- [ ] T143 [P] [US3] Create content rejected email template in packages/email/templates/content-rejected.tsx
-- [ ] T144 [US3] Integrate email sending in approve/reject API routes
+- [x] T142 [P] [US3] Create content approved email template in packages/email/templates/content-approved.tsx
+- [x] T143 [P] [US3] Create content rejected email template in packages/email/templates/content-rejected.tsx
+- [x] T144 [US3] Integrate email sending in approve/reject API routes
 
 **Build Queue Integration**
 
-- [ ] T145 [US3] Create build queue service in packages/build-system/queue.ts (add to queue, check duplicates)
-- [ ] T146 [US3] Integrate build queue service in content approval endpoint (create P2 build job)
+- [x] T145 [US3] Create build queue service in packages/build-system/queue.ts (add to queue, check duplicates)
+- [x] T146 [US3] Integrate build queue service in content approval endpoint (create P2 build job)
 
 **Checkpoint**: At this point, User Story 3 should be fully functional. Agents create content, admins moderate, approvals queue builds.
 

@@ -1,0 +1,62 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// This will be loaded from generated data file in production
+const agentData = {
+  name: 'Agent Name',
+  bio: 'Professional real estate agent',
+  phone: '020 7123 4567',
+  email: 'agent@example.com',
+};
+---
+
+<BaseLayout title={`${agentData.name} - Real Estate Agent`}>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Hero Section -->
+    <section class="bg-blue-600 text-white py-20">
+      <div class="container mx-auto px-4 text-center">
+        <h1 class="text-5xl font-bold mb-4">{agentData.name}</h1>
+        <p class="text-xl mb-8">{agentData.bio}</p>
+        <div class="flex justify-center gap-4">
+          <a href="/properties" class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+            View Properties
+          </a>
+          <a href="/contact" class="border-2 border-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+            Contact Me
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Stats -->
+    <section class="py-16">
+      <div class="container mx-auto px-4">
+        <div class="grid md:grid-cols-3 gap-8 text-center">
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-4xl font-bold text-blue-600 mb-2">0</h3>
+            <p class="text-gray-600">Active Properties</p>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-4xl font-bold text-blue-600 mb-2">0</h3>
+            <p class="text-gray-600">Sold Properties</p>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-4xl font-bold text-blue-600 mb-2">0</h3>
+            <p class="text-gray-600">Happy Clients</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="bg-gray-100 py-16">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold mb-4">Ready to Find Your Dream Home?</h2>
+        <p class="text-gray-600 mb-8">Let's work together to find the perfect property for you.</p>
+        <a href="/contact" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition inline-block">
+          Get in Touch
+        </a>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { loginSchema } from '@nest/validation';
+import { isRateLimited, getRemainingAttempts, resetRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,6 +9,22 @@ export async function POST(request: NextRequest) {
 
     // Validate input
     const validatedData = loginSchema.parse(body);
+
+    // Check rate limiting (FR-004: 5 attempts per 15 minutes)
+    const rateLimitKey = `login:${validatedData.email}`;
+    if (isRateLimited(rateLimitKey)) {
+      const remaining = getRemainingAttempts(rateLimitKey);
+      return NextResponse.json(
+        {
+          error: {
+            code: 'RATE_LIMITED',
+            message: 'Too many login attempts. Please try again in 15 minutes.',
+            remainingAttempts: remaining,
+          },
+        },
+        { status: 429 }
+      );
+    }
 
     const supabase = createClient();
 
@@ -19,10 +36,16 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json(
-        { error: { code: 'INVALID_CREDENTIALS', message: error.message } },
+        {
+          error: { code: 'INVALID_CREDENTIALS', message: error.message },
+          remainingAttempts: getRemainingAttempts(rateLimitKey) - 1,
+        },
         { status: 401 }
       );
     }
+
+    // Successful login - reset rate limit
+    resetRateLimit(rateLimitKey);
 
     // Get user profile with role
     const { data: profile } = await supabase

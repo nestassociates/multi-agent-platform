@@ -1,0 +1,61 @@
+---
+interface Props {
+  name: string;
+  tagline: string;
+  backgroundImage?: string;
+  primaryCta?: {
+    text: string;
+    href: string;
+  };
+  secondaryCta?: {
+    text: string;
+    href: string;
+  };
+}
+
+const {
+  name,
+  tagline,
+  backgroundImage,
+  primaryCta = { text: 'View Properties', href: '/properties' },
+  secondaryCta = { text: 'Contact Me', href: '/contact' },
+} = Astro.props;
+---
+
+<section
+  class="relative bg-blue-600 text-white py-20 lg:py-32 overflow-hidden"
+  style={backgroundImage ? `background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${backgroundImage}); background-size: cover; background-position: center;` : ''}
+>
+  <div class="container mx-auto px-4 relative z-10">
+    <div class="max-w-3xl mx-auto text-center">
+      <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+        {name}
+      </h1>
+      <p class="text-xl md:text-2xl mb-8 text-gray-100">
+        {tagline}
+      </p>
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <a
+          href={primaryCta.href}
+          class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition shadow-lg"
+        >
+          {primaryCta.text}
+        </a>
+        <a
+          href={secondaryCta.href}
+          class="border-2 border-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-blue-600 transition"
+        >
+          {secondaryCta.text}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decorative Elements -->
+  {!backgroundImage && (
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-24 -right-24 w-96 h-96 bg-blue-500 rounded-full opacity-20 blur-3xl"></div>
+      <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-700 rounded-full opacity-20 blur-3xl"></div>
+    </div>
+  )}
+</section>

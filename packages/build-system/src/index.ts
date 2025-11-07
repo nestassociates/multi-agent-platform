@@ -4,3 +4,6 @@
  */
 
 export * from './queue';
+export * from './data-generator';
+export * from './vercel-client';
+export * from './builder';

@@ -1,0 +1,6 @@
+# Robots.txt for Agent Microsite
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://agent-subdomain.agents.nestassociates.com/sitemap.xml

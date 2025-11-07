@@ -1,0 +1,119 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+// Generate static paths from data file
+export async function getStaticPaths() {
+  // In production, this will read from generated JSON
+  // For now, return empty array for build to succeed
+  return [];
+}
+
+const { slug } = Astro.params;
+
+const post = {
+  title: 'Blog Post Title',
+  publishedAt: new Date().toISOString(),
+  featuredImageUrl: null,
+  contentBody: '<p>Blog post content will appear here when generated from the dashboard.</p>',
+  excerpt: 'This is a blog post excerpt.',
+};
+---
+
+<BaseLayout title={post.title} description={post.excerpt}>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white border-b">
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex gap-6">
+          <a href="/" class="text-gray-600 hover:text-blue-600 transition">Home</a>
+          <a href="/about" class="text-gray-600 hover:text-blue-600 transition">About</a>
+          <a href="/services" class="text-gray-600 hover:text-blue-600 transition">Services</a>
+          <a href="/properties" class="text-gray-600 hover:text-blue-600 transition">Properties</a>
+          <a href="/blog" class="text-blue-600 font-semibold">Blog</a>
+          <a href="/contact" class="text-gray-600 hover:text-blue-600 transition">Contact</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Article -->
+    <article class="py-16">
+      <div class="container mx-auto px-4 max-w-3xl">
+        <!-- Back link -->
+        <a href="/blog" class="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          Back to Blog
+        </a>
+
+        <!-- Featured Image -->
+        {post.featuredImageUrl && (
+          <img
+            src={post.featuredImageUrl}
+            alt={post.title}
+            class="w-full h-96 object-cover rounded-lg mb-8"
+          />
+        )}
+
+        <!-- Title & Meta -->
+        <div class="mb-8">
+          <h1 class="text-4xl font-bold mb-4">{post.title}</h1>
+          <div class="flex items-center text-gray-600 text-sm">
+            <time datetime={post.publishedAt}>
+              {new Date(post.publishedAt).toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              })}
+            </time>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="prose prose-lg max-w-none">
+          <Fragment set:html={post.contentBody} />
+        </div>
+
+        <!-- Social Share -->
+        <div class="mt-12 pt-8 border-t">
+          <p class="text-gray-600 mb-4">Share this post:</p>
+          <div class="flex gap-4">
+            <a
+              href={`https://twitter.com/intent/tweet?url=${Astro.url}&text=${post.title}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-gray-600 hover:text-blue-600 transition"
+            >
+              Twitter
+            </a>
+            <a
+              href={`https://www.facebook.com/sharer/sharer.php?u=${Astro.url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-gray-600 hover:text-blue-600 transition"
+            >
+              Facebook
+            </a>
+            <a
+              href={`https://www.linkedin.com/sharing/share-offsite/?url=${Astro.url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-gray-600 hover:text-blue-600 transition"
+            >
+              LinkedIn
+            </a>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="mt-12 bg-blue-50 rounded-lg p-8 text-center">
+          <h2 class="text-2xl font-bold mb-4">Need Help with Your Property Search?</h2>
+          <p class="text-gray-700 mb-6">Get in touch for expert advice</p>
+          <a href="/contact" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+            Contact Me
+          </a>
+        </div>
+      </div>
+    </article>
+  </div>
+</BaseLayout>

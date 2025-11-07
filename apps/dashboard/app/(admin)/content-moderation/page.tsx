@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { ModerationQueue } from '@/components/admin/moderation-queue';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Content {
   id: string;
@@ -102,52 +104,44 @@ export default function ContentModerationPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600">Pending Review</div>
-          <div className="text-2xl font-bold text-yellow-600">{content.length}</div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600">Average Review Time</div>
-          <div className="text-2xl font-bold text-gray-900">24h</div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600">Approval Rate</div>
-          <div className="text-2xl font-bold text-green-600">94%</div>
-        </div>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Pending Review</CardDescription>
+            <CardTitle className="text-2xl text-yellow-600">{content.length}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Average Review Time</CardDescription>
+            <CardTitle className="text-2xl">24h</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Approval Rate</CardDescription>
+            <CardTitle className="text-2xl text-green-600">94%</CardTitle>
+          </CardHeader>
+        </Card>
       </div>
 
       {/* Error State */}
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg
-                className="h-5 w-5 text-red-400"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error loading content</h3>
-              <div className="mt-2 text-sm text-red-700">{error}</div>
-            </div>
-          </div>
-        </div>
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>
+            <h3 className="font-medium mb-1">Error loading content</h3>
+            <p className="text-sm">{error}</p>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Loading State */}
       {loading ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-          <p className="mt-4 text-gray-600">Loading content...</p>
-        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-4 text-muted-foreground">Loading content...</p>
+          </CardContent>
+        </Card>
       ) : (
         <ModerationQueue
           content={content}

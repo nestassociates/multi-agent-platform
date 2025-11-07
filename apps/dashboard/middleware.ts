@@ -71,6 +71,18 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
+  // TODO: Enforce 2FA for admin users (FR-002)
+  // Disabled until 2FA setup page is fully implemented
+  // if (user && userRole && (userRole === 'admin' || userRole === 'super_admin')) {
+  //   const { data: factors } = await supabase.auth.mfa.listFactors();
+  //   const has2FA = factors && factors.totp && factors.totp.length > 0;
+  //   if (!has2FA && path !== '/2fa-setup' && !path.startsWith('/api/')) {
+  //     const redirectUrl = request.nextUrl.clone();
+  //     redirectUrl.pathname = '/2fa-setup';
+  //     return NextResponse.redirect(redirectUrl);
+  //   }
+  // }
+
   // Public/system endpoints that don't require auth
   const publicPaths = [
     '/login',
@@ -92,8 +104,8 @@ export async function middleware(request: NextRequest) {
 
   // Role-based redirects
   if (user && userRole) {
-    // Admin accessing agent routes -> redirect to admin dashboard
-    if ((userRole === 'admin' || userRole === 'super_admin') && path.startsWith('/dashboard')) {
+    // Admins accessing /dashboard -> redirect to /agents (their main page)
+    if ((userRole === 'admin' || userRole === 'super_admin') && path === '/dashboard') {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = '/agents';
       return NextResponse.redirect(redirectUrl);
@@ -106,7 +118,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    // Redirect from login to appropriate dashboard if already authenticated
+    // Redirect from login to appropriate page if already authenticated
     if (path === '/login') {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = userRole === 'agent' ? '/dashboard' : '/agents';

@@ -1,0 +1,61 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const agentData = {
+  name: 'Agent Name',
+  bio: 'Professional real estate agent with years of experience.',
+  qualifications: ['ARLA', 'NAEA'],
+  phone: '020 7123 4567',
+  email: 'agent@example.com',
+};
+---
+
+<BaseLayout title={`About ${agentData.name}`}>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <section class="bg-white border-b py-8">
+      <div class="container mx-auto px-4">
+        <nav class="flex gap-6">
+          <a href="/" class="text-gray-600 hover:text-blue-600 transition">Home</a>
+          <a href="/about" class="text-blue-600 font-semibold">About</a>
+          <a href="/properties" class="text-gray-600 hover:text-blue-600 transition">Properties</a>
+          <a href="/contact" class="text-gray-600 hover:text-blue-600 transition">Contact</a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- About Content -->
+    <section class="py-16">
+      <div class="container mx-auto px-4 max-w-4xl">
+        <h1 class="text-4xl font-bold mb-8">About {agentData.name}</h1>
+
+        <div class="bg-white p-8 rounded-lg shadow-sm mb-8">
+          <h2 class="text-2xl font-semibold mb-4">Biography</h2>
+          <p class="text-gray-700 leading-relaxed">{agentData.bio}</p>
+        </div>
+
+        <div class="bg-white p-8 rounded-lg shadow-sm mb-8">
+          <h2 class="text-2xl font-semibold mb-4">Qualifications</h2>
+          <ul class="space-y-2">
+            {agentData.qualifications.map((qual) => (
+              <li class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>{qual}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="bg-white p-8 rounded-lg shadow-sm">
+          <h2 class="text-2xl font-semibold mb-4">Contact Information</h2>
+          <div class="space-y-3">
+            <p><strong>Phone:</strong> <a href={`tel:${agentData.phone}`} class="text-blue-600 hover:underline">{agentData.phone}</a></p>
+            <p><strong>Email:</strong> <a href={`mailto:${agentData.email}`} class="text-blue-600 hover:underline">{agentData.email}</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

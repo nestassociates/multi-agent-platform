@@ -1,0 +1,100 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Will be loaded from generated data file
+const agentData = {
+  name: 'Agent Name',
+  services: [
+    'Residential Sales',
+    'Residential Lettings',
+    'Property Valuations',
+    'Market Appraisals',
+  ],
+};
+---
+
+<BaseLayout title={`Services - ${agentData.name}`}>
+  <div class="min-h-screen bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white border-b">
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex gap-6">
+          <a href="/" class="text-gray-600 hover:text-blue-600 transition">Home</a>
+          <a href="/about" class="text-gray-600 hover:text-blue-600 transition">About</a>
+          <a href="/services" class="text-blue-600 font-semibold">Services</a>
+          <a href="/properties" class="text-gray-600 hover:text-blue-600 transition">Properties</a>
+          <a href="/blog" class="text-gray-600 hover:text-blue-600 transition">Blog</a>
+          <a href="/contact" class="text-gray-600 hover:text-blue-600 transition">Contact</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Header -->
+    <section class="bg-blue-600 text-white py-16">
+      <div class="container mx-auto px-4">
+        <h1 class="text-4xl font-bold mb-4">Professional Real Estate Services</h1>
+        <p class="text-xl">Comprehensive property services tailored to your needs</p>
+      </div>
+    </section>
+
+    <!-- Services Grid -->
+    <section class="py-16">
+      <div class="container mx-auto px-4">
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {agentData.services.map((service) => (
+            <div class="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition">
+              <svg class="w-12 h-12 text-blue-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <h3 class="text-lg font-semibold mb-2">{service}</h3>
+              <p class="text-gray-600 text-sm">Professional service with expert guidance</p>
+            </div>
+          ))}
+        </div>
+
+        <!-- Process Section -->
+        <div class="bg-white rounded-lg shadow-sm p-8 mb-8">
+          <h2 class="text-3xl font-bold mb-8">How I Work</h2>
+          <div class="grid md:grid-cols-3 gap-8">
+            <div>
+              <div class="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl mb-4">
+                1
+              </div>
+              <h3 class="text-xl font-semibold mb-2">Initial Consultation</h3>
+              <p class="text-gray-600">
+                We discuss your needs, budget, and timeline to create a tailored plan
+              </p>
+            </div>
+            <div>
+              <div class="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl mb-4">
+                2
+              </div>
+              <h3 class="text-xl font-semibold mb-2">Property Search</h3>
+              <p class="text-gray-600">
+                I find properties that match your criteria and arrange viewings
+              </p>
+            </div>
+            <div>
+              <div class="bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl mb-4">
+                3
+              </div>
+              <h3 class="text-xl font-semibold mb-2">Successful Completion</h3>
+              <p class="text-gray-600">
+                I guide you through offers, negotiations, and completion
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="bg-blue-50 rounded-lg p-8 text-center">
+          <h2 class="text-2xl font-bold mb-4">Ready to Get Started?</h2>
+          <p class="text-gray-700 mb-6">Let's discuss your property needs today</p>
+          <a href="/contact" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+            Contact Me
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
