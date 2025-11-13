@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 /**
  * GET /api/admin/content/moderation
@@ -7,9 +7,9 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServiceRoleClient();
+    // Step 1: Auth check with regular client (has session access)
+    const supabase = createClient();
 
-    // Get authenticated user
     const {
       data: { user },
       error: authError,
@@ -19,26 +19,29 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 });
     }
 
-    // Check if user is admin
+    // Step 2: Verify admin role
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
-    if (!profile || profile.role !== 'admin') {
+    if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
       return NextResponse.json({ error: { message: 'Forbidden' } }, { status: 403 });
     }
 
-    // Fetch pending content with agent information
-    const { data: content, error: fetchError } = await supabase
-      .from('agent_content')
+    // Step 3: Data fetch with service role client (bypasses RLS for joins)
+    const supabaseAdmin = createServiceRoleClient();
+    const { data: content, error: fetchError } = await supabaseAdmin
+      .from('content_submissions')
       .select(
         `
         *,
         agent:agents (
           id,
-          profile:profiles (
+          subdomain,
+          user_id,
+          profiles!agents_user_id_fkey (
             first_name,
             last_name,
             email
@@ -55,6 +58,13 @@ export async function GET(request: NextRequest) {
         { error: { message: 'Failed to fetch moderation queue' } },
         { status: 500 }
       );
+    }
+
+    console.log('[Moderation API] Content data:', JSON.stringify(content, null, 2));
+    console.log('[Moderation API] First item agent:', content?.[0]?.agent);
+    if (content?.[0]?.agent) {
+      console.log('[Moderation API] Agent keys:', Object.keys(content[0].agent));
+      console.log('[Moderation API] Agent profiles:', content[0].agent.profiles);
     }
 
     return NextResponse.json({

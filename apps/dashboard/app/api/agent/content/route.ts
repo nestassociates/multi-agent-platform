@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { createContentSchema } from '@nest/validation';
 import { generateSlug, generateUniqueSlug } from '@/lib/slug-generator';
 
@@ -9,7 +9,7 @@ import { generateSlug, generateUniqueSlug } from '@/lib/slug-generator';
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServiceRoleClient();
+    const supabase = createClient();
 
     // Get authenticated user
     const {
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Check for slug uniqueness
     const { data: existingContent } = await supabase
-      .from('agent_content')
+      .from('content_submissions')
       .select('slug')
       .eq('agent_id', agent.id);
 
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     // Create content
     const { data: content, error: insertError } = await supabase
-      .from('agent_content')
+      .from('content_submissions')
       .insert({
         agent_id: agent.id,
         content_type: data.content_type,
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
 
     // Build query
     let query = supabase
-      .from('agent_content')
+      .from('content_submissions')
       .select('*')
       .eq('agent_id', agent.id)
       .order('updated_at', { ascending: false });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { updateContentSchema } from '@nest/validation';
 
 /**
@@ -11,7 +11,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createServiceRoleClient();
+    const supabase = createClient();
     const contentId = params.id;
 
     // Get authenticated user
@@ -40,7 +40,7 @@ export async function PATCH(
 
     // Verify content belongs to this agent
     const { data: existingContent, error: checkError } = await supabase
-      .from('agent_content')
+      .from('content_submissions')
       .select('*')
       .eq('id', contentId)
       .eq('agent_id', agent.id)
@@ -100,7 +100,7 @@ export async function PATCH(
 
     // Update content
     const { data: updatedContent, error: updateError } = await supabase
-      .from('agent_content')
+      .from('content_submissions')
       .update(updateData)
       .eq('id', contentId)
       .eq('agent_id', agent.id)
@@ -137,7 +137,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createServiceRoleClient();
+    const supabase = createClient();
     const contentId = params.id;
 
     // Get authenticated user
@@ -166,7 +166,7 @@ export async function GET(
 
     // Fetch content
     const { data: content, error: fetchError } = await supabase
-      .from('agent_content')
+      .from('content_submissions')
       .select('*')
       .eq('id', contentId)
       .eq('agent_id', agent.id)

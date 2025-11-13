@@ -13,9 +13,8 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export interface BuildRequest {
   agent_id: string;
-  trigger: 'content_approved' | 'profile_updated' | 'manual' | 'property_sync';
-  priority: 'low' | 'normal' | 'high';
-  metadata?: Record<string, any>;
+  trigger_reason: string;
+  priority: number; // 1=Emergency, 2=High, 3=Normal, 4=Low
 }
 
 /**
@@ -46,10 +45,9 @@ export async function addBuild(request: BuildRequest): Promise<{ success: boolea
       .from('build_queue')
       .insert({
         agent_id: request.agent_id,
-        trigger: request.trigger,
+        trigger_reason: request.trigger_reason,
         priority: request.priority,
-        status: 'queued',
-        metadata: request.metadata || {},
+        status: 'pending',
       })
       .select('id')
       .single();

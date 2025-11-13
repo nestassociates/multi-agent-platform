@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createContentSchema, type CreateContentInput } from '@nest/validation';
-import { Button, Input, RichTextEditor } from '@nest/ui';
+import { Button, Input } from '@nest/ui';
+import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor';
 import { generateSlug } from '@/lib/slug-generator';
 
 interface ContentFormProps {
@@ -69,7 +70,7 @@ export function ContentForm({
 
   // Handle rich text editor content change
   const handleContentBodyChange = (html: string) => {
-    setValue('content_body', html);
+    setValue('content_body', html, { shouldValidate: true });
   };
 
   // Auto-save draft
@@ -88,8 +89,14 @@ export function ContentForm({
     }
   };
 
+  // Debug: Log form submission
+  const handleFormSubmit = (data: CreateContentInput) => {
+    console.log('Form submission data:', data);
+    return onSubmit(data);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-4xl">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6 max-w-4xl">
       {/* Auto-save indicator */}
       {onSaveDraft && (
         <div className="flex items-center justify-end text-sm text-gray-500">
@@ -168,14 +175,29 @@ export function ContentForm({
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Content <span className="text-red-500">*</span>
         </label>
-        <RichTextEditor
-          content={contentBody}
-          onChange={handleContentBodyChange}
-          onSave={onSaveDraft ? handleAutoSave : undefined}
-          autoSave={!!onSaveDraft}
-          autoSaveInterval={30000} // 30 seconds
-          placeholder="Write your content here..."
-        />
+        <div className="border rounded-lg overflow-hidden" style={{ width: '100%', minHeight: '600px', position: 'relative' }}>
+          <style>{`
+            .simple-editor-content {
+              max-width: 100% !important;
+              padding: 1rem !important;
+            }
+            .simple-editor-content .tiptap.ProseMirror.simple-editor {
+              padding: 1rem !important;
+            }
+            .tiptap ::selection,
+            .tiptap *::selection {
+              background: #3b82f6 !important;
+              color: white !important;
+            }
+            .ProseMirror-selectednode {
+              outline: 2px solid #3b82f6 !important;
+            }
+          `}</style>
+          <SimpleEditor
+            initialContent={contentBody}
+            onChange={handleContentBodyChange}
+          />
+        </div>
         {errors.content_body && (
           <p className="mt-1 text-sm text-red-600">{errors.content_body.message}</p>
         )}

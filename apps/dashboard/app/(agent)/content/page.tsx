@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -47,7 +47,7 @@ const contentTypeLabels = {
 };
 
 export default async function AgentContentPage() {
-  const supabase = createServiceRoleClient();
+  const supabase = createClient();
 
   // Get current user
   const {
@@ -72,7 +72,7 @@ export default async function AgentContentPage() {
 
   // Fetch agent's content
   const { data: content, error: contentError } = await supabase
-    .from('agent_content')
+    .from('content_submissions')
     .select('*')
     .eq('agent_id', agent.id)
     .order('updated_at', { ascending: false });

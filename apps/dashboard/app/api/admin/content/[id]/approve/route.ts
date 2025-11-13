@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { sendContentApprovedEmail } from '@nest/email';
 import { addBuild } from '@nest/build-system';
 
@@ -12,7 +12,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createServiceRoleClient();
+    const supabase = createClient();
     const contentId = params.id;
 
     // Get authenticated user
@@ -29,23 +29,25 @@ export async function POST(
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
-    if (!profile || profile.role !== 'admin') {
+    if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
       return NextResponse.json({ error: { message: 'Forbidden' } }, { status: 403 });
     }
 
     // Get content with agent information
-    const { data: content, error: fetchError } = await supabase
-      .from('agent_content')
+    const supabaseAdmin = createServiceRoleClient();
+    const { data: content, error: fetchError } = await supabaseAdmin
+      .from('content_submissions')
       .select(
         `
         *,
         agent:agents (
           id,
           user_id,
-          profile:profiles (
+          subdomain,
+          profiles!agents_user_id_fkey (
             first_name,
             last_name,
             email
@@ -64,12 +66,12 @@ export async function POST(
     }
 
     // Update content status to approved
-    const { error: updateError } = await supabase
-      .from('agent_content')
+    const { error: updateError } = await supabaseAdmin
+      .from('content_submissions')
       .update({
         status: 'approved',
-        approved_at: new Date().toISOString(),
-        approved_by: user.id,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by_user_id: user.id,
       })
       .eq('id', contentId);
 
@@ -83,11 +85,14 @@ export async function POST(
 
     // Send approval email to agent
     try {
-      await sendContentApprovedEmail(content.agent.profile.email, {
-        agentName: `${content.agent.profile.first_name} ${content.agent.profile.last_name}`,
-        contentTitle: content.title,
-        contentType: content.content_type,
-      });
+      const agentProfile = content.agent?.profiles?.[0];
+      if (agentProfile) {
+        await sendContentApprovedEmail(agentProfile.email, {
+          agentName: `${agentProfile.first_name} ${agentProfile.last_name}`,
+          contentTitle: content.title,
+          contentType: content.content_type,
+        });
+      }
     } catch (emailError) {
       console.error('Error sending approval email:', emailError);
       // Don't fail the request if email fails
@@ -97,13 +102,8 @@ export async function POST(
     try {
       await addBuild({
         agent_id: content.agent_id,
-        trigger: 'content_approved',
-        priority: 'normal',
-        metadata: {
-          content_id: contentId,
-          content_title: content.title,
-          content_type: content.content_type,
-        },
+        trigger_reason: `Content approved: ${content.title}`,
+        priority: 2, // High priority for content approval
       });
     } catch (buildError) {
       console.error('Error queuing build:', buildError);
