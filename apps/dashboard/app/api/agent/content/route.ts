@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServiceRoleClient();
+    const supabase = createClient();
 
     // Get authenticated user
     const {

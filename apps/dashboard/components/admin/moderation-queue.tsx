@@ -152,7 +152,7 @@ export function ModerationQueue({
                   </TableCell>
                   <TableCell>
                     {item.agent
-                      ? `${item.agent.profiles?.first_name} ${item.agent.profiles?.last_name}`
+                      ? `${item.agent.profile?.first_name} ${item.agent.profile?.last_name}`
                       : 'Unknown'}
                   </TableCell>
                   <TableCell>
