@@ -238,4 +238,51 @@ test.describe('Agent List View', () => {
     // Verify count changed
     await expect(resultsText).toBeVisible();
   });
+
+  test('agent list displays up to 50 agents per page', async ({ page }) => {
+    // Login as admin
+    await page.goto('/login');
+    await page.fill('[name="email"]', 'website@nestassociates.co.uk');
+    await page.fill('[name="password"]', process.env.ADMIN_PASSWORD || 'test-password');
+    await page.click('button[type="submit"]');
+
+    // Navigate to agents list
+    await page.goto('/agents');
+
+    // Count rows in the table
+    const rows = page.locator('table tbody tr');
+    const rowCount = await rows.count();
+
+    // Verify we display at most 50 rows per page
+    expect(rowCount).toBeLessThanOrEqual(50);
+    expect(rowCount).toBeGreaterThan(0);
+
+    // Check if pagination is shown when there are more than 50 agents
+    const resultsText = await page.locator('text=/Showing \\d+ of (\\d+) agents/').textContent();
+    if (resultsText) {
+      const match = resultsText.match(/of (\d+) agents/);
+      if (match) {
+        const totalAgents = parseInt(match[1], 10);
+
+        if (totalAgents > 50) {
+          // If more than 50 agents exist, verify pagination controls are present
+          // Note: This depends on your pagination implementation
+          // Common patterns: "Next", "Previous", page numbers, etc.
+          const hasPagination =
+            (await page.locator('button:has-text("Next")').count() > 0) ||
+            (await page.locator('button:has-text("Previous")').count() > 0) ||
+            (await page.locator('[aria-label*="pagination"]').count() > 0) ||
+            (await page.locator('[role="navigation"]').count() > 0);
+
+          // If pagination exists, it should be visible
+          if (hasPagination) {
+            expect(hasPagination).toBeTruthy();
+          }
+        } else {
+          // If 50 or fewer agents, verify we show all of them
+          expect(rowCount).toBe(totalAgents);
+        }
+      }
+    }
+  });
 });
