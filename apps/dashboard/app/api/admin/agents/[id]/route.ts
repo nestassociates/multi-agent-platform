@@ -61,6 +61,22 @@ export async function PATCH(
     }
 
     const body = await request.json();
+
+    // T237: Explicit validation - prevent email/subdomain changes
+    if (body.email !== undefined) {
+      return NextResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'Email cannot be changed via this endpoint' } },
+        { status: 400 }
+      );
+    }
+
+    if (body.subdomain !== undefined) {
+      return NextResponse.json(
+        { error: { code: 'VALIDATION_ERROR', message: 'Subdomain cannot be changed via this endpoint' } },
+        { status: 400 }
+      );
+    }
+
     const validatedData = updateAgentSchema.parse(body);
 
     const supabase = createServiceRoleClient();

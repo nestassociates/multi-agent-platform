@@ -106,11 +106,73 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search') || '';
+    const status = searchParams.get('status') || '';
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const offset = (page - 1) * limit;
+
     const supabase = createServiceRoleClient();
-    const { data: agents, error } = await supabase
+
+    // Build query
+    let query = supabase
       .from('agents')
-      .select('*, profile:profiles!agents_user_id_fkey(first_name, last_name, email)')
-      .order('created_at', { ascending: false });
+      .select('*, profile:profiles!agents_user_id_fkey(first_name, last_name, email)', { count: 'exact' });
+
+    // Apply status filter
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    // Apply search filter (search across name, email, subdomain)
+    if (search) {
+      // We need to handle search differently as we're searching across relations
+      // Get all agents first, then filter in memory for now
+      // TODO: Consider using a database view or full-text search for better performance
+      const { data: allAgents, error: fetchError } = await query.order('created_at', { ascending: false });
+
+      if (fetchError) {
+        return NextResponse.json(
+          { error: { code: 'QUERY_ERROR', message: fetchError.message } },
+          { status: 500 }
+        );
+      }
+
+      // Filter by search term
+      const searchLower = search.toLowerCase();
+      const filtered = (allAgents || []).filter((agent: any) => {
+        const fullName = `${agent.profile?.first_name} ${agent.profile?.last_name}`.toLowerCase();
+        const email = agent.profile?.email?.toLowerCase() || '';
+        const subdomain = agent.subdomain.toLowerCase();
+
+        return (
+          fullName.includes(searchLower) ||
+          email.includes(searchLower) ||
+          subdomain.includes(searchLower)
+        );
+      });
+
+      // Apply pagination
+      const total = filtered.length;
+      const paginatedData = filtered.slice(offset, offset + limit);
+
+      return NextResponse.json({
+        data: paginatedData,
+        pagination: {
+          page,
+          limit,
+          total,
+          total_pages: Math.ceil(total / limit),
+        },
+      });
+    }
+
+    // No search - use database pagination
+    const { data: agents, error, count } = await query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       return NextResponse.json(
@@ -119,7 +181,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ data: agents || [], pagination: { page: 1, limit: 50, total: agents?.length || 0, total_pages: 1 } });
+    return NextResponse.json({
+      data: agents || [],
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        total_pages: Math.ceil((count || 0) / limit),
+      },
+    });
   } catch (error: any) {
     return NextResponse.json(
       { error: { code: 'INTERNAL_SERVER_ERROR', message: 'An error occurred' } },
