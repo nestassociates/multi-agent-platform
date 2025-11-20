@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -7,6 +8,96 @@ export async function middleware(request: NextRequest) {
       headers: request.headers,
     },
   });
+
+  // T321: Rate Limiting for API routes
+  const path = request.nextUrl.pathname;
+  const clientIp = getClientIp(request);
+
+  // Apply rate limiting based on route
+  if (path.startsWith('/api/auth/')) {
+    // Strict rate limiting for auth endpoints (5 per 15 min)
+    const rateLimit = checkRateLimit(clientIp, RATE_LIMITS.AUTH);
+
+    if (!rateLimit.success) {
+      return new NextResponse(
+        JSON.stringify({
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: 'Too many requests. Please try again later.',
+            reset: new Date(rateLimit.reset).toISOString(),
+          },
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': String(Math.ceil((rateLimit.reset - Date.now()) / 1000)),
+            'X-RateLimit-Limit': String(rateLimit.limit),
+            'X-RateLimit-Remaining': String(rateLimit.remaining),
+            'X-RateLimit-Reset': String(rateLimit.reset),
+          },
+        }
+      );
+    }
+  } else if (path.startsWith('/api/public/')) {
+    // Generous rate limiting for public API (300 per 5 min)
+    const rateLimit = checkRateLimit(clientIp, RATE_LIMITS.PUBLIC_API);
+
+    if (!rateLimit.success) {
+      return new NextResponse(
+        JSON.stringify({
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: 'Too many requests. Please slow down.',
+          },
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': String(Math.ceil((rateLimit.reset - Date.now()) / 1000)),
+          },
+        }
+      );
+    }
+  } else if (path.startsWith('/api/')) {
+    // Standard rate limiting for other API routes (100 per min)
+    const rateLimit = checkRateLimit(clientIp, RATE_LIMITS.API);
+
+    if (!rateLimit.success) {
+      return new NextResponse(
+        JSON.stringify({
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: 'Too many requests.',
+          },
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
+
+    // Add rate limit headers to response
+    response.headers.set('X-RateLimit-Limit', String(rateLimit.limit));
+    response.headers.set('X-RateLimit-Remaining', String(rateLimit.remaining));
+    response.headers.set('X-RateLimit-Reset', String(rateLimit.reset));
+  }
+
+  // T322: Security Headers (helmet.js-style)
+  response.headers.set('X-DNS-Prefetch-Control', 'on');
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=()'
+  );
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -68,8 +159,6 @@ export async function middleware(request: NextRequest) {
 
     userRole = profile?.role || null;
   }
-
-  const path = request.nextUrl.pathname;
 
   // TODO: Enforce 2FA for admin users (FR-002)
   // Disabled until 2FA setup page is fully implemented
