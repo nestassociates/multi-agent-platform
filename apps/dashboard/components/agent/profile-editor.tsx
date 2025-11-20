@@ -7,6 +7,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { updateAgentProfileSchema, type UpdateAgentProfileInput } from '@nest/validation';
 import { Button } from '@nest/ui';
 import type { Agent, Profile } from '@nest/shared-types';
+import ProfilePreview from '@/components/agent/profile-preview';
+import { Eye } from 'lucide-react';
 
 interface ProfileEditorProps {
   agent: Agent & { profile: Profile };
@@ -17,6 +19,7 @@ export default function ProfileEditor({ agent }: ProfileEditorProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const {
     register,
@@ -199,11 +202,27 @@ export default function ProfileEditor({ agent }: ProfileEditorProps) {
       </div>
 
       {/* Submit Button */}
-      <div className="pt-4 border-t">
+      <div className="pt-4 border-t flex gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setIsPreviewOpen(true)}
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          Preview
+        </Button>
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Saving...' : 'Save Profile'}
         </Button>
       </div>
+
+      {/* Preview Modal */}
+      <ProfilePreview
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        profile={agent.profile}
+        agent={agent}
+      />
     </form>
   );
 }
