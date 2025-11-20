@@ -16,15 +16,19 @@ import { Home, ExternalLink, Loader2 } from 'lucide-react';
 
 interface Property {
   id: string;
-  apex27_listing_id: string;
-  display_address: string;
+  apex27_id: string;
+  title: string;
+  address: any; // JSONB
+  postcode: string;
   transaction_type: string;
   property_type: string;
   price: number;
   bedrooms: number | null;
   bathrooms: number | null;
   status: string;
+  is_featured: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 interface AgentPropertiesTabProps {
@@ -120,9 +124,9 @@ export function AgentPropertiesTab({ agentId }: AgentPropertiesTabProps) {
             {properties.map((property) => (
               <TableRow key={property.id}>
                 <TableCell>
-                  <div className="font-medium">{property.display_address}</div>
+                  <div className="font-medium">{property.title}</div>
                   <div className="text-sm text-muted-foreground">
-                    ID: {property.apex27_listing_id}
+                    {property.postcode || 'ID: ' + property.apex27_id}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -151,7 +155,7 @@ export function AgentPropertiesTab({ agentId }: AgentPropertiesTabProps) {
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm" asChild>
                     <a
-                      href={`https://www.apex27.co.uk/property/${property.apex27_listing_id}`}
+                      href={`https://www.apex27.co.uk/property/${property.apex27_id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

@@ -34,7 +34,7 @@ export async function GET(
     // Fetch properties
     const { data: properties, error: propertiesError } = await supabase
       .from('properties')
-      .select('id, apex27_listing_id, display_address, transaction_type, property_type, price, bedrooms, bathrooms, status, created_at')
+      .select('id, apex27_id, title, address, postcode, transaction_type, property_type, price, bedrooms, bathrooms, status, is_featured, created_at, updated_at')
       .eq('agent_id', params.id)
       .order('created_at', { ascending: false });
 
