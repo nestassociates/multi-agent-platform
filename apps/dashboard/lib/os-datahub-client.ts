@@ -5,7 +5,8 @@
  * Uses OS Features API with WFS (Web Feature Service)
  */
 
-const OS_API_KEY = process.env.OS_DATAHUB_API_KEY || '';
+const OS_API_KEY = process.env.OS_DATA_HUB_API_KEY || '';
+const OS_API_SECRET = process.env.OS_DATA_HUB_API_SECRET || '';
 const OS_BASE_URL = 'https://api.os.uk/features/v1/wfs';
 
 interface PropertyCountResult {
