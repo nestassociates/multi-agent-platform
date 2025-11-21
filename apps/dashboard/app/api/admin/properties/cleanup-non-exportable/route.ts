@@ -35,19 +35,35 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceRoleClient();
 
     // T022: Query all properties from database
-    const { data: allProperties, error: queryError } = await supabase
-      .from('properties')
-      .select('id, apex27_id, agent_id');
+    // Note: Supabase has a default limit of 1000 rows, so we need to paginate
+    let allProperties: any[] = [];
+    let page = 0;
+    const PAGE_SIZE = 1000;
 
-    if (queryError) {
-      console.error('[Cleanup] Error querying properties:', queryError);
-      return NextResponse.json(
-        { error: { code: 'QUERY_ERROR', message: queryError.message } },
-        { status: 500 }
-      );
+    while (true) {
+      const { data, error: queryError } = await supabase
+        .from('properties')
+        .select('id, apex27_id, agent_id')
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+      if (queryError) {
+        console.error('[Cleanup] Error querying properties:', queryError);
+        return NextResponse.json(
+          { error: { code: 'QUERY_ERROR', message: queryError.message } },
+          { status: 500 }
+        );
+      }
+
+      if (!data || data.length === 0) break;
+
+      allProperties = allProperties.concat(data);
+      console.log(`[Cleanup] Fetched page ${page + 1}: ${data.length} properties (total: ${allProperties.length})`);
+
+      if (data.length < PAGE_SIZE) break; // Last page
+      page++;
     }
 
-    console.log(`[Cleanup] Found ${allProperties?.length || 0} properties in database`);
+    console.log(`[Cleanup] Found ${allProperties.length} properties in database (across ${page + 1} pages)`);
 
     // T023: Fetch current Apex27 data to check exportable status
     console.log('[Cleanup] Fetching current exportable status from Apex27...');
