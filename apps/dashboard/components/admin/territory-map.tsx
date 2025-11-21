@@ -40,6 +40,10 @@ interface TerritoryMapProps {
   allowDrawing?: boolean;
   center?: [number, number]; // [lng, lat]
   zoom?: number;
+  searchRadius?: {
+    center: [number, number];
+    radiusMeters: number;
+  } | null;
 }
 
 export default function TerritoryMap({
@@ -49,8 +53,9 @@ export default function TerritoryMap({
   onDrawDelete,
   onTerritoryClick,
   allowDrawing = true,
-  center = [-2.2426, 53.4808], // Manchester, UK
-  zoom = 11,
+  center = [-3.1006, 51.0151], // Taunton, UK
+  zoom = 12,
+  searchRadius = null,
 }: TerritoryMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -171,21 +176,53 @@ export default function TerritoryMap({
 
       // T153: Drawing event handlers
       map.current.on('draw.create', (e: any) => {
+        console.log('🎨 [MAP] draw.create event fired', {
+          featuresCount: e.features?.length,
+          feature: e.features?.[0],
+          timestamp: new Date().toISOString(),
+        });
         if (onDrawCreate && e.features && e.features.length > 0) {
+          console.log('🎨 [MAP] Calling onDrawCreate handler');
           onDrawCreate(e.features[0]);
         }
       });
 
       map.current.on('draw.update', (e: any) => {
+        console.log('🎨 [MAP] draw.update event fired', {
+          featuresCount: e.features?.length,
+          timestamp: new Date().toISOString(),
+        });
         if (onDrawUpdate && e.features && e.features.length > 0) {
+          console.log('🎨 [MAP] Calling onDrawUpdate handler');
           onDrawUpdate(e.features[0]);
         }
       });
 
       map.current.on('draw.delete', (e: any) => {
+        console.log('🎨 [MAP] draw.delete event fired', {
+          featuresCount: e.features?.length,
+          timestamp: new Date().toISOString(),
+        });
         if (onDrawDelete && e.features && e.features.length > 0) {
+          console.log('🎨 [MAP] Calling onDrawDelete handler');
           onDrawDelete(e.features[0].id as string);
         }
+      });
+
+      // Add handler for selection changes (debugging)
+      map.current.on('draw.selectionchange', (e: any) => {
+        console.log('🎨 [MAP] draw.selectionchange event fired', {
+          featuresCount: e.features?.length,
+          timestamp: new Date().toISOString(),
+        });
+      });
+
+      // Add handler for mode changes (debugging)
+      map.current.on('draw.modechange', (e: any) => {
+        console.log('🎨 [MAP] draw.modechange event fired', {
+          mode: e.mode,
+          timestamp: new Date().toISOString(),
+        });
       });
     }
 
@@ -325,6 +362,81 @@ export default function TerritoryMap({
       }
     }
   }, [territories, isMapLoaded]);
+
+  // Display search radius circle when provided
+  useEffect(() => {
+    if (!map.current || !isMapLoaded || !searchRadius) {
+      // Remove radius circle if no searchRadius
+      if (map.current && map.current.getLayer('search-radius-fill')) {
+        map.current.removeLayer('search-radius-fill');
+        map.current.removeLayer('search-radius-outline');
+        map.current.removeSource('search-radius');
+      }
+      return;
+    }
+
+    const { center: radiusCenter, radiusMeters } = searchRadius;
+
+    // Create a circle around the center point
+    const metersPerDegree = 111320; // Approximate meters per degree at equator
+    const radiusDegrees = radiusMeters / metersPerDegree;
+
+    // Generate circle points
+    const points = 64;
+    const circleCoords: [number, number][] = [];
+    for (let i = 0; i <= points; i++) {
+      const angle = (i / points) * 2 * Math.PI;
+      const lng = radiusCenter[0] + radiusDegrees * Math.cos(angle) / Math.cos(radiusCenter[1] * Math.PI / 180);
+      const lat = radiusCenter[1] + radiusDegrees * Math.sin(angle);
+      circleCoords.push([lng, lat]);
+    }
+
+    const circleGeoJSON: GeoJSON.FeatureCollection = {
+      type: 'FeatureCollection',
+      features: [{
+        type: 'Feature',
+        properties: { radius: radiusMeters },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [circleCoords],
+        },
+      }],
+    };
+
+    // Remove existing circle
+    if (map.current.getLayer('search-radius-fill')) {
+      map.current.removeLayer('search-radius-fill');
+      map.current.removeLayer('search-radius-outline');
+      map.current.removeSource('search-radius');
+    }
+
+    // Add circle to map
+    map.current.addSource('search-radius', {
+      type: 'geojson',
+      data: circleGeoJSON,
+    });
+
+    map.current.addLayer({
+      id: 'search-radius-fill',
+      type: 'fill',
+      source: 'search-radius',
+      paint: {
+        'fill-color': '#3b82f6',
+        'fill-opacity': 0.1,
+      },
+    });
+
+    map.current.addLayer({
+      id: 'search-radius-outline',
+      type: 'line',
+      source: 'search-radius',
+      paint: {
+        'line-color': '#3b82f6',
+        'line-width': 2,
+        'line-dasharray': [2, 2],
+      },
+    });
+  }, [searchRadius, isMapLoaded]);
 
   return (
     <div className="relative w-full" style={{ height: '600px' }}>

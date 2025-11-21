@@ -126,10 +126,21 @@ export async function POST(request: NextRequest) {
     }
 
     // T162: Get property count from OS Data Hub
-    console.log('Calling OS Data Hub for property count...');
-    const { count: osPropertyCount, error: osError, details } = await countPropertiesInBoundary(boundary);
+    console.log('📍 [TERRITORIES-API] Calling OS Data Hub for property count...', {
+      boundaryType: boundary?.type,
+      coordinatesCount: boundary?.coordinates?.[0]?.length,
+      timestamp: new Date().toISOString(),
+    });
 
-    console.log('OS Data Hub response:', { count: osPropertyCount, error: osError, details });
+    const { count: osPropertyCount, error: osError, details, metadata } = await countPropertiesInBoundary(boundary);
+
+    console.log('📍 [TERRITORIES-API] OS Data Hub response:', {
+      count: osPropertyCount,
+      error: osError,
+      details,
+      metadata,
+      timestamp: new Date().toISOString(),
+    });
 
     if (osError) {
       console.warn('OS Data Hub error:', osError);
@@ -137,6 +148,15 @@ export async function POST(request: NextRequest) {
 
     // Convert GeoJSON to WKT for storage
     // PostGIS will use the trigger to calculate property count from database
+
+    // Prepare metadata for storage
+    const territoryMetadata = metadata ? {
+      postcodes: metadata.postcodes || [],
+      area_km2: metadata.areaKm2,
+      radius_meters: metadata.radiusMeters,
+      commercial_count: details?.commercial || 0,
+      mixed_count: details?.mixed || 0,
+    } : null;
 
     // Create territory
     const { data: territory, error: createError } = await supabase
@@ -146,6 +166,7 @@ export async function POST(request: NextRequest) {
         agent_id,
         boundary: boundaryWKT,
         property_count: osPropertyCount || 0, // Use OS count, will be updated by trigger
+        metadata: territoryMetadata,
       })
       .select()
       .single();
