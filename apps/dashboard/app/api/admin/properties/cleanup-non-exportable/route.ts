@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     // T022: Query all properties from database
     const { data: allProperties, error: queryError } = await supabase
       .from('properties')
-      .select('id, apex27_id, title, agent_id');
+      .select('id, apex27_id, agent_id');
 
     if (queryError) {
       console.error('[Cleanup] Error querying properties:', queryError);
@@ -88,7 +88,6 @@ export async function POST(request: NextRequest) {
         sample_deletions: toDelete.slice(0, 10).map(p => ({
           id: p.id,
           apex27_id: p.apex27_id,
-          title: p.title,
           exportable: exportableMap.get(p.apex27_id) ?? null,
         })),
       });

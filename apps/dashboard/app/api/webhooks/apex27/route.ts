@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         // Check if property is marked as exportable in Apex27
         if (!payload.listing.exportable) {
           console.log(
-            `[Webhook] Filtering non-exportable property ${payload.listing.id} (${payload.listing.title || 'No title'})`
+            `[Webhook] Filtering non-exportable property ${payload.listing.id} (${payload.listing.displayAddress || 'No address'})`
           );
 
           // If this is an update and property exists, delete it

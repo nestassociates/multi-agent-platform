@@ -234,7 +234,7 @@ export async function syncPropertiesFromApex27(
       if (!listing.exportable) {
         filtered++;
         console.log(
-          `[Sync] Filtered non-exportable property ${listing.id} (${listing.title || 'No title'})`
+          `[Sync] Filtered non-exportable property ${listing.id} (${listing.displayAddress || 'No address'})`
         );
         continue; // Skip this property
       }
