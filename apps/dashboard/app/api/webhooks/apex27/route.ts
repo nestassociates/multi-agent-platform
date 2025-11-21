@@ -23,7 +23,33 @@ export async function POST(request: NextRequest) {
     switch (payload.action) {
       case 'create':
       case 'update':
-        // Upsert the property (create or update)
+        // T004-T007: Filter non-exportable properties
+        // Check if property is marked as exportable in Apex27
+        if (!payload.listing.exportable) {
+          console.log(
+            `[Webhook] Filtering non-exportable property ${payload.listing.id} (${payload.listing.title || 'No title'})`
+          );
+
+          // If this is an update and property exists, delete it
+          if (payload.action === 'update') {
+            await deletePropertyByApex27Id(payload.listing.id);
+            console.log(
+              `[Webhook] Deleted property ${payload.listing.id} - changed to non-exportable`
+            );
+          }
+
+          return NextResponse.json(
+            {
+              success: true,
+              message: 'Property filtered - not exportable',
+              listingId: payload.listing.id,
+              exportable: false,
+            },
+            { status: 200 }
+          );
+        }
+
+        // Upsert the property (create or update) - only if exportable
         const propertyId = await upsertPropertyFromApex27(payload.listing);
 
         if (!propertyId) {
@@ -43,7 +69,7 @@ export async function POST(request: NextRequest) {
         }
 
         console.log(
-          `[Webhook] ${payload.action === 'create' ? 'Created' : 'Updated'} property ${propertyId} from listing ${payload.listing.id}`
+          `[Webhook] ${payload.action === 'create' ? 'Created' : 'Updated'} property ${propertyId} from listing ${payload.listing.id} (exportable: true)`
         );
 
         return NextResponse.json(
@@ -52,6 +78,7 @@ export async function POST(request: NextRequest) {
             message: `Property ${payload.action}d successfully`,
             propertyId,
             listingId: payload.listing.id,
+            exportable: true,
           },
           { status: 200 }
         );
