@@ -186,16 +186,18 @@ export async function upsertPropertyFromApex27(
 
 /**
  * Delete property by Apex27 ID
- * Actually marks as unavailable rather than hard delete
+ * Hard delete (permanent removal) for non-exportable properties
  */
 export async function deletePropertyByApex27Id(
   apex27Id: number
 ): Promise<boolean> {
   const supabase = createServiceRoleClient();
 
+  // Hard delete - permanently remove from database
+  // Cascade deletes will remove related records (images, enquiries, etc.)
   const { error } = await supabase
     .from('properties')
-    .update({ status: 'sold', updated_at: new Date().toISOString() })
+    .delete()
     .eq('apex27_id', apex27Id.toString());
 
   if (error) {
@@ -203,7 +205,7 @@ export async function deletePropertyByApex27Id(
     return false;
   }
 
-  console.log(`Property ${apex27Id} marked as sold/deleted`);
+  console.log(`Property ${apex27Id} permanently deleted (hard delete)`);
   return true;
 }
 
@@ -218,14 +220,25 @@ export async function syncPropertiesFromApex27(
   total: number;
   synced: number;
   skipped: number;
+  filtered: number;
   errors: number;
 }> {
   let synced = 0;
   let skipped = 0;
+  let filtered = 0; // T009: Track filtered count
   let errors = 0;
 
   for (const listing of listings) {
     try {
+      // T008: Filter non-exportable properties
+      if (!listing.exportable) {
+        filtered++;
+        console.log(
+          `[Sync] Filtered non-exportable property ${listing.id} (${listing.displayAddress || 'No address'})`
+        );
+        continue; // Skip this property
+      }
+
       const result = await upsertPropertyFromApex27(listing);
       if (result) {
         synced++;
@@ -238,10 +251,22 @@ export async function syncPropertiesFromApex27(
     }
   }
 
+  // T010: Log filtering metrics
+  console.log('[Sync] Filtering summary:', {
+    total: listings.length,
+    exportable: listings.filter(l => l.exportable).length,
+    nonExportable: listings.filter(l => !l.exportable).length,
+    synced,
+    filtered,
+    skipped,
+    errors,
+  });
+
   return {
     total: listings.length,
     synced,
     skipped,
+    filtered,
     errors,
   };
 }

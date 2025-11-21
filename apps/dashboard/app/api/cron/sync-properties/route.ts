@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
         summary: {
           totalListings: result.total,
           synced: result.synced,
+          filtered: result.filtered, // T009: Include filtered count
           skipped: result.skipped,
           errors: result.errors,
           duration: `${duration}ms`,
@@ -106,6 +107,7 @@ export async function GET(request: NextRequest) {
         summary: {
           totalListings: result.total,
           synced: result.synced,
+          filtered: result.filtered,
           skipped: result.skipped,
           errors: result.errors,
           duration: `${duration}ms`,
