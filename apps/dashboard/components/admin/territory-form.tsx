@@ -39,7 +39,6 @@ export interface TerritoryFormData {
   name: string;
   agent_id: string;
   boundary: any;
-  description?: string;
 }
 
 export default function TerritoryForm({
@@ -160,17 +159,6 @@ export default function TerritoryForm({
             )}
           </div>
 
-          {/* Description */}
-          <div>
-            <Label htmlFor="description">Description (Optional)</Label>
-            <Textarea
-              id="description"
-              {...register('description')}
-              placeholder="e.g., Covers city centre including Northern Quarter and Spinningfields"
-              rows={3}
-              disabled={!drawnPolygon}
-            />
-          </div>
 
           {/* Property Count Preview */}
           {propertyCount !== null && (

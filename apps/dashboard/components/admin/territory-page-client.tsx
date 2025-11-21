@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Trash2 } from 'lucide-react';
+import { getAgentColor } from '@/lib/color-generator';
 
 interface Props {
   territories: any[];
@@ -21,16 +22,24 @@ export default function TerritoryPageClient({ territories: initialTerritories, a
   const [isCreating, setIsCreating] = useState(false);
   const [selectedTerritoryId, setSelectedTerritoryId] = useState<string | null>(null);
 
+  // Debug state changes
+  console.log('🔍 Component state:', { isCreating, hasPolygon: !!drawnPolygon, territoriesCount: territories.length });
+
   const handleDrawCreate = (feature: any) => {
+    console.log('✏️ Draw create event:', feature);
+    console.log('✏️ Setting drawnPolygon and isCreating=true');
     setDrawnPolygon(feature.geometry);
     setIsCreating(true);
+    console.log('✏️ State updated, should show form now');
   };
 
   const handleDrawUpdate = (feature: any) => {
+    console.log('Draw update event:', feature);
     setDrawnPolygon(feature.geometry);
   };
 
   const handleDrawDelete = () => {
+    console.log('Draw delete event');
     setDrawnPolygon(null);
     setIsCreating(false);
   };
@@ -54,10 +63,17 @@ export default function TerritoryPageClient({ territories: initialTerritories, a
 
       const result = await response.json();
 
-      // Reset form and refresh
+      // Add new territory to local state immediately
+      const newTerritory = {
+        ...result.territory,
+        boundary: data.boundary,
+        color: getAgentColor(data.agent_id, territories.length),
+      };
+      setTerritories([newTerritory, ...territories]);
+
+      // Reset form
       setDrawnPolygon(null);
       setIsCreating(false);
-      router.refresh();
     } catch (error: any) {
       throw error;
     }
@@ -82,7 +98,9 @@ export default function TerritoryPageClient({ territories: initialTerritories, a
         throw new Error('Failed to delete territory');
       }
 
-      router.refresh();
+      // Remove from local state immediately
+      setTerritories(territories.filter(t => t.id !== territoryId));
+      setSelectedTerritoryId(null);
     } catch (error) {
       console.error('Delete territory error:', error);
       alert('Failed to delete territory');

@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, agent_id, boundary, description } = body;
+    const { name, agent_id, boundary } = body;
 
     // Validate required fields
     if (!name || !agent_id || !boundary) {
@@ -126,7 +126,10 @@ export async function POST(request: NextRequest) {
     }
 
     // T162: Get property count from OS Data Hub
-    const { count: osPropertyCount, error: osError } = await countPropertiesInBoundary(boundary);
+    console.log('Calling OS Data Hub for property count...');
+    const { count: osPropertyCount, error: osError, details } = await countPropertiesInBoundary(boundary);
+
+    console.log('OS Data Hub response:', { count: osPropertyCount, error: osError, details });
 
     if (osError) {
       console.warn('OS Data Hub error:', osError);
@@ -142,7 +145,6 @@ export async function POST(request: NextRequest) {
         name,
         agent_id,
         boundary: boundaryWKT,
-        description: description || null,
         property_count: osPropertyCount || 0, // Use OS count, will be updated by trigger
       })
       .select()

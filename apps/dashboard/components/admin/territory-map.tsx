@@ -9,6 +9,13 @@ import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 // Mapbox access token from environment
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
 
+// Debug: Log if token is missing
+if (!mapboxgl.accessToken) {
+  console.error('MAPBOX TOKEN MISSING! Add NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN to .env.local');
+} else {
+  console.log('Mapbox token configured:', mapboxgl.accessToken.substring(0, 20) + '...');
+}
+
 interface Territory {
   id: string;
   name: string;
@@ -54,11 +61,26 @@ export default function TerritoryMap({
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
+    // Ensure container has dimensions before initializing map
+    if (mapContainer.current.offsetWidth === 0 || mapContainer.current.offsetHeight === 0) {
+      console.warn('Map container has no dimensions, waiting...');
+      return;
+    }
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center,
       zoom,
+    });
+
+    // Force resize after map loads
+    map.current.on('load', () => {
+      setIsMapLoaded(true);
+      // Resize map to fit container
+      setTimeout(() => {
+        map.current?.resize();
+      }, 100);
     });
 
     // Add navigation controls
@@ -166,10 +188,6 @@ export default function TerritoryMap({
         }
       });
     }
-
-    map.current.on('load', () => {
-      setIsMapLoaded(true);
-    });
 
     return () => {
       map.current?.remove();
@@ -284,24 +302,33 @@ export default function TerritoryMap({
     });
 
     // Fit map to show all territories
-    if (territories.length > 0) {
+    if (territories.length > 0 && map.current) {
       const bounds = new mapboxgl.LngLatBounds();
+      let hasValidBounds = false;
 
       territories.forEach((territory) => {
-        if (territory.boundary.type === 'Polygon') {
+        if (territory.boundary && territory.boundary.type === 'Polygon' && territory.boundary.coordinates) {
           territory.boundary.coordinates[0].forEach((coord: [number, number]) => {
             bounds.extend(coord);
+            hasValidBounds = true;
           });
         }
       });
 
-      map.current.fitBounds(bounds, { padding: 50 });
+      // Only fit bounds if we have valid coordinates
+      if (hasValidBounds) {
+        try {
+          map.current.fitBounds(bounds, { padding: 50 });
+        } catch (error) {
+          console.warn('Error fitting bounds:', error);
+        }
+      }
     }
   }, [territories, isMapLoaded]);
 
   return (
-    <div className="relative w-full h-[600px]">
-      <div ref={mapContainer} className="absolute inset-0 rounded-lg overflow-hidden border" />
+    <div className="relative w-full" style={{ height: '600px' }}>
+      <div ref={mapContainer} className="absolute inset-0 rounded-lg overflow-hidden border" style={{ width: '100%', height: '100%' }} />
 
       {/* Drawing Instructions */}
       {allowDrawing && (

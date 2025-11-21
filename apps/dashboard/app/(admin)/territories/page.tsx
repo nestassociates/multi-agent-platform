@@ -13,21 +13,38 @@ export default async function TerritoriesPage() {
 
   const supabase = createServiceRoleClient();
 
-  // Fetch territories directly from database (avoid internal API call)
-  const { data: territories, error: territoriesError } = await supabase
+  // Fetch all territories
+  const { data: rawTerritories, error: territoriesError } = await supabase
     .from('territories')
     .select(`
-      *,
+      id,
+      name,
+      agent_id,
+      property_count,
+      created_at,
+      updated_at,
       agent:agents!territories_agent_id_fkey(
         id,
         subdomain,
-        profile:profiles!agents_user_id_fkey(
-          first_name,
-          last_name
-        )
+        profile:profiles!agents_user_id_fkey(first_name, last_name)
       )
     `)
     .order('created_at', { ascending: false });
+
+  // For each territory, fetch boundary as GeoJSON using ST_AsGeoJSON
+  const territoriesWithBoundaries = await Promise.all(
+    (rawTerritories || []).map(async (territory: any) => {
+      const { data } = await supabase.rpc('get_territory_boundary_geojson', {
+        territory_id: territory.id
+      });
+      return {
+        ...territory,
+        boundary: data ? JSON.parse(data) : null
+      };
+    })
+  );
+
+  const territories = territoriesWithBoundaries;
 
   // Fetch agents
   const { data: agents, error: agentsError } = await supabase
@@ -41,7 +58,7 @@ export default async function TerritoriesPage() {
   }
 
   // Add colors to territories
-  const territoriesWithColors = (territories || []).map((territory, index) => ({
+  const territoriesWithColors = (territories || []).map((territory: any, index: number) => ({
     ...territory,
     color: getAgentColor(territory.agent_id, index),
   }));
