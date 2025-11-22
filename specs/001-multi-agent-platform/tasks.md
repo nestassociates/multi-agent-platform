@@ -433,11 +433,11 @@ Based on Turborepo monorepo structure from plan.md:
 
 **SEO & Performance Optimization**
 
-- [ ] T215 [P] [US5] Add SEO meta tags to Astro layout (Open Graph, Twitter Cards) in apps/agent-site/src/layouts/BaseLayout.astro
-- [ ] T216 [P] [US5] Generate sitemap.xml dynamically in apps/agent-site/src/pages/sitemap.xml.ts
-- [ ] T217 [P] [US5] Generate robots.txt in apps/agent-site/public/robots.txt
-- [ ] T218 [P] [US5] Add schema.org markup (LocalBusiness, Person) in Astro layout
-- [ ] T219 [P] [US5] Configure image optimization in apps/agent-site/astro.config.mjs
+- [x] T215 [P] [US5] Add SEO meta tags to Astro layout (Open Graph, Twitter Cards) in apps/agent-site/src/layouts/BaseLayout.astro
+- [x] T216 [P] [US5] Generate sitemap.xml dynamically in apps/agent-site/src/pages/sitemap.xml.ts
+- [x] T217 [P] [US5] Generate robots.txt in apps/agent-site/public/robots.txt
+- [x] T218 [P] [US5] Add schema.org markup (LocalBusiness, Person) in Astro layout
+- [x] T219 [P] [US5] Configure image optimization in apps/agent-site/astro.config.mjs
 
 **Checkpoint**: At this point, User Story 5 should be fully functional. Build queue processes automatically, generates static sites, deploys to subdomains.
 
