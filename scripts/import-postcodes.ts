@@ -72,10 +72,19 @@ function geometryToWKT(geometry: { type: 'Polygon'; coordinates: number[][][] })
   if (!geometry.coordinates || !geometry.coordinates[0]) {
     return null;
   }
-  const ring = geometry.coordinates[0];
+  let ring = geometry.coordinates[0];
   if (ring.length === 0) {
     return null;
   }
+
+  // Ensure ring is closed (first point == last point)
+  const firstPoint = ring[0];
+  const lastPoint = ring[ring.length - 1];
+  if (firstPoint[0] !== lastPoint[0] || firstPoint[1] !== lastPoint[1]) {
+    // Ring is not closed, close it
+    ring = [...ring, firstPoint];
+  }
+
   const points = ring.map(([lng, lat]) => `${lng} ${lat}`).join(', ');
   return `POLYGON((${points}))`;
 }

@@ -8,7 +8,7 @@ import { getUser } from '@/lib/auth';
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
     const user = await getUser();
@@ -19,7 +19,8 @@ export async function PATCH(
       );
     }
 
-    const { id: territoryId } = params;
+    const resolvedParams = await params;
+    const { id: territoryId } = resolvedParams;
     const body = await request.json();
 
     const supabase = createServiceRoleClient();
@@ -61,7 +62,7 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
     const user = await getUser();
@@ -72,7 +73,8 @@ export async function DELETE(
       );
     }
 
-    const { id: territoryId } = params;
+    const resolvedParams = await params;
+    const { id: territoryId } = resolvedParams;
     const supabase = createServiceRoleClient();
 
     // Delete territory
@@ -102,7 +104,7 @@ export async function DELETE(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
     const user = await getUser();
@@ -113,7 +115,8 @@ export async function POST(
       );
     }
 
-    const { id: territoryId } = params;
+    const resolvedParams = await params;
+    const { id: territoryId } = resolvedParams;
     const supabase = createServiceRoleClient();
 
     // Call PostGIS function to update property count
