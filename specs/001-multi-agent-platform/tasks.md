@@ -460,35 +460,35 @@ Based on Turborepo monorepo structure from plan.md:
 
 **Agent List View**
 
-- [ ] T224 [P] [US6] Create agent table component with search and filters in apps/dashboard/components/admin/agent-table.tsx
-- [ ] T225 [P] [US6] Create status filter dropdown in apps/dashboard/components/admin/status-filter.tsx
-- [ ] T226 [US6] Update agents list page with table, search, filters, pagination in apps/dashboard/app/(admin)/agents/page.tsx
-- [ ] T227 [US6] Add search and filter query parameters to GET /api/admin/agents endpoint
+- [x] T224 [P] [US6] Create agent table component with search and filters in apps/dashboard/components/admin/agent-table.tsx
+- [x] T225 [P] [US6] Create status filter dropdown in apps/dashboard/components/admin/status-filter.tsx
+- [x] T226 [US6] Update agents list page with table, search, filters, pagination in apps/dashboard/app/(admin)/agents/page.tsx
+- [x] T227 [US6] Add search and filter query parameters to GET /api/admin/agents endpoint
 
 **Agent Detail View**
 
-- [ ] T228 [P] [US6] Create agent detail page in apps/dashboard/app/(admin)/agents/[id]/page.tsx
-- [ ] T229 [P] [US6] Create agent overview tab component in apps/dashboard/components/admin/agent-overview.tsx
-- [ ] T230 [P] [US6] Create agent content tab component in apps/dashboard/components/admin/agent-content-tab.tsx
-- [ ] T231 [P] [US6] Create agent properties tab component in apps/dashboard/components/admin/agent-properties-tab.tsx
-- [ ] T232 [P] [US6] Create agent analytics tab (placeholder for US8) in apps/dashboard/components/admin/agent-analytics-tab.tsx
-- [ ] T233 [P] [US6] Create agent settings tab component in apps/dashboard/components/admin/agent-settings-tab.tsx
-- [ ] T234 [US6] Implement GET /api/admin/agents/:id endpoint (detailed view with counts) in apps/dashboard/app/api/admin/agents/[id]/route.ts
+- [x] T228 [P] [US6] Create agent detail page in apps/dashboard/app/(admin)/agents/[id]/page.tsx
+- [x] T229 [P] [US6] Create agent overview tab component in apps/dashboard/components/admin/agent-overview.tsx
+- [x] T230 [P] [US6] Create agent content tab component in apps/dashboard/components/admin/agent-content-tab.tsx
+- [x] T231 [P] [US6] Create agent properties tab component in apps/dashboard/components/admin/agent-properties-tab.tsx
+- [x] T232 [P] [US6] Create agent analytics tab (placeholder for US8) in apps/dashboard/components/admin/agent-analytics-tab.tsx
+- [x] T233 [P] [US6] Create agent settings tab component in apps/dashboard/components/admin/agent-settings-tab.tsx
+- [x] T234 [US6] Implement GET /api/admin/agents/:id endpoint (detailed view with counts) in apps/dashboard/app/api/admin/agents/[id]/route.ts
 
 **Agent Editing**
 
-- [ ] T235 [P] [US6] Create edit agent modal component in apps/dashboard/components/admin/edit-agent-modal.tsx
-- [ ] T236 [US6] Implement PATCH /api/admin/agents/:id endpoint (update agent, trigger rebuild) in apps/dashboard/app/api/admin/agents/[id]/route.ts
-- [ ] T237 [US6] Add validation to prevent email/subdomain changes without workflow
+- [x] T235 [P] [US6] Create edit agent modal component in apps/dashboard/components/admin/edit-agent-modal.tsx
+- [x] T236 [US6] Implement PATCH /api/admin/agents/:id endpoint (update agent, trigger rebuild) in apps/dashboard/app/api/admin/agents/[id]/route.ts
+- [x] T237 [US6] Add validation to prevent email/subdomain changes without workflow
 
 **Agent Deletion**
 
-- [ ] T238 [P] [US6] Create delete confirmation dialog in apps/dashboard/components/admin/delete-agent-dialog.tsx
-- [ ] T239 [US6] Implement DELETE /api/admin/agents/:id endpoint (cascade delete, archive site) in apps/dashboard/app/api/admin/agents/[id]/route.ts
+- [x] T238 [P] [US6] Create delete confirmation dialog in apps/dashboard/components/admin/delete-agent-dialog.tsx
+- [x] T239 [US6] Implement DELETE /api/admin/agents/:id endpoint (cascade delete, archive site) in apps/dashboard/app/api/admin/agents/[id]/route.ts
 
 **View Live Site**
 
-- [ ] T240 [US6] Add "View Live Site" button that opens agent microsite URL in new tab
+- [x] T240 [US6] Add "View Live Site" button that opens agent microsite URL in new tab
 
 **Checkpoint**: At this point, User Story 6 should be fully functional. Admins have full agent management capabilities.
 
