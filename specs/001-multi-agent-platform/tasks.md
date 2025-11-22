@@ -372,25 +372,25 @@ Based on Turborepo monorepo structure from plan.md:
 
 **Astro Agent Site Template**
 
-- [ ] T175 [P] [US5] Create Astro base layout in apps/agent-site/src/layouts/BaseLayout.astro
-- [ ] T176 [P] [US5] Create homepage in apps/agent-site/src/pages/index.astro
-- [ ] T177 [P] [US5] Create about page in apps/agent-site/src/pages/about.astro
-- [ ] T178 [P] [US5] Create services page in apps/agent-site/src/pages/services.astro
-- [ ] T179 [P] [US5] Create properties page in apps/agent-site/src/pages/properties/index.astro
-- [ ] T180 [P] [US5] Create property detail page in apps/agent-site/src/pages/properties/[slug].astro
-- [ ] T181 [P] [US5] Create blog archive page in apps/agent-site/src/pages/blog/index.astro
-- [ ] T182 [P] [US5] Create blog post page in apps/agent-site/src/pages/blog/[slug].astro
-- [ ] T183 [P] [US5] Create area guides archive in apps/agent-site/src/pages/areas/index.astro
-- [ ] T184 [P] [US5] Create area guide detail in apps/agent-site/src/pages/areas/[slug].astro
-- [ ] T185 [P] [US5] Create reviews page in apps/agent-site/src/pages/reviews.astro
-- [ ] T186 [P] [US5] Create contact page in apps/agent-site/src/pages/contact.astro
+- [x] T175 [P] [US5] Create Astro base layout in apps/agent-site/src/layouts/BaseLayout.astro
+- [x] T176 [P] [US5] Create homepage in apps/agent-site/src/pages/index.astro
+- [x] T177 [P] [US5] Create about page in apps/agent-site/src/pages/about.astro
+- [x] T178 [P] [US5] Create services page in apps/agent-site/src/pages/services.astro
+- [x] T179 [P] [US5] Create properties page in apps/agent-site/src/pages/properties/index.astro
+- [x] T180 [P] [US5] Create property detail page in apps/agent-site/src/pages/properties/[slug].astro
+- [x] T181 [P] [US5] Create blog archive page in apps/agent-site/src/pages/blog/index.astro
+- [x] T182 [P] [US5] Create blog post page in apps/agent-site/src/pages/blog/[slug].astro
+- [x] T183 [P] [US5] Create area guides archive in apps/agent-site/src/pages/areas/index.astro
+- [x] T184 [P] [US5] Create area guide detail in apps/agent-site/src/pages/areas/[slug].astro
+- [x] T185 [P] [US5] Create reviews page in apps/agent-site/src/pages/reviews.astro
+- [x] T186 [P] [US5] Create contact page in apps/agent-site/src/pages/contact.astro
 
 **Astro Components**
 
-- [ ] T187 [P] [US5] Create Hero component in apps/agent-site/src/components/Hero.astro
-- [ ] T188 [P] [US5] Create PropertyCard component in apps/agent-site/src/components/PropertyCard.astro
-- [ ] T189 [P] [US5] Create BlogCard component in apps/agent-site/src/components/BlogCard.astro
-- [ ] T190 [P] [US5] Create ContactForm component in apps/agent-site/src/components/ContactForm.astro
+- [x] T187 [P] [US5] Create Hero component in apps/agent-site/src/components/Hero.astro
+- [x] T188 [P] [US5] Create PropertyCard component in apps/agent-site/src/components/PropertyCard.astro
+- [x] T189 [P] [US5] Create BlogCard component in apps/agent-site/src/components/BlogCard.astro
+- [x] T190 [P] [US5] Create ContactForm component in apps/agent-site/src/components/ContactForm.astro (Implemented as ContactForm.tsx)
 
 **Data File Generation**
 
