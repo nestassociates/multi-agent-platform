@@ -394,11 +394,11 @@ Based on Turborepo monorepo structure from plan.md:
 
 **Data File Generation**
 
-- [ ] T191 [P] [US5] Create data generator service in packages/build-system/data-generator.ts
-- [ ] T192 [US5] Implement fetch agent data (profile, bio, qualifications, social links) in data generator
-- [ ] T193 [US5] Implement fetch approved content (blog posts, area guides) in data generator
-- [ ] T194 [US5] Implement fetch properties for agent in data generator
-- [ ] T195 [US5] Implement fetch global templates (header, footer) in data generator
+- [x] T191 [P] [US5] Create data generator service in packages/build-system/data-generator.ts
+- [x] T192 [US5] Implement fetch agent data (profile, bio, qualifications, social links) in data generator
+- [x] T193 [US5] Implement fetch approved content (blog posts, area guides) in data generator
+- [x] T194 [US5] Implement fetch properties for agent in data generator
+- [x] T195 [US5] Implement fetch global templates (header, footer) in data generator
 - [ ] T196 [US5] Generate agent.json file in correct format for Astro consumption
 
 **Build Queue Processor**
