@@ -41,6 +41,43 @@ curl -X POST "https://portals-6d2c7f86.apex27.co.uk/api/get-listings" \
 
 ---
 
+## Exportable Property Filtering
+
+**Added**: 2025-11-22 (Feature 002)
+
+The system now filters properties during synchronization to only sync properties marked as `exportable: true` in Apex27. This reduces the database from ~10,880 properties to ~200 marketed properties.
+
+### Filter Behavior
+
+**Webhook Handler** (`apps/dashboard/app/api/webhooks/apex27/route.ts`):
+- CREATE: Skips properties with `exportable: false`
+- UPDATE: Deletes properties when `exportable` changes to `false`
+- DELETE: Handles as normal
+
+**Cron Sync** (`apps/dashboard/app/api/cron/sync-properties/route.ts`):
+- Only fetches and syncs properties with `exportable: true`
+- Tracks metrics for synced vs skipped properties
+
+**Property Count Cache** (1 year TTL):
+- Property counts are cached for 365 days to minimize OS Places API calls
+- Cache located in `postcode_property_counts` table
+
+### One-Time Cleanup
+
+To remove existing non-exportable properties, use the cleanup endpoint:
+
+```bash
+# Dry-run mode (preview only)
+POST /api/admin/properties/cleanup-non-exportable?dryRun=true
+
+# Actual cleanup
+POST /api/admin/properties/cleanup-non-exportable
+```
+
+See `specs/002-exportable-properties-filter/DEPLOYMENT_GUIDE.md` for details.
+
+---
+
 ## Architecture Change: Polling Strategy
 
 ### Original Plan (Incorrect)
