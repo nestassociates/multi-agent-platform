@@ -399,23 +399,23 @@ Based on Turborepo monorepo structure from plan.md:
 - [x] T193 [US5] Implement fetch approved content (blog posts, area guides) in data generator
 - [x] T194 [US5] Implement fetch properties for agent in data generator
 - [x] T195 [US5] Implement fetch global templates (header, footer) in data generator
-- [ ] T196 [US5] Generate agent.json file in correct format for Astro consumption
+- [x] T196 [US5] Generate agent.json file in correct format for Astro consumption
 
 **Build Queue Processor**
 
-- [ ] T197 [P] [US5] Create Vercel API client in packages/build-system/vercel-client.ts
-- [ ] T198 [P] [US5] Create build processor service in packages/build-system/builder.ts
-- [ ] T199 [US5] Implement fetch pending builds query (ordered by priority, created_at) in build processor
-- [ ] T200 [US5] Implement parallel build processing (up to 20 concurrent) in build processor
-- [ ] T201 [US5] Implement Vercel API build trigger in Vercel client
-- [ ] T202 [US5] Implement build status polling in Vercel client
-- [ ] T203 [US5] Implement build completion handler (update status, logs) in build processor
-- [ ] T204 [US5] Implement build failure handler (retry logic, exponential backoff) in build processor
+- [x] T197 [P] [US5] Create Vercel API client in packages/build-system/vercel-client.ts
+- [x] T198 [P] [US5] Create build processor service in packages/build-system/builder.ts
+- [x] T199 [US5] Implement fetch pending builds query (ordered by priority, created_at) in build processor
+- [x] T200 [US5] Implement parallel build processing (up to 20 concurrent) in build processor
+- [x] T201 [US5] Implement Vercel API build trigger in Vercel client
+- [x] T202 [US5] Implement build status polling in Vercel client
+- [x] T203 [US5] Implement build completion handler (update status, logs) in build processor
+- [x] T204 [US5] Implement build failure handler (retry logic, exponential backoff) in build processor
 
 **Cron Job Setup**
 
-- [ ] T205 [US5] Create Vercel cron endpoint in apps/dashboard/app/api/cron/process-builds/route.ts
-- [ ] T206 [US5] Configure vercel.json with cron schedule (every 2 minutes)
+- [x] T205 [US5] Create Vercel cron endpoint in apps/dashboard/app/api/cron/process-builds/route.ts
+- [x] T206 [US5] Configure vercel.json with cron schedule (every 2 minutes)
 - [ ] T207 [US5] Add duplicate detection (update trigger_reason if pending build exists) in cron endpoint
 
 **Email: Build Failure Notification**
