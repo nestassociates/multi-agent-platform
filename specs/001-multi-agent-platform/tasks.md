@@ -416,20 +416,20 @@ Based on Turborepo monorepo structure from plan.md:
 
 - [x] T205 [US5] Create Vercel cron endpoint in apps/dashboard/app/api/cron/process-builds/route.ts
 - [x] T206 [US5] Configure vercel.json with cron schedule (every 2 minutes)
-- [ ] T207 [US5] Add duplicate detection (update trigger_reason if pending build exists) in cron endpoint
+- [x] T207 [US5] Add duplicate detection (update trigger_reason if pending build exists) in cron endpoint
 
 **Email: Build Failure Notification**
 
-- [ ] T208 [P] [US5] Create build failed email template in packages/email/templates/build-failed.tsx
-- [ ] T209 [US5] Send email to admin team when build fails after 3 retries
+- [x] T208 [P] [US5] Create build failed email template in packages/email/templates/build-failed.tsx
+- [x] T209 [US5] Send email to admin team when build fails after 3 retries
 
 **Admin: Build Queue Monitoring**
 
-- [ ] T210 [P] [US5] Create build queue list component in apps/dashboard/components/admin/build-queue-list.tsx
-- [ ] T211 [P] [US5] Create admin build queue page in apps/dashboard/app/(admin)/build-queue/page.tsx
-- [ ] T212 [US5] Implement GET /api/admin/build-queue endpoint in apps/dashboard/app/api/admin/build-queue/route.ts
-- [ ] T213 [US5] Implement POST /api/admin/build-queue/:agent_id/trigger endpoint (manual trigger) in apps/dashboard/app/api/admin/build-queue/[agent_id]/trigger/route.ts
-- [ ] T214 [US5] Implement POST /api/admin/build-queue/:id/retry endpoint in apps/dashboard/app/api/admin/build-queue/[id]/retry/route.ts
+- [x] T210 [P] [US5] Create build queue list component in apps/dashboard/components/admin/build-queue-list.tsx
+- [x] T211 [P] [US5] Create admin build queue page in apps/dashboard/app/(admin)/build-queue/page.tsx
+- [x] T212 [US5] Implement GET /api/admin/build-queue endpoint in apps/dashboard/app/api/admin/build-queue/route.ts
+- [x] T213 [US5] Implement POST /api/admin/build-queue/:agent_id/trigger endpoint (manual trigger) in apps/dashboard/app/api/admin/build-queue/[agent_id]/trigger/route.ts
+- [x] T214 [US5] Implement POST /api/admin/build-queue/:id/retry endpoint in apps/dashboard/app/api/admin/build-queue/[id]/retry/route.ts
 
 **SEO & Performance Optimization**
 
