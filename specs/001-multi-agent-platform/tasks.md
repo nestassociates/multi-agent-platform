@@ -642,24 +642,24 @@ Based on Turborepo monorepo structure from plan.md:
 
 **Public Agents Endpoint**
 
-- [ ] T293 [P] [US10] Implement GET /api/public/agents endpoint (return active agents only) in apps/dashboard/app/api/public/agents/route.ts
-- [ ] T294 [US10] Add CORS headers for WordPress domain in public agents endpoint
-- [ ] T295 [US10] Add 5-minute cache headers in public agents endpoint
-- [ ] T296 [US10] Format response: id, name (first + last), email, phone, bio, subdomain, avatar_url
+- [x] T293 [P] [US10] Implement GET /api/public/agents endpoint (return active agents only) in apps/dashboard/app/api/public/agents/route.ts
+- [x] T294 [US10] Add CORS headers for WordPress domain in public agents endpoint
+- [x] T295 [US10] Add 5-minute cache headers in public agents endpoint
+- [x] T296 [US10] Format response: id, name (first + last), email, phone, bio, subdomain, avatar_url
 
 **Public Properties Endpoint**
 
-- [ ] T297 [P] [US10] Implement GET /api/public/properties endpoint with query filters in apps/dashboard/app/api/public/properties/route.ts
-- [ ] T298 [US10] Add query parameter handling: transaction_type, min_price, max_price, bedrooms, postcode, location
-- [ ] T299 [US10] Add CORS headers for WordPress domain in public properties endpoint
-- [ ] T300 [US10] Add 5-minute cache headers in public properties endpoint
-- [ ] T301 [US10] Format response with agent info and property link URL
+- [x] T297 [P] [US10] Implement GET /api/public/properties endpoint with query filters in apps/dashboard/app/api/public/properties/route.ts
+- [x] T298 [US10] Add query parameter handling: transaction_type, min_price, max_price, bedrooms, postcode, location
+- [x] T299 [US10] Add CORS headers for WordPress domain in public properties endpoint
+- [x] T300 [US10] Add 5-minute cache headers in public properties endpoint
+- [x] T301 [US10] Format response with agent info and property link URL
 
 **WordPress Widget Documentation**
 
-- [ ] T302 [P] [US10] Create WordPress integration guide in specs/001-multi-agent-platform/wordpress-integration.md
-- [ ] T303 [P] [US10] Create JavaScript widget example code for agent directory
-- [ ] T304 [P] [US10] Create JavaScript widget example code for property search
+- [x] T302 [P] [US10] Create WordPress integration guide in specs/001-multi-agent-platform/wordpress-integration.md
+- [x] T303 [P] [US10] Create JavaScript widget example code for agent directory
+- [x] T304 [P] [US10] Create JavaScript widget example code for property search
 
 **Checkpoint**: At this point, User Story 10 should be fully functional. WordPress site can integrate with public APIs.
 
