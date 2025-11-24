@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { ContentActions } from '@/components/admin/content-actions';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 interface ContentDetailPageProps {
   params: {
@@ -210,7 +211,7 @@ export default async function ContentDetailPage({ params }: ContentDetailPagePro
               <h3 className="text-sm font-medium text-gray-700 mb-2">Content</h3>
               <div
                 className="prose max-w-none text-gray-900"
-                dangerouslySetInnerHTML={{ __html: typedContent.content_body }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(typedContent.content_body) }}
               />
             </div>
           )}
@@ -279,7 +280,7 @@ export default async function ContentDetailPage({ params }: ContentDetailPagePro
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ContentActions contentId={typedContent.id} />
+            <ContentActions contentId={typedContent.id} contentTitle={typedContent.title} />
           </CardContent>
         </Card>
       )}

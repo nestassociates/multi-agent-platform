@@ -6,6 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createContentSchema, type CreateContentInput } from '@nest/validation';
 import { Button, Input } from '@nest/ui';
 import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor';
+import { ImageUpload } from '@/components/agent/image-upload';
+import { ContentPreview } from '@/components/agent/content-preview';
+import { Eye } from 'lucide-react';
 import { generateSlug } from '@/lib/slug-generator';
 
 interface ContentFormProps {
@@ -30,6 +33,7 @@ export function ContentForm({
 }: ContentFormProps) {
   const [autoSaving, setAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const {
     register,
@@ -54,7 +58,9 @@ export function ContentForm({
 
   const title = watch('title');
   const contentBody = watch('content_body');
+  const contentType = watch('content_type');
   const excerpt = watch('excerpt');
+  const featuredImageUrl = watch('featured_image_url');
   const seoMetaDescription = watch('seo_meta_description');
 
   // Auto-generate slug from title
@@ -71,6 +77,11 @@ export function ContentForm({
   // Handle rich text editor content change
   const handleContentBodyChange = (html: string) => {
     setValue('content_body', html, { shouldValidate: true });
+  };
+
+  // Handle image upload
+  const handleImageUpload = (url: string) => {
+    setValue('featured_image_url', url, { shouldValidate: true });
   };
 
   // Auto-save draft
@@ -221,17 +232,16 @@ export function ContentForm({
         </div>
       </div>
 
-      {/* Featured Image URL */}
+      {/* Featured Image Upload */}
       <div>
-        <label htmlFor="featured_image_url" className="block text-sm font-medium text-gray-700 mb-2">
-          Featured Image URL (Optional)
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Featured Image (Optional)
         </label>
-        <Input
-          id="featured_image_url"
-          {...register('featured_image_url')}
-          type="url"
-          placeholder="https://example.com/image.jpg"
-          className="w-full"
+        <ImageUpload
+          onUpload={handleImageUpload}
+          initialUrl={featuredImageUrl}
+          bucket="content-images"
+          contentType={contentType?.replace('_', '-') + 's'} // blog_post → blog-posts
         />
         {errors.featured_image_url && (
           <p className="mt-1 text-sm text-red-600">{errors.featured_image_url.message}</p>
@@ -301,7 +311,25 @@ export function ContentForm({
             Save Draft
           </Button>
         )}
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => setShowPreview(true)}
+          disabled={isSubmitting}
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          Preview
+        </Button>
       </div>
+
+      {/* Preview Modal */}
+      <ContentPreview
+        title={title || 'Untitled Content'}
+        content={contentBody || ''}
+        featuredImage={featuredImageUrl}
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+      />
     </form>
   );
 }

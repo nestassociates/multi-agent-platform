@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createContentSchema } from '@nest/validation';
 import { generateSlug, generateUniqueSlug } from '@/lib/slug-generator';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 /**
  * POST /api/agent/content
@@ -70,6 +71,9 @@ export async function POST(request: NextRequest) {
     // Determine status (default to draft if not specified)
     const status = body.status || 'draft';
 
+    // Sanitize HTML content before storage (defense-in-depth)
+    const sanitizedContentBody = sanitizeHtml(data.content_body);
+
     // Create content
     const { data: content, error: insertError } = await supabase
       .from('content_submissions')
@@ -78,7 +82,7 @@ export async function POST(request: NextRequest) {
         content_type: data.content_type,
         title: data.title,
         slug,
-        content_body: data.content_body,
+        content_body: sanitizedContentBody,
         excerpt: data.excerpt || null,
         featured_image_url: data.featured_image_url || null,
         seo_meta_title: data.seo_meta_title || null,

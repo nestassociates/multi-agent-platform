@@ -1,9 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ModerationQueue } from '@/components/admin/moderation-queue';
+import { ContentFilterBar, type ContentFilters } from '@/components/admin/content-filter-bar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import { Button } from '@/components/ui/button';
 
 interface Content {
   id: string;
@@ -24,16 +35,35 @@ interface Content {
 }
 
 export default function ContentModerationPage() {
+  const searchParams = useSearchParams();
   const [content, setContent] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<ContentFilters>({});
+  const [pagination, setPagination] = useState<{
+    nextCursor: string | null;
+    hasNextPage: boolean;
+    total?: number;
+  }>({
+    nextCursor: null,
+    hasNextPage: false,
+  });
 
-  const fetchContent = async () => {
+  const fetchContent = async (currentFilters: ContentFilters = {}, cursor?: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/admin/content/moderation');
+      // Build query params
+      const params = new URLSearchParams();
+      if (currentFilters.content_type) params.set('content_type', currentFilters.content_type);
+      if (currentFilters.agent_id) params.set('agent_id', currentFilters.agent_id);
+      if (currentFilters.date_from) params.set('date_from', currentFilters.date_from);
+      if (currentFilters.date_to) params.set('date_to', currentFilters.date_to);
+      if (currentFilters.search) params.set('search', currentFilters.search);
+      if (cursor) params.set('cursor', cursor);
+
+      const response = await fetch(`/api/admin/content/moderation?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch content');
@@ -41,6 +71,7 @@ export default function ContentModerationPage() {
 
       const data = await response.json();
       setContent(data.content || []);
+      setPagination(data.pagination || { nextCursor: null, hasNextPage: false });
     } catch (err: any) {
       console.error('Error fetching content:', err);
       setError(err.message);
@@ -49,9 +80,36 @@ export default function ContentModerationPage() {
     }
   };
 
+  // Load content on mount and when search params change
   useEffect(() => {
-    fetchContent();
-  }, []);
+    // Read filters from URL params
+    const urlFilters: ContentFilters = {};
+    const typeParam = searchParams.get('type');
+    const agentParam = searchParams.get('agent');
+    const fromParam = searchParams.get('from');
+    const toParam = searchParams.get('to');
+    const searchParam = searchParams.get('search');
+
+    if (typeParam && typeParam !== 'all') urlFilters.content_type = typeParam;
+    if (agentParam) urlFilters.agent_id = agentParam;
+    if (fromParam) urlFilters.date_from = fromParam;
+    if (toParam) urlFilters.date_to = toParam;
+    if (searchParam) urlFilters.search = searchParam;
+
+    setFilters(urlFilters);
+    fetchContent(urlFilters);
+  }, [searchParams]);
+
+  const handleFilterChange = (newFilters: ContentFilters) => {
+    setFilters(newFilters);
+    fetchContent(newFilters);
+  };
+
+  const loadNextPage = () => {
+    if (pagination.nextCursor) {
+      fetchContent(filters, pagination.nextCursor);
+    }
+  };
 
   const handleApprove = async (id: string) => {
     try {
@@ -94,35 +152,18 @@ export default function ContentModerationPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Content Moderation</h1>
-        <p className="text-gray-600 mt-2">
-          Review and approve content submitted by agents before it goes live on their sites.
-        </p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Content Moderation</h1>
+          <p className="text-muted-foreground">
+            Review and approve content submitted by agents before it goes live on their sites
+          </p>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Pending Review</CardDescription>
-            <CardTitle className="text-2xl text-yellow-600">{content.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Average Review Time</CardDescription>
-            <CardTitle className="text-2xl">24h</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Approval Rate</CardDescription>
-            <CardTitle className="text-2xl text-green-600">94%</CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
+      {/* Filters */}
+      <ContentFilterBar onFilterChange={handleFilterChange} />
 
       {/* Error State */}
       {error && (
@@ -142,13 +183,68 @@ export default function ContentModerationPage() {
             <p className="mt-4 text-muted-foreground">Loading content...</p>
           </CardContent>
         </Card>
+      ) : content.length === 0 ? (
+        /* Empty State */
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="text-muted-foreground mb-4">
+              <svg
+                className="mx-auto h-12 w-12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium mb-2">
+              {Object.keys(filters).length > 0 ? 'No content matches your filters' : 'No pending content'}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {Object.keys(filters).length > 0
+                ? 'Try adjusting your filters to see more results'
+                : 'All content has been reviewed. Check back later!'}
+            </p>
+            {Object.keys(filters).length > 0 && (
+              <Button variant="outline" onClick={() => handleFilterChange({})}>
+                Reset Filters
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       ) : (
-        <ModerationQueue
-          content={content}
-          onApprove={handleApprove}
-          onReject={handleReject}
-          onRefresh={fetchContent}
-        />
+        <>
+          <ModerationQueue
+            content={content}
+            onApprove={handleApprove}
+            onReject={handleReject}
+            onRefresh={() => fetchContent(filters)}
+          />
+
+          {/* Pagination */}
+          {pagination.hasNextPage && (
+            <div className="mt-6 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <Button
+                      variant="outline"
+                      onClick={loadNextPage}
+                      disabled={loading}
+                    >
+                      {loading ? 'Loading...' : `Load More (${pagination.total ? `${content.length} of ${pagination.total}` : 'Next Page'})`}
+                    </Button>
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

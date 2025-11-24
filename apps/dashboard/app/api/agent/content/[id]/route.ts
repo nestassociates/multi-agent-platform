@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { updateContentSchema } from '@nest/validation';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 /**
  * PATCH /api/agent/content/[id]
@@ -53,6 +54,19 @@ export async function PATCH(
       );
     }
 
+    // Check if content is editable (only draft or rejected)
+    if (existingContent.status !== 'draft' && existingContent.status !== 'rejected') {
+      return NextResponse.json(
+        {
+          error: {
+            message: 'Cannot edit approved or published content',
+            status: existingContent.status,
+          },
+        },
+        { status: 400 }
+      );
+    }
+
     // Parse and validate request body
     const body = await request.json();
     const validationResult = updateContentSchema.safeParse(body);
@@ -78,7 +92,10 @@ export async function PATCH(
 
     if (data.title !== undefined) updateData.title = data.title;
     if (data.slug !== undefined) updateData.slug = data.slug;
-    if (data.content_body !== undefined) updateData.content_body = data.content_body;
+    if (data.content_body !== undefined) {
+      // Sanitize HTML content (defense-in-depth)
+      updateData.content_body = sanitizeHtml(data.content_body);
+    }
     if (data.excerpt !== undefined) updateData.excerpt = data.excerpt;
     if (data.featured_image_url !== undefined)
       updateData.featured_image_url = data.featured_image_url;
@@ -86,10 +103,24 @@ export async function PATCH(
     if (data.seo_meta_description !== undefined)
       updateData.seo_meta_description = data.seo_meta_description;
 
-    // Agents can only set status to 'draft' or 'pending_review'
+    // Handle status change
     if (data.status !== undefined) {
       if (data.status === 'draft' || data.status === 'pending_review') {
         updateData.status = data.status;
+
+        // If changing from rejected to pending_review, clear rejection fields and increment version
+        if (existingContent.status === 'rejected' && data.status === 'pending_review') {
+          updateData.rejection_reason = null;
+          updateData.reviewed_at = null;
+          updateData.reviewed_by_user_id = null;
+          updateData.submitted_at = new Date().toISOString();
+          updateData.version = (existingContent.version || 1) + 1;
+        }
+
+        // If submitting draft for first time, set submitted_at
+        if (existingContent.status === 'draft' && data.status === 'pending_review') {
+          updateData.submitted_at = new Date().toISOString();
+        }
       } else {
         return NextResponse.json(
           { error: { message: 'Invalid status. Agents can only set draft or pending_review.' } },
@@ -185,6 +216,98 @@ export async function GET(
     });
   } catch (error: any) {
     console.error('Error in GET /api/agent/content/[id]:', error);
+    return NextResponse.json(
+      { error: { message: 'Internal server error' } },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/agent/content/[id]
+ * Delete draft content (only draft status allowed)
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const supabase = createClient();
+    const contentId = params.id;
+
+    // Get authenticated user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 });
+    }
+
+    // Get agent profile
+    const { data: agent, error: agentError } = await supabase
+      .from('agents')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (agentError || !agent) {
+      return NextResponse.json(
+        { error: { message: 'Agent profile not found' } },
+        { status: 404 }
+      );
+    }
+
+    // Get existing content to check ownership and status
+    const { data: existingContent, error: fetchError } = await supabase
+      .from('content_submissions')
+      .select('status')
+      .eq('id', contentId)
+      .eq('agent_id', agent.id)
+      .single();
+
+    if (fetchError || !existingContent) {
+      return NextResponse.json(
+        { error: { message: 'Content not found' } },
+        { status: 404 }
+      );
+    }
+
+    // Only allow deleting draft content
+    if (existingContent.status !== 'draft') {
+      return NextResponse.json(
+        {
+          error: {
+            message: 'Can only delete draft content',
+            status: existingContent.status,
+          },
+        },
+        { status: 400 }
+      );
+    }
+
+    // Delete content
+    const { error: deleteError } = await supabase
+      .from('content_submissions')
+      .delete()
+      .eq('id', contentId)
+      .eq('agent_id', agent.id);
+
+    if (deleteError) {
+      console.error('Error deleting content:', deleteError);
+      return NextResponse.json(
+        { error: { message: 'Failed to delete content' } },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Content deleted successfully',
+    });
+  } catch (error: any) {
+    console.error('Error in DELETE /api/agent/content/[id]:', error);
     return NextResponse.json(
       { error: { message: 'Internal server error' } },
       { status: 500 }

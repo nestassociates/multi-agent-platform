@@ -1,5 +1,7 @@
 'use client';
 
+import { sanitizeHtml } from '@/lib/sanitize';
+
 interface Content {
   id: string;
   agent_id: string;
@@ -114,7 +116,7 @@ export function ContentPreview({ content }: ContentPreviewProps) {
         <h3 className="text-sm font-medium text-gray-700 mb-3">Content</h3>
         <div
           className="prose prose-sm sm:prose lg:prose-lg max-w-none"
-          dangerouslySetInnerHTML={{ __html: content.content_body }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.content_body) }}
         />
       </div>
 

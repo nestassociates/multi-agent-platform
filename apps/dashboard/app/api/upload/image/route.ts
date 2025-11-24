@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getUser } from '@/lib/auth';
-import { cropToSquare, isValidImage } from '@/lib/image-processor';
+import { cropToSquare, isValidImage, optimizeImage } from '@/lib/image-processor';
+import { randomUUID } from 'crypto';
 
 /**
  * POST /api/upload/image
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const bucket = (formData.get('bucket') as string) || 'avatars';
+    const contentType = (formData.get('content_type') as string) || '';
 
     if (!file) {
       return NextResponse.json(
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest) {
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: { code: 'FILE_TOO_LARGE', message: 'File size must be less than 5MB' } },
+        { error: { code: 'FILE_TOO_LARGE', message: `File size must be less than 5MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.` } },
         { status: 400 }
       );
     }
@@ -45,18 +47,29 @@ export async function POST(request: NextRequest) {
     const isValid = await isValidImage(buffer);
     if (!isValid) {
       return NextResponse.json(
-        { error: { code: 'INVALID_FORMAT', message: 'File must be a valid image (JPEG, PNG, WebP, GIF)' } },
+        { error: { code: 'INVALID_FORMAT', message: 'File must be a valid image (JPEG, PNG, WebP, or GIF)' } },
         { status: 400 }
       );
     }
 
-    // Auto-crop to square (400x400)
-    const processedBuffer = await cropToSquare(buffer, 400);
+    // Process image based on bucket type
+    let processedBuffer: Buffer;
+    let fileExtension: string;
 
-    // Generate unique filename
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(2, 8);
-    const filename = `${user.id}/${timestamp}-${randomString}.jpg`;
+    if (bucket === 'avatars') {
+      // Avatars: Crop to square (400x400)
+      processedBuffer = await cropToSquare(buffer, 400);
+      fileExtension = 'jpg';
+    } else {
+      // Content images: Optimize without cropping (1200px max width, WebP)
+      processedBuffer = await optimizeImage(buffer, 1200, 85);
+      fileExtension = 'webp';
+    }
+
+    // Generate unique filename with folder structure
+    const uuid = randomUUID();
+    const folder = contentType ? `${contentType}/` : '';
+    const filename = `${user.id}/${folder}${uuid}.${fileExtension}`;
 
     // Upload to Supabase Storage
     const supabase = createServiceRoleClient();
@@ -64,7 +77,7 @@ export async function POST(request: NextRequest) {
     const { data, error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(filename, processedBuffer, {
-        contentType: 'image/jpeg',
+        contentType: fileExtension === 'webp' ? 'image/webp' : 'image/jpeg',
         cacheControl: '31536000', // 1 year
         upsert: false,
       });

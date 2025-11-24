@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,15 +15,18 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ApprovalDialog } from '@/components/admin/approval-dialog';
 
 interface ContentActionsProps {
   contentId: string;
+  contentTitle: string;
 }
 
-export function ContentActions({ contentId }: ContentActionsProps) {
+export function ContentActions({ contentId, contentTitle }: ContentActionsProps) {
   const router = useRouter();
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +51,8 @@ export function ContentActions({ contentId }: ContentActionsProps) {
     } catch (err: any) {
       console.error('Error approving content:', err);
       setError(err.message);
+      throw err; // Re-throw for ApprovalDialog to handle
+    } finally {
       setIsApproving(false);
     }
   };
@@ -99,11 +105,11 @@ export function ContentActions({ contentId }: ContentActionsProps) {
 
       <div className="flex gap-4">
         <Button
-          onClick={handleApprove}
+          onClick={() => setShowApprovalDialog(true)}
           disabled={isApproving || isRejecting}
           className="flex-1 bg-green-600 hover:bg-green-700"
         >
-          {isApproving ? 'Approving...' : 'Approve Content'}
+          Approve Content
         </Button>
 
         <Button
@@ -116,9 +122,17 @@ export function ContentActions({ contentId }: ContentActionsProps) {
         </Button>
       </div>
 
+      {/* Approval Dialog */}
+      <ApprovalDialog
+        isOpen={showApprovalDialog}
+        onClose={() => setShowApprovalDialog(false)}
+        onConfirm={handleApprove}
+        contentTitle={contentTitle}
+      />
+
       {/* Reject Dialog */}
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Reject Content</DialogTitle>
             <DialogDescription>
@@ -156,8 +170,19 @@ export function ContentActions({ contentId }: ContentActionsProps) {
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleReject} disabled={isRejecting}>
-              {isRejecting ? 'Rejecting...' : 'Reject Content'}
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={isRejecting || rejectionReason.trim().length < 10}
+            >
+              {isRejecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Rejecting...
+                </>
+              ) : (
+                'Reject Content'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
