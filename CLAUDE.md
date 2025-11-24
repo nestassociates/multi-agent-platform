@@ -32,6 +32,36 @@ TypeScript 5.3+ / JavaScript ES2023: Follow standard conventions
 
 <!-- MANUAL ADDITIONS START -->
 
+## ⚠️ CRITICAL: Before Modifying Existing Features
+
+**ALWAYS check these before making changes:**
+
+1. **Read `.deprecated-files.md`** - Check if feature has been replaced/deprecated
+2. **Check git history**: `git log --oneline --all --grep="keyword"` or `git log --oneline -20`
+3. **Search for existing implementations**: Use Task tool with Explore agent to find current code
+4. **Use Plan Mode** for major refactors - ALWAYS get user approval first
+5. **When in doubt, ASK** - Never guess, revert, or assume
+
+### Territory Management - ⚠️ USE POSTCODE SYSTEM ONLY
+
+**NEVER use/restore these files** (deprecated, deleted):
+- ❌ `territory-page-client.tsx` (polygon drawing system)
+- ❌ `territory-form.tsx` (polygon form)
+- ❌ `territory-map.tsx` (Mapbox Draw polygons)
+- ❌ `territories` table UI (keep table for historical data only)
+
+**ALWAYS use** (current postcode system):
+- ✅ `postcode-page-client.tsx` - Postcode territory UI
+- ✅ `postcode-map.tsx` - Interactive postcode map
+- ✅ `PostcodePageClient` in territories/page.tsx
+- ✅ `postcodes` table (2,727 UK districts)
+- ✅ `agent_postcodes` table (assignments)
+
+**If user asks about territories**: Use postcode system, NOT polygon drawing.
+**Reference**: `.deprecated-files.md` for full details
+
+---
+
 ## Feature: 003-content-submission-refactor
 
 ### Security Best Practices
