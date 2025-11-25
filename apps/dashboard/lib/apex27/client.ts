@@ -4,7 +4,7 @@
  * API Key: Uses X-Api-Key header (not Portal API's form-encoded approach)
  */
 
-import type { Apex27Listing } from './types';
+import type { Apex27Listing, Apex27Branch } from './types';
 
 const APEX27_API_URL = 'https://api.apex27.co.uk';
 
@@ -212,4 +212,24 @@ export async function getWebhooks(): Promise<any[]> {
     console.error('Error getting webhooks from Apex27:', error);
     throw error;
   }
+}
+
+/**
+ * Fetch branch details from Apex27
+ * Used to get agent contact info for draft agent setup
+ * @param branchId - Branch ID from Apex27
+ * @returns Branch details including email, phone, name
+ */
+export async function getBranchDetails(branchId: string): Promise<Apex27Branch | null> {
+  // Fetch a property from this branch to get branch details
+  const { listings } = await getListings({ page: 1, pageSize: 100 });
+
+  const listing = listings.find(l => String(l.branch.id) === branchId);
+
+  if (!listing) {
+    console.log(`No properties found for branch ${branchId}`);
+    return null;
+  }
+
+  return listing.branch;
 }

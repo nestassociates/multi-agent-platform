@@ -7,7 +7,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createAgentSchema, type CreateAgentInput } from '@nest/validation';
 import { Button } from '@nest/ui';
 
-export default function CreateAgentForm() {
+interface CreateAgentFormProps {
+  initialData?: Partial<CreateAgentInput>;
+  draftAgentId?: string;
+}
+
+export default function CreateAgentForm({ initialData, draftAgentId }: CreateAgentFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -18,6 +23,7 @@ export default function CreateAgentForm() {
     formState: { errors },
   } = useForm<CreateAgentInput>({
     resolver: zodResolver(createAgentSchema),
+    defaultValues: initialData,
   });
 
   const onSubmit = async (data: CreateAgentInput) => {
@@ -30,7 +36,10 @@ export default function CreateAgentForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          draft_agent_id: draftAgentId, // Include draft agent ID if setting up existing agent
+        }),
       });
 
       if (!response.ok) {

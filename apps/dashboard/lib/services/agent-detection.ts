@@ -100,7 +100,10 @@ export async function ensureAgentExists(
 }
 
 /**
- * Scan all properties for new branch IDs and create agents
+ * Scan Apex27 for new branches and auto-create agents
+ *
+ * Fetches properties from Apex27 API, extracts unique branch IDs,
+ * and creates draft agents for any branches that don't have agents yet.
  *
  * Task: T014
  */
@@ -111,52 +114,64 @@ export async function scanPropertiesForNewAgents(): Promise<{
 }> {
   const supabase = createServiceRoleClient();
 
-  // Get all unique branch IDs from properties
-  const { data: properties, error: propError } = await supabase
-    .from('properties')
-    .select('apex27_branch_id, apex27_branch_name')
-    .not('apex27_branch_id', 'is', null);
+  // Fetch properties from Apex27 (first 100 for performance)
+  console.log('[Auto-Detect] Fetching properties from Apex27 API...');
+  const { getListings } = await import('@/lib/apex27/client');
+  const { listings } = await getListings({ page: 1, pageSize: 100 });
 
-  if (propError) {
-    throw new Error(`Failed to scan properties: ${propError.message}`);
-  }
+  console.log(`[Auto-Detect] Fetched ${listings.length} properties from Apex27`);
 
-  if (!properties || properties.length === 0) {
-    return {
-      scannedProperties: 0,
-      newAgentsCreated: 0,
-      agents: [],
-    };
-  }
+  // Extract unique branch IDs from Apex27 data
+  const apex27Branches = new Map<string, string | null>();
 
-  // Get unique branch IDs
-  const uniqueBranches = new Map<string, string | null>();
-  properties.forEach(p => {
-    if (p.apex27_branch_id && !uniqueBranches.has(p.apex27_branch_id)) {
-      uniqueBranches.set(p.apex27_branch_id, p.apex27_branch_name || null);
+  listings.forEach(listing => {
+    if (listing.branch?.id) {
+      const branchId = String(listing.branch.id);
+      if (!apex27Branches.has(branchId)) {
+        apex27Branches.set(branchId, listing.branch.name || null);
+      }
     }
   });
 
-  // Ensure agent exists for each branch
+  console.log(`[Auto-Detect] Found ${apex27Branches.size} unique branches in Apex27`);
+
+  // Get existing agents from database
+  const { data: existingAgents } = await supabase
+    .from('agents')
+    .select('apex27_branch_id');
+
+  const existingBranchIds = new Set(
+    existingAgents?.map(a => a.apex27_branch_id).filter(Boolean) || []
+  );
+
+  // Find branches that need agents
+  const missingBranches = Array.from(apex27Branches.entries()).filter(
+    ([branchId]) => !existingBranchIds.has(branchId)
+  );
+
+  console.log(`[Auto-Detect] Found ${missingBranches.length} branches without agents`);
+
+  // Create draft agents for missing branches
   const newAgents: Agent[] = [];
 
-  for (const [branchId, branchName] of uniqueBranches.entries()) {
+  for (const [branchId, branchName] of missingBranches) {
     try {
       const result = await ensureAgentExists(branchId, branchName);
       if (result.isNew) {
         newAgents.push(result.agent);
+        console.log(`[Auto-Detect] Created draft agent for branch ${branchId}: ${result.agent.subdomain}`);
 
         // Notify admin about new agent
         await notifyAdminNewAgent(result.agent);
       }
     } catch (error) {
-      console.error(`Failed to ensure agent for branch ${branchId}:`, error);
+      console.error(`[Auto-Detect] Failed to create agent for branch ${branchId}:`, error);
       // Continue with other branches
     }
   }
 
   return {
-    scannedProperties: properties.length,
+    scannedProperties: listings.length,
     newAgentsCreated: newAgents.length,
     agents: newAgents,
   };
