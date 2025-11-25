@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { type CreateContentInput } from '@nest/validation';
 import ContentForm from '@/components/agent/content-form';
 
+export const dynamic = 'force-dynamic';
+
 export default function NewContentPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);

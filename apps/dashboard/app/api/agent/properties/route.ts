@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Agent Properties API
  * GET endpoint for agents to view their own properties
