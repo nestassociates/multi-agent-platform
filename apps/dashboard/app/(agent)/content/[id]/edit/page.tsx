@@ -18,7 +18,7 @@ interface EditContentPageProps {
 interface ContentData {
   id: string;
   agent_id: string;
-  content_type: string;
+  content_type: 'blog_post' | 'area_guide' | 'review' | 'fee_structure';
   title: string;
   slug: string;
   content_body: string;
