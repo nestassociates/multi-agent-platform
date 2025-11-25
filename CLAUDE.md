@@ -5,6 +5,8 @@ Auto-generated from all feature plans. Last updated: 2025-10-29
 ## Active Technologies
 - TypeScript 5.3+ (Next.js 14 App Router) + @supabase/supabase-js, Next.js API Routes (002-exportable-properties-filter)
 - PostgreSQL (Supabase) with existing properties table (002-exportable-properties-filter)
+- TypeScript 5.3+ / Next.js 14 (App Router) / Astro 4.x + @supabase/supabase-js, Zod, React Hook Form, Resend (email) (004-agent-lifecycle-management)
+- PostgreSQL (Supabase) - existing agents, profiles, properties, build_queue tables + NEW agent_onboarding_checklist table (004-agent-lifecycle-management)
 
 - TypeScript 5.3+ / JavaScript ES2023 (001-multi-agent-platform)
 
@@ -25,10 +27,10 @@ npm test && npm run lint
 TypeScript 5.3+ / JavaScript ES2023: Follow standard conventions
 
 ## Recent Changes
+- 004-agent-lifecycle-management: Added TypeScript 5.3+ / Next.js 14 (App Router) / Astro 4.x + @supabase/supabase-js, Zod, React Hook Form, Resend (email)
 - 003-content-submission-refactor: Added TypeScript 5.3+ (Next.js 14 App Router)
 - 002-exportable-properties-filter: Added TypeScript 5.3+ (Next.js 14 App Router) + @supabase/supabase-js, Next.js API Routes
 
-- 001-multi-agent-platform: Added TypeScript 5.3+ / JavaScript ES2023
 
 <!-- MANUAL ADDITIONS START -->
 
