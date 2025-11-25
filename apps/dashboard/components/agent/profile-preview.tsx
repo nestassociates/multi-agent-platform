@@ -109,29 +109,34 @@ export default function ProfilePreview({ isOpen, onClose, profile, agent }: Prop
             )}
 
             {/* Social Media Links */}
-            {agent.social_media_links && Object.keys(agent.social_media_links).length > 0 && (
-              <div className="mt-8">
-                <h3 className="text-xl font-semibold mb-4">Connect With Me</h3>
-                <div className="flex gap-4">
-                  {Object.entries(agent.social_media_links).map(([platform, url]) => {
-                    const Icon = SOCIAL_ICONS[platform.toLowerCase()];
-                    const urlString = String(url);
-                    return (
-                      <a
-                        key={platform}
-                        href={urlString}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-muted transition-colors"
-                      >
-                        {Icon && <Icon className="h-4 w-4" />}
-                        <span className="capitalize">{platform}</span>
-                      </a>
-                    );
-                  })}
+            {agent.social_media_links && (() => {
+              const validLinks = Object.entries(agent.social_media_links).filter(([_, url]) => url && String(url).trim() !== '');
+              if (validLinks.length === 0) return null;
+
+              return (
+                <div className="mt-8">
+                  <h3 className="text-xl font-semibold mb-4">Connect With Me</h3>
+                  <div className="flex gap-4">
+                    {validLinks.map(([platform, url]) => {
+                      const Icon = SOCIAL_ICONS[platform.toLowerCase()];
+                      const urlString = String(url);
+                      return (
+                        <a
+                          key={platform}
+                          href={urlString}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-muted transition-colors"
+                        >
+                          {Icon && <Icon className="h-4 w-4" />}
+                          <span className="capitalize">{platform}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Website URL */}
             <div className="mt-8 pt-8 border-t">

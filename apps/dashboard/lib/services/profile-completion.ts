@@ -114,20 +114,26 @@ export async function updateChecklistProgress(
   const supabase = createServiceRoleClient();
 
   // Get profile and agent data
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('first_name, last_name, email, phone, bio, avatar_url')
+    .select('first_name, last_name, email, phone, avatar_url')
     .eq('user_id', userId)
     .single();
 
-  const { data: agent } = await supabase
+  const { data: agent, error: agentError } = await supabase
     .from('agents')
-    .select('id, subdomain, qualifications, status')
+    .select('id, subdomain, qualifications, status, bio')
     .eq('id', agentId)
     .single();
 
-  if (!profile || !agent) {
-    throw new Error('Profile or agent not found');
+  if (!profile) {
+    console.error('Profile not found for user_id:', userId, profileError);
+    throw new Error(`Profile not found for user ${userId}`);
+  }
+
+  if (!agent) {
+    console.error('Agent not found for agent_id:', agentId, agentError);
+    throw new Error(`Agent not found: ${agentId}`);
   }
 
   // Calculate completion

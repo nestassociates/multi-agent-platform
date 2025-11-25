@@ -7,10 +7,10 @@ import { emailSchema, passwordSchema } from './auth';
 
 // Social media links schema
 export const socialMediaLinksSchema = z.object({
-  facebook: z.string().url('Invalid Facebook URL').optional(),
-  twitter: z.string().url('Invalid Twitter URL').optional(),
-  linkedin: z.string().url('Invalid LinkedIn URL').optional(),
-  instagram: z.string().url('Invalid Instagram URL').optional(),
+  facebook: z.string().url('Invalid Facebook URL').or(z.literal('')).optional(),
+  twitter: z.string().url('Invalid Twitter URL').or(z.literal('')).optional(),
+  linkedin: z.string().url('Invalid LinkedIn URL').or(z.literal('')).optional(),
+  instagram: z.string().url('Invalid Instagram URL').or(z.literal('')).optional(),
 }).optional();
 
 export type SocialMediaLinksInput = z.infer<typeof socialMediaLinksSchema>;

@@ -7,6 +7,75 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import type { Apex27Listing } from '../apex27/types';
 
 /**
+ * Check if agent has a recent build queued (within specified time window)
+ * Used for debouncing - avoid queuing multiple builds for rapid property updates
+ */
+async function hasRecentBuild(agentId: string, withinMinutes: number = 60): Promise<boolean> {
+  const supabase = createServiceRoleClient();
+  const cutoff = new Date(Date.now() - withinMinutes * 60 * 1000).toISOString();
+
+  const { data } = await supabase
+    .from('build_queue')
+    .select('id')
+    .eq('agent_id', agentId)
+    .eq('status', 'pending')
+    .gte('created_at', cutoff)
+    .limit(1)
+    .maybeSingle();
+
+  return !!data;
+}
+
+/**
+ * Queue a build for an agent with smart debouncing
+ * Only queues if: agent is active AND no build queued in last hour
+ */
+async function queueSmartRebuild(
+  agentId: string,
+  reason: string = 'property_updated'
+): Promise<boolean> {
+  const supabase = createServiceRoleClient();
+
+  // Check if agent is active (only rebuild active agents)
+  const { data: agent } = await supabase
+    .from('agents')
+    .select('status')
+    .eq('id', agentId)
+    .single();
+
+  if (!agent || agent.status !== 'active') {
+    console.log(`[Smart Rebuild] Skipping build for agent ${agentId} - status: ${agent?.status || 'not found'}`);
+    return false;
+  }
+
+  // Check for recent builds (debouncing)
+  const hasRecent = await hasRecentBuild(agentId, 60); // 1 hour window
+
+  if (hasRecent) {
+    console.log(`[Smart Rebuild] Skipping build for agent ${agentId} - build already queued recently`);
+    return false;
+  }
+
+  // Queue the build
+  const { error } = await supabase
+    .from('build_queue')
+    .insert({
+      agent_id: agentId,
+      priority: 3, // P3 - normal priority
+      trigger_reason: reason,
+      status: 'pending',
+    });
+
+  if (error) {
+    console.error(`[Smart Rebuild] Failed to queue build:`, error);
+    return false;
+  }
+
+  console.log(`✅ [Smart Rebuild] Queued build for agent ${agentId} (${reason})`);
+  return true;
+}
+
+/**
  * Find agent by Apex27 branch ID
  * @param branchId - Apex27 branch.id
  * @returns Agent ID or null if not found
@@ -177,6 +246,13 @@ export async function upsertPropertyFromApex27(
     }
 
     console.log(`Property ${listing.id} upserted successfully for agent ${agentId}`);
+
+    // Queue smart rebuild for active agents (debounced to 1 hour)
+    // This ensures agent sites update when properties change
+    await queueSmartRebuild(agentId, 'property_updated').catch(err => {
+      console.error(`Failed to queue rebuild (non-fatal):`, err);
+    });
+
     return data;
   } catch (error) {
     console.error(`Failed to upsert property ${listing.id}:`, error);
@@ -193,6 +269,13 @@ export async function deletePropertyByApex27Id(
 ): Promise<boolean> {
   const supabase = createServiceRoleClient();
 
+  // Get agent_id before deleting (for rebuild trigger)
+  const { data: property } = await supabase
+    .from('properties')
+    .select('agent_id')
+    .eq('apex27_id', apex27Id.toString())
+    .maybeSingle();
+
   // Hard delete - permanently remove from database
   // Cascade deletes will remove related records (images, enquiries, etc.)
   const { error } = await supabase
@@ -206,6 +289,14 @@ export async function deletePropertyByApex27Id(
   }
 
   console.log(`Property ${apex27Id} permanently deleted (hard delete)`);
+
+  // Queue smart rebuild if property belonged to an agent
+  if (property?.agent_id) {
+    await queueSmartRebuild(property.agent_id, 'property_removed').catch(err => {
+      console.error(`Failed to queue rebuild (non-fatal):`, err);
+    });
+  }
+
   return true;
 }
 
