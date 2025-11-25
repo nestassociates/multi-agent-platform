@@ -36,24 +36,34 @@ export default async function NewAgentPage({ searchParams }: NewAgentPageProps) 
     if (agent && agent.apex27_branch_id) {
       draftAgent = agent;
 
-      // Fetch branch details from Apex27
-      try {
-        branchDetails = await getBranchDetails(agent.apex27_branch_id);
+      // Use stored contact data if available, otherwise fetch from Apex27
+      if (agent.apex27_contact_data) {
+        initialData = {
+          email: agent.apex27_contact_data.email || '',
+          phone: agent.apex27_contact_data.phone || '',
+          apex27_branch_id: agent.apex27_branch_id,
+          // Leave subdomain blank - admin should set proper name-based subdomain
+          // Leave first_name/last_name blank - admin fills from branch name or knowledge
+        };
+      } else {
+        // Fallback: Fetch branch details from Apex27
+        try {
+          branchDetails = await getBranchDetails(agent.apex27_branch_id);
 
-        if (branchDetails) {
-          // Pre-populate form with Apex27 data
-          initialData = {
-            email: branchDetails.email,
-            phone: branchDetails.phone,
-            subdomain: agent.subdomain,
-            apex27_branch_id: agent.apex27_branch_id,
-            // Try to extract name from branch name if it looks like a person's name
-            // Otherwise admin will need to fill it in
-          };
+          if (branchDetails) {
+            // Pre-populate form with Apex27 data
+            initialData = {
+              email: branchDetails.email,
+              phone: branchDetails.phone,
+              apex27_branch_id: agent.apex27_branch_id,
+              // Leave subdomain blank - admin should set proper name-based subdomain
+              // Leave first_name/last_name blank - admin fills from branch name or knowledge
+            };
+          }
+        } catch (error) {
+          console.error('Failed to fetch branch details:', error);
+          // Continue without pre-population
         }
-      } catch (error) {
-        console.error('Failed to fetch branch details:', error);
-        // Continue without pre-population
       }
     }
   }

@@ -50,6 +50,11 @@ export interface Agent {
   subdomain: string; // e.g., "john-smith"
   apex27_branch_id: string | null;
   branch_name: string | null; // Human-readable branch name from Apex27
+  apex27_contact_data?: {
+    email?: string;
+    phone?: string;
+    address?: string;
+  } | null; // Contact data from Apex27 branch (for draft agents)
   bio: string | null;
   qualifications: string[]; // Array of qualification names
   social_media_links: SocialMediaLinks;

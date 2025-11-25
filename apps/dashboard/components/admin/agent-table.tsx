@@ -29,6 +29,11 @@ interface Agent {
   subdomain: string;
   apex27_branch_id: string | null;
   branch_name: string | null;
+  apex27_contact_data?: {
+    email?: string;
+    phone?: string;
+    address?: string;
+  } | null;
   status: AgentStatus;
   created_at: string;
   profile?: {
@@ -148,7 +153,7 @@ export function AgentTable({ agents, currentStatusFilter = 'all' }: AgentTablePr
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {agent.profile?.email || '—'}
+                    {agent.profile?.email || agent.apex27_contact_data?.email || '—'}
                   </TableCell>
                   <TableCell>
                     <code className="text-sm bg-muted px-1.5 py-0.5 rounded">

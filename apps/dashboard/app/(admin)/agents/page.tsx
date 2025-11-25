@@ -28,7 +28,7 @@ export default async function AgentsPage({ searchParams }: AgentsPageProps) {
   // Build query with status filter (T025, T030, T031)
   let query = supabase
     .from('agents')
-    .select('*, profile:profiles!agents_user_id_fkey(first_name, last_name, email)');
+    .select('id, subdomain, apex27_branch_id, branch_name, apex27_contact_data, status, created_at, profile:profiles!agents_user_id_fkey(first_name, last_name, email)');
 
   // Apply status filter if provided
   const statusFilter = searchParams.status;

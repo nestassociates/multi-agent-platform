@@ -25,7 +25,8 @@ export interface DetectionResult {
  */
 export async function ensureAgentExists(
   branchId: string,
-  branchName?: string | null
+  branchName?: string | null,
+  branchDetails?: any
 ): Promise<DetectionResult> {
   const supabase = createServiceRoleClient();
 
@@ -50,14 +51,22 @@ export async function ensureAgentExists(
     };
   }
 
-  // Create new draft agent
+  // Create new draft agent with Apex27 contact data
   const subdomain = generateSubdomainFromBranchId(branchId);
+
+  // Store branch contact info for pre-populating setup form
+  const contactData = branchDetails ? {
+    email: branchDetails.email,
+    phone: branchDetails.phone,
+    address: `${branchDetails.address1}, ${branchDetails.city}, ${branchDetails.postalCode}`,
+  } : null;
 
   const { data: newAgent, error: createError } = await supabase
     .from('agents')
     .insert({
       apex27_branch_id: branchId,
       branch_name: branchName || null,
+      apex27_contact_data: contactData,
       subdomain,
       status: 'draft',
       user_id: null, // No user yet (admin will create)
@@ -151,12 +160,27 @@ export async function scanPropertiesForNewAgents(): Promise<{
 
   console.log(`[Auto-Detect] Found ${missingBranches.length} branches without agents`);
 
-  // Create draft agents for missing branches
+  // Create draft agents for missing branches with full contact details
   const newAgents: Agent[] = [];
+
+  // Fetch full branch details from Apex27
+  const { getBranchDetails } = await import('@/lib/apex27/client');
 
   for (const [branchId, branchName] of missingBranches) {
     try {
-      const result = await ensureAgentExists(branchId, branchName);
+      // Fetch branch contact details from Apex27
+      let branchDetails = null;
+      try {
+        // Find this branch in the listings we already fetched
+        const listing = listings.find(l => String(l.branch.id) === branchId);
+        if (listing) {
+          branchDetails = listing.branch;
+        }
+      } catch (err) {
+        console.error(`Failed to get branch details for ${branchId}:`, err);
+      }
+
+      const result = await ensureAgentExists(branchId, branchName, branchDetails);
       if (result.isNew) {
         newAgents.push(result.agent);
         console.log(`[Auto-Detect] Created draft agent for branch ${branchId}: ${result.agent.subdomain}`);
