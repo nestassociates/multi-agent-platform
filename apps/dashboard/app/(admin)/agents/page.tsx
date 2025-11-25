@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AgentTable } from '@/components/admin/agent-table';
 import { AgentAutoDetectBanner } from '@/components/admin/agent-auto-detect-banner';
+import { AgentActionsMenu } from '@/components/admin/agent-actions-menu';
 import type { AgentStatus } from '@nest/shared-types';
 
 interface AgentsPageProps {
@@ -56,9 +57,7 @@ export default async function AgentsPage({ searchParams }: AgentsPageProps) {
             Manage your real estate agents ({agents?.length || 0} total)
           </p>
         </div>
-        <Button asChild>
-          <Link href="/agents/new">Create Agent</Link>
-        </Button>
+        <AgentActionsMenu />
       </div>
 
       {/* T024: Auto-detect banner */}
