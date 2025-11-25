@@ -54,6 +54,8 @@ export interface Agent {
     email?: string;
     phone?: string;
     address?: string;
+    firstName?: string;
+    lastName?: string;
   } | null; // Contact data from Apex27 branch (for draft agents)
   bio: string | null;
   qualifications: string[]; // Array of qualification names

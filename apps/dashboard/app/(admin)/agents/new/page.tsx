@@ -39,11 +39,12 @@ export default async function NewAgentPage({ searchParams }: NewAgentPageProps) 
       // Use stored contact data if available, otherwise fetch from Apex27
       if (agent.apex27_contact_data) {
         initialData = {
+          first_name: agent.apex27_contact_data.firstName || '',
+          last_name: agent.apex27_contact_data.lastName || '',
           email: agent.apex27_contact_data.email || '',
           phone: agent.apex27_contact_data.phone || '',
           apex27_branch_id: agent.apex27_branch_id,
-          // Leave subdomain blank - admin should set proper name-based subdomain
-          // Leave first_name/last_name blank - admin fills from branch name or knowledge
+          // Leave subdomain blank - admin should set proper name-based subdomain like "leanne-taylor-torbay"
         };
       } else {
         // Fallback: Fetch branch details from Apex27

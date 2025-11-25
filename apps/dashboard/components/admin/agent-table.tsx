@@ -33,6 +33,8 @@ interface Agent {
     email?: string;
     phone?: string;
     address?: string;
+    firstName?: string;
+    lastName?: string;
   } | null;
   status: AgentStatus;
   created_at: string;
@@ -146,6 +148,11 @@ export function AgentTable({ agents, currentStatusFilter = 'all' }: AgentTablePr
                   <TableCell className="font-medium">
                     {agent.profile ? (
                       `${agent.profile.first_name} ${agent.profile.last_name}`
+                    ) : agent.apex27_contact_data?.firstName && agent.apex27_contact_data?.lastName ? (
+                      <span>
+                        {agent.apex27_contact_data.firstName} {agent.apex27_contact_data.lastName}
+                        <span className="ml-2 text-xs text-muted-foreground">(draft)</span>
+                      </span>
                     ) : (
                       <span className="text-muted-foreground italic">
                         {agent.branch_name || `(Auto) ${agent.apex27_branch_id}`}

@@ -54,11 +54,16 @@ export async function ensureAgentExists(
   // Create new draft agent with Apex27 contact data
   const subdomain = generateSubdomainFromBranchId(branchId);
 
+  // Parse name from email (firstname.lastname@nestassociates.co.uk)
+  const parsedName = branchDetails?.email ? parseNameFromEmail(branchDetails.email) : null;
+
   // Store branch contact info for pre-populating setup form
   const contactData = branchDetails ? {
     email: branchDetails.email,
     phone: branchDetails.phone,
     address: `${branchDetails.address1}, ${branchDetails.city}, ${branchDetails.postalCode}`,
+    firstName: parsedName?.firstName || null,
+    lastName: parsedName?.lastName || null,
   } : null;
 
   const { data: newAgent, error: createError } = await supabase
@@ -263,4 +268,27 @@ function generateSubdomainFromBranchId(branchId: string): string {
     .replace(/-+/g, '-'); // Collapse multiple hyphens
 
   return `agent-${cleaned}`;
+}
+
+/**
+ * Parse agent name from email address
+ * Pattern: firstname.lastname@nestassociates.co.uk
+ * Returns: { firstName, lastName } or null if can't parse
+ */
+function parseNameFromEmail(email: string): { firstName: string; lastName: string } | null {
+  if (!email || !email.includes('@nestassociates.co.uk')) {
+    return null;
+  }
+
+  const localPart = email.split('@')[0]; // Get "firstname.lastname"
+  const parts = localPart.split('.');
+
+  if (parts.length >= 2) {
+    // Capitalize first letter of each part
+    const firstName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+    const lastName = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+    return { firstName, lastName };
+  }
+
+  return null;
 }
