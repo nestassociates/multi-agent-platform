@@ -159,7 +159,7 @@ export function EditAgentModal({ agent, open, onOpenChange }: EditAgentModalProp
                 className="bg-muted rounded-r-none"
               />
               <span className="rounded-r-md border border-l-0 bg-muted px-3 py-2 text-sm text-muted-foreground">
-                .agents.nestassociates.com
+                .nestassociates.co.uk
               </span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">

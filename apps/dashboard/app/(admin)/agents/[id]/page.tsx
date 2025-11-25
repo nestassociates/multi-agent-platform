@@ -69,7 +69,7 @@ export default async function AgentDetailPage({ params }: { params: { id: string
 
   const checklist = checklistResult.data;
 
-  const micrositeUrl = `https://${agent.subdomain}.agents.nestassociates.com`;
+  const micrositeUrl = `https://${agent.subdomain}.nestassociates.co.uk`;
 
   return (
     <div className="space-y-6">

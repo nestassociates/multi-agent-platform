@@ -87,7 +87,7 @@ export function AgentSettingsTab({ agent, onUpdate }: AgentSettingsTabProps) {
     }
   };
 
-  const micrositeUrl = `https://${agent.subdomain}.agents.nestassociates.com`;
+  const micrositeUrl = `https://${agent.subdomain}.nestassociates.co.uk`;
 
   return (
     <div className="space-y-6">

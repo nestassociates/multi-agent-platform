@@ -138,12 +138,12 @@ export default function ProfilePreview({ isOpen, onClose, profile, agent }: Prop
               <p className="text-sm text-muted-foreground text-center">
                 Your microsite: {' '}
                 <a
-                  href={`https://${agent.subdomain}.agents.nestassociates.com`}
+                  href={`https://${agent.subdomain}.nestassociates.co.uk`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  {agent.subdomain}.agents.nestassociates.com
+                  {agent.subdomain}.nestassociates.co.uk
                 </a>
               </p>
             </div>

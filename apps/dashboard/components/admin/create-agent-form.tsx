@@ -158,7 +158,7 @@ export default function CreateAgentForm({ initialData, draftAgentId }: CreateAge
             className="w-full rounded-l-md border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
           />
           <span className="rounded-r-md border border-l-0 border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500">
-            .agents.nestassociates.com
+            .nestassociates.co.uk
           </span>
         </div>
         <p className="mt-1 text-xs text-gray-500">
