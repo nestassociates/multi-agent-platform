@@ -215,6 +215,43 @@ export async function getWebhooks(): Promise<any[]> {
 }
 
 /**
+ * Fetch all users from Apex27
+ * @returns Array of Apex27 users with names, emails, etc.
+ */
+export async function getUsers(): Promise<Apex27User[]> {
+  const url = `${APEX27_API_URL}/users`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-Api-Key': getApiKey(),
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Apex27 API error: ${response.status} ${response.statusText}`);
+    }
+
+    return (await response.json()) as Apex27User[];
+  } catch (error) {
+    console.error('Error fetching users from Apex27:', error);
+    throw error;
+  }
+}
+
+/**
+ * Find user by email address
+ * @param email - Email to search for
+ * @returns Apex27User or null
+ */
+export async function getUserByEmail(email: string): Promise<Apex27User | null> {
+  const users = await getUsers();
+  return users.find(u => u.email.toLowerCase() === email.toLowerCase()) || null;
+}
+
+/**
  * Fetch branch details from Apex27
  * Used to get agent contact info for draft agent setup
  * @param branchId - Branch ID from Apex27

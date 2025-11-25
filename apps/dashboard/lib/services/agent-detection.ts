@@ -55,13 +55,25 @@ export async function ensureAgentExists(
   // Create new draft agent with Apex27 contact data
   const subdomain = generateSubdomainFromBranchId(branchId);
 
-  // Store contact info from Apex27 (user data for names, branch data for contact details)
-  const contactData = branchDetails || userData ? {
-    email: userData?.email || branchDetails?.email || null,
-    phone: branchDetails?.phone || null,
-    address: branchDetails ? `${branchDetails.address1}, ${branchDetails.city}, ${branchDetails.postalCode}` : null,
-    firstName: userData?.firstName || null,  // ✅ Direct from listing.user
-    lastName: userData?.lastName || null,    // ✅ Direct from listing.user
+  // Get user data from Apex27 Users API by matching branch email
+  // Branch email IS the agent's email - fetch their user record for proper firstName/lastName
+  let userRecord = null;
+  if (branchDetails?.email) {
+    try {
+      const { getUserByEmail } = await import('@/lib/apex27/client');
+      userRecord = await getUserByEmail(branchDetails.email);
+    } catch (err) {
+      console.error(`Failed to fetch user for ${branchDetails.email}:`, err);
+    }
+  }
+
+  // Store contact info from Apex27
+  const contactData = branchDetails ? {
+    email: branchDetails.email,
+    phone: branchDetails.phone,
+    address: `${branchDetails.address1}, ${branchDetails.city}, ${branchDetails.postalCode}`,
+    firstName: userRecord?.firstName || null,  // ✅ From Apex27 /users API
+    lastName: userRecord?.lastName || null,     // ✅ From Apex27 /users API
   } : null;
 
   const { data: newAgent, error: createError } = await supabase
