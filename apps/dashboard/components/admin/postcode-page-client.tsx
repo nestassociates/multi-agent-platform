@@ -113,11 +113,11 @@ export default function PostcodePageClient({ agents }: Props) {
           if (territories.length > 0) {
             const uniqueAreas = new Set<string>();
 
-            territories.forEach(territory => {
+            territories.forEach((territory: any) => {
               // Extract ALL postcode prefixes from territory name (e.g., "BA16, TA11" -> ["BA", "TA"])
               const postcodeMatches = territory.name.match(/([A-Z]+)\d+/g);
               if (postcodeMatches) {
-                postcodeMatches.forEach(postcode => {
+                postcodeMatches.forEach((postcode: string) => {
                   const areaMatch = postcode.match(/^([A-Z]+)/);
                   if (areaMatch) {
                     uniqueAreas.add(areaMatch[1]);
