@@ -106,7 +106,11 @@ export const HeadingDropdownMenu = forwardRef<
             <CardBody>
               <ButtonGroup>
                 {levels.map((level) => (
-                  <DropdownMenuItem key={`heading-${level}`} asChild>
+                  <DropdownMenuItem
+                    key={`heading-${level}`}
+                    asChild
+                    onClick={() => setIsOpen(false)}
+                  >
                     <HeadingButton
                       editor={editor}
                       level={level}
