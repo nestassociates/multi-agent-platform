@@ -1,6 +1,6 @@
 'use client';
 
-import { sanitizeHtml } from '@/lib/sanitize';
+import { useState, useEffect } from 'react';
 
 interface Content {
   id: string;
@@ -46,6 +46,17 @@ const statusColors = {
 };
 
 export function ContentPreview({ content }: ContentPreviewProps) {
+  const [sanitizedBody, setSanitizedBody] = useState<string>('');
+
+  // Dynamically import sanitize to avoid jsdom issues during SSR/build
+  useEffect(() => {
+    if (content.content_body) {
+      import('@/lib/sanitize').then(({ sanitizeHtml }) => {
+        setSanitizedBody(sanitizeHtml(content.content_body));
+      });
+    }
+  }, [content.content_body]);
+
   return (
     <div className="space-y-6">
       {/* Header Info */}
@@ -116,7 +127,7 @@ export function ContentPreview({ content }: ContentPreviewProps) {
         <h3 className="text-sm font-medium text-gray-700 mb-3">Content</h3>
         <div
           className="prose prose-sm sm:prose lg:prose-lg max-w-none"
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.content_body) }}
+          dangerouslySetInnerHTML={{ __html: sanitizedBody }}
         />
       </div>
 

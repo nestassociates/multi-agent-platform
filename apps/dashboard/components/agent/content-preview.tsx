@@ -1,6 +1,6 @@
 'use client';
 
-import { sanitizeHtml } from '@/lib/sanitize';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -24,8 +24,18 @@ export function ContentPreview({
   isOpen,
   onClose,
 }: ContentPreviewProps) {
-  // Sanitize HTML before rendering (defense-in-depth)
-  const sanitizedContent = sanitizeHtml(content);
+  const [sanitizedContent, setSanitizedContent] = useState<string>('');
+
+  // Dynamically import sanitize to avoid jsdom issues during SSR/build
+  useEffect(() => {
+    if (content) {
+      import('@/lib/sanitize').then(({ sanitizeHtml }) => {
+        setSanitizedContent(sanitizeHtml(content));
+      });
+    } else {
+      setSanitizedContent('');
+    }
+  }, [content]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

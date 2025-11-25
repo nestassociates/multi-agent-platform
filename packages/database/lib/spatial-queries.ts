@@ -2,9 +2,12 @@
  * PostGIS Spatial Query Utilities
  *
  * Helper functions for geographic and spatial database operations
+ *
+ * NOTE: These functions require a Supabase client to be passed in.
+ * The caller is responsible for creating the client with appropriate permissions.
  */
 
-import { createServiceRoleClient } from '../../../apps/dashboard/lib/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface OverlapResult {
   hasOverlap: boolean;
@@ -20,16 +23,17 @@ export interface OverlapResult {
  * Check if a polygon overlaps with existing territories
  * Uses PostGIS ST_Intersects and ST_Area functions
  *
+ * @param supabase - Supabase client instance
  * @param polygon - GeoJSON Polygon geometry
  * @param excludeTerritoryId - Optional territory ID to exclude (for updates)
  * @returns Overlap result with list of overlapping territories
  */
 export async function checkTerritoryOverlap(
+  supabase: SupabaseClient,
   polygon: any,
   excludeTerritoryId?: string
 ): Promise<OverlapResult> {
   try {
-    const supabase = createServiceRoleClient();
 
     // Convert GeoJSON to WKT for PostGIS
     const wkt = geojsonPolygonToWKT(polygon);
@@ -129,17 +133,20 @@ export function wktToGeojsonPolygon(wkt: string): any {
 
 /**
  * Calculate territory statistics
+ * @param supabase - Supabase client instance
  * @param polygon - GeoJSON Polygon geometry
  * @returns Territory stats (area, perimeter, center point)
  */
-export async function calculateTerritoryStats(polygon: any): Promise<{
+export async function calculateTerritoryStats(
+  supabase: SupabaseClient,
+  polygon: any
+): Promise<{
   area_km2: number;
   area_mi2: number;
   perimeter_km: number;
   center: [number, number];
 }> {
   try {
-    const supabase = createServiceRoleClient();
 
     const wkt = geojsonPolygonToWKT(polygon);
 
@@ -192,13 +199,17 @@ function getPolygonCenter(polygon: any): [number, number] {
 
 /**
  * Find territories containing a specific point
+ * @param supabase - Supabase client instance
  * @param lng - Longitude
  * @param lat - Latitude
  * @returns List of territories containing this point
  */
-export async function findTerritoriesAtPoint(lng: number, lat: number): Promise<any[]> {
+export async function findTerritoriesAtPoint(
+  supabase: SupabaseClient,
+  lng: number,
+  lat: number
+): Promise<any[]> {
   try {
-    const supabase = createServiceRoleClient();
 
     const { data, error } = await supabase.rpc('find_territories_at_point', {
       point_lng: lng,
