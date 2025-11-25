@@ -188,24 +188,19 @@ export async function notifyAdminNewAgent(agent: Agent): Promise<void> {
   }
 
   // Send email using email service
-  const { sendEmail } = await import('@nest/email');
-  const { AgentDetectedEmail } = await import('@nest/email/templates/agent-detected');
+  const { sendAgentDetectedEmail } = await import('@nest/email');
 
   const dashboardUrl = process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dashboard.nestassociates.com';
 
   for (const admin of admins) {
     try {
-      await sendEmail({
-        to: admin.email,
-        subject: `New Agent Detected from Apex27: ${agent.apex27_branch_id}`,
-        react: AgentDetectedEmail({
-          branchId: agent.apex27_branch_id!,
-          branchName: agent.branch_name,
-          subdomain: agent.subdomain,
-          propertyCount: propertyCount || 0,
-          agentId: agent.id,
-          dashboardUrl,
-        }),
+      await sendAgentDetectedEmail(admin.email, {
+        branchId: agent.apex27_branch_id!,
+        branchName: agent.branch_name,
+        subdomain: agent.subdomain,
+        propertyCount: propertyCount || 0,
+        agentId: agent.id,
+        dashboardUrl,
       });
 
       console.log(`📧 Sent agent-detected email to ${admin.email}`);

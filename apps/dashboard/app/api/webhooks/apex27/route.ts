@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
         if (payload.listing.branch?.id) {
           try {
             await ensureAgentExists(
-              payload.listing.branch.id,
+              String(payload.listing.branch.id), // Convert number to string
               payload.listing.branch.name || null
             );
           } catch (error) {

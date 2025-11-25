@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Create agent
+    // 3. Create agent (T027: Set status='pending_profile')
     const { data: agent, error: agentError } = await supabase.from('agents').insert({
       user_id: authUser.user.id,
       subdomain: validatedData.subdomain,
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       bio: validatedData.bio || null,
       qualifications: validatedData.qualifications || [],
       social_media_links: validatedData.social_media_links || {},
-      status: 'active',
+      status: 'pending_profile', // Agent needs to complete profile
     }).select().single();
 
     if (agentError) {
@@ -73,6 +73,24 @@ export async function POST(request: NextRequest) {
         { error: { code: 'AGENT_ERROR', message: agentError.message } },
         { status: 400 }
       );
+    }
+
+    // T028-T029: Create onboarding checklist
+    const { error: checklistError } = await supabase
+      .from('agent_onboarding_checklist')
+      .insert({
+        agent_id: agent.id,
+        user_created: true, // Just created user
+        welcome_email_sent: true, // Welcome email is sent below
+        profile_completed: false,
+        profile_completion_pct: 0,
+        admin_approved: false,
+        site_deployed: false,
+      });
+
+    if (checklistError) {
+      console.error('Checklist error (non-fatal):', checklistError);
+      // Continue - agent created successfully
     }
 
     // Success!

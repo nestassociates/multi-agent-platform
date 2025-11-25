@@ -8,6 +8,7 @@ export {
   sendContentApprovedEmail,
   sendContentRejectedEmail,
   sendBuildFailedEmail,
+  sendAgentDetectedEmail,
   type WelcomeEmailData,
 } from './sender';
 
@@ -15,3 +16,4 @@ export {
 export { default as WelcomeEmail } from '../templates/welcome';
 export { default as ContentApprovedEmail } from '../templates/content-approved';
 export { default as ContentRejectedEmail } from '../templates/content-rejected';
+export { default as AgentDetectedEmail } from '../templates/agent-detected';

@@ -91,21 +91,21 @@ Based on Turborepo monorepo structure:
 
 **UI Components**
 
-- [ ] T023 [P] [US2] Create agent status badge component in apps/dashboard/components/admin/agent-status-badge.tsx
-- [ ] T024 [P] [US2] Create agent auto-detect banner component in apps/dashboard/components/admin/agent-auto-detect-banner.tsx
-- [ ] T025 [US2] Modify agents list page in apps/dashboard/app/(admin)/agents/page.tsx to add status filter
-- [ ] T026 [US2] Add "Setup" action button for draft agents in agents list page
+- [x] T023 [P] [US2] Create agent status badge component in apps/dashboard/components/admin/agent-status-badge.tsx
+- [x] T024 [P] [US2] Create agent auto-detect banner component in apps/dashboard/components/admin/agent-auto-detect-banner.tsx
+- [x] T025 [US2] Modify agents list page in apps/dashboard/app/(admin)/agents/page.tsx to add status filter
+- [x] T026 [US2] Add "Setup" action button for draft agents in agents list page
 
 **Agent Creation Updates**
 
-- [ ] T027 [US2] Modify POST /api/admin/agents endpoint in apps/dashboard/app/api/admin/agents/route.ts to set status='pending_profile'
-- [ ] T028 [US2] Add checklist creation in POST /api/admin/agents endpoint
-- [ ] T029 [US2] Update checklist.user_created and checklist.welcome_email_sent in endpoint
+- [x] T027 [US2] Modify POST /api/admin/agents endpoint in apps/dashboard/app/api/admin/agents/route.ts to set status='pending_profile'
+- [x] T028 [US2] Add checklist creation in POST /api/admin/agents endpoint
+- [x] T029 [US2] Update checklist.user_created and checklist.welcome_email_sent in endpoint
 
 **Status Filter**
 
-- [ ] T030 [US2] Add status query parameter to GET /api/admin/agents endpoint in apps/dashboard/app/api/admin/agents/route.ts
-- [ ] T031 [US2] Implement status filtering logic in GET endpoint
+- [x] T030 [US2] Add status query parameter to GET /api/admin/agents endpoint in apps/dashboard/app/api/admin/agents/route.ts
+- [x] T031 [US2] Implement status filtering logic in GET endpoint
 
 **Checkpoint**: Admins can setup draft agents, status tracking works
 

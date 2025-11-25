@@ -3,6 +3,7 @@ import { render } from '@react-email/render';
 import WelcomeEmail from '../templates/welcome';
 import ContentApprovedEmail from '../templates/content-approved';
 import ContentRejectedEmail from '../templates/content-rejected';
+import AgentDetectedEmail from '../templates/agent-detected';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -139,4 +140,46 @@ export async function sendBuildFailedEmail(
   // Placeholder - will implement when we have the template
   console.log('Build failed email:', agentName, data);
   return { id: 'placeholder' };
+}
+
+/**
+ * Send agent detected email to admins
+ * Feature: 004-agent-lifecycle-management
+ * Task: T020
+ */
+export async function sendAgentDetectedEmail(
+  adminEmail: string,
+  data: {
+    branchId: string;
+    branchName: string | null;
+    subdomain: string;
+    propertyCount: number;
+    agentId: string;
+    dashboardUrl?: string;
+  }
+): Promise<EmailResponse> {
+  const html = render(
+    AgentDetectedEmail({
+      branchId: data.branchId,
+      branchName: data.branchName,
+      subdomain: data.subdomain,
+      propertyCount: data.propertyCount,
+      agentId: data.agentId,
+      dashboardUrl: data.dashboardUrl || process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dashboard.nestassociates.com',
+    })
+  );
+
+  try {
+    const result = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@nestassociates.co.uk',
+      to: adminEmail,
+      subject: `New Agent Detected from Apex27: ${data.branchId}`,
+      html,
+    });
+
+    return result as EmailResponse;
+  } catch (error) {
+    console.error('Failed to send agent-detected email:', error);
+    throw error;
+  }
 }

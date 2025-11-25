@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createContentSchema } from '@nest/validation';
 import { generateSlug, generateUniqueSlug } from '@/lib/slug-generator';
-import { sanitizeHtml } from '@/lib/sanitize';
+
+// Dynamic import of sanitize to avoid build issues with jsdom
+export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/agent/content
@@ -74,6 +76,7 @@ export async function POST(request: NextRequest) {
     // Sanitize HTML content (defense-in-depth: server-side + client-side)
     // Server sanitization prevents malicious content from being stored
     // Client sanitization (in preview components) adds additional protection
+    const { sanitizeHtml } = await import('@/lib/sanitize');
     const sanitizedContentBody = data.content_body ? sanitizeHtml(data.content_body) : '';
 
     // Create content
