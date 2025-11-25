@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { ContentActions } from '@/components/admin/content-actions';
-import { sanitizeHtml } from '@/lib/sanitize';
+import { SanitizedContent } from '@/components/admin/sanitized-content';
 
 interface ContentDetailPageProps {
   params: {
@@ -209,9 +209,9 @@ export default async function ContentDetailPage({ params }: ContentDetailPagePro
           {typedContent.content_body && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Content</h3>
-              <div
+              <SanitizedContent
+                html={typedContent.content_body}
                 className="prose max-w-none text-gray-900"
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(typedContent.content_body) }}
               />
             </div>
           )}

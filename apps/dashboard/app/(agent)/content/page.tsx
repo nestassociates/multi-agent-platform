@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { sanitizePlainText } from '@/lib/sanitize';
 
 export const metadata: Metadata = {
   title: 'My Content | Agent Dashboard',
@@ -186,7 +185,7 @@ export default async function AgentContentPage() {
                       <div className="font-medium">{item.title}</div>
                       {item.rejection_reason && (
                         <div className="text-xs text-destructive mt-1">
-                          Rejected: {sanitizePlainText(item.rejection_reason)}
+                          Rejected: {item.rejection_reason}
                         </div>
                       )}
                     </TableCell>
