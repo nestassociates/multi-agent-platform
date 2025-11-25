@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
             await ensureAgentExists(
               String(payload.listing.branch.id), // Convert number to string
               payload.listing.branch.name || null,
-              payload.listing.branch // Pass full branch details for contact data
+              payload.listing.branch, // Pass full branch details for contact data
+              payload.listing.user    // ✅ Pass user data with firstName/lastName
             );
           } catch (error) {
             console.error('Auto-detection failed (non-fatal):', error);

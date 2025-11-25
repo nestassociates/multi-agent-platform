@@ -26,7 +26,8 @@ export interface DetectionResult {
 export async function ensureAgentExists(
   branchId: string,
   branchName?: string | null,
-  branchDetails?: any
+  branchDetails?: any,
+  userData?: any
 ): Promise<DetectionResult> {
   const supabase = createServiceRoleClient();
 
@@ -54,16 +55,13 @@ export async function ensureAgentExists(
   // Create new draft agent with Apex27 contact data
   const subdomain = generateSubdomainFromBranchId(branchId);
 
-  // Parse name from email (firstname.lastname@nestassociates.co.uk)
-  const parsedName = branchDetails?.email ? parseNameFromEmail(branchDetails.email) : null;
-
-  // Store branch contact info for pre-populating setup form
-  const contactData = branchDetails ? {
-    email: branchDetails.email,
-    phone: branchDetails.phone,
-    address: `${branchDetails.address1}, ${branchDetails.city}, ${branchDetails.postalCode}`,
-    firstName: parsedName?.firstName || null,
-    lastName: parsedName?.lastName || null,
+  // Store contact info from Apex27 (user data for names, branch data for contact details)
+  const contactData = branchDetails || userData ? {
+    email: userData?.email || branchDetails?.email || null,
+    phone: branchDetails?.phone || null,
+    address: branchDetails ? `${branchDetails.address1}, ${branchDetails.city}, ${branchDetails.postalCode}` : null,
+    firstName: userData?.firstName || null,  // ✅ Direct from listing.user
+    lastName: userData?.lastName || null,    // ✅ Direct from listing.user
   } : null;
 
   const { data: newAgent, error: createError } = await supabase
@@ -173,19 +171,21 @@ export async function scanPropertiesForNewAgents(): Promise<{
 
   for (const [branchId, branchName] of missingBranches) {
     try {
-      // Fetch branch contact details from Apex27
+      // Get branch and user details from Apex27
       let branchDetails = null;
+      let userData = null;
       try {
         // Find this branch in the listings we already fetched
         const listing = listings.find(l => String(l.branch.id) === branchId);
         if (listing) {
           branchDetails = listing.branch;
+          userData = listing.user;  // ✅ Get user data with names
         }
       } catch (err) {
-        console.error(`Failed to get branch details for ${branchId}:`, err);
+        console.error(`Failed to get details for ${branchId}:`, err);
       }
 
-      const result = await ensureAgentExists(branchId, branchName, branchDetails);
+      const result = await ensureAgentExists(branchId, branchName, branchDetails, userData);
       if (result.isNew) {
         newAgents.push(result.agent);
         console.log(`[Auto-Detect] Created draft agent for branch ${branchId}: ${result.agent.subdomain}`);
@@ -270,25 +270,3 @@ function generateSubdomainFromBranchId(branchId: string): string {
   return `agent-${cleaned}`;
 }
 
-/**
- * Parse agent name from email address
- * Pattern: firstname.lastname@nestassociates.co.uk
- * Returns: { firstName, lastName } or null if can't parse
- */
-function parseNameFromEmail(email: string): { firstName: string; lastName: string } | null {
-  if (!email || !email.includes('@nestassociates.co.uk')) {
-    return null;
-  }
-
-  const localPart = email.split('@')[0]; // Get "firstname.lastname"
-  const parts = localPart.split('.');
-
-  if (parts.length >= 2) {
-    // Capitalize first letter of each part
-    const firstName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-    const lastName = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
-    return { firstName, lastName };
-  }
-
-  return null;
-}
