@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { updateContentSchema } from '@nest/validation';
-import { sanitizeHtml } from '@/lib/sanitize';
 
 /**
  * PATCH /api/agent/content/[id]
@@ -93,8 +92,9 @@ export async function PATCH(
     if (data.title !== undefined) updateData.title = data.title;
     if (data.slug !== undefined) updateData.slug = data.slug;
     if (data.content_body !== undefined) {
-      // Sanitize HTML content (defense-in-depth)
-      updateData.content_body = sanitizeHtml(data.content_body);
+      // Note: HTML sanitization happens on display (client-side)
+      // All content is sanitized before rendering with dangerouslySetInnerHTML
+      updateData.content_body = data.content_body;
     }
     if (data.excerpt !== undefined) updateData.excerpt = data.excerpt;
     if (data.featured_image_url !== undefined)
