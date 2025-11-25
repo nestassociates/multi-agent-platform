@@ -5,7 +5,7 @@
  */
 
 export type UserRole = 'super_admin' | 'admin' | 'agent';
-export type AgentStatus = 'active' | 'suspended' | 'archived';
+export type AgentStatus = 'draft' | 'pending_profile' | 'pending_admin' | 'active' | 'inactive' | 'suspended';
 export type TransactionType = 'sale' | 'let' | 'commercial';
 export type PropertyStatus = 'available' | 'under_offer' | 'sold' | 'let';
 export type ContentType = 'blog_post' | 'area_guide' | 'review' | 'fee_structure';
@@ -46,13 +46,40 @@ export interface SocialMediaLinks {
  */
 export interface Agent {
   id: string; // UUID
-  user_id: string; // UUID, references profiles
+  user_id: string | null; // UUID, references profiles (nullable for draft agents)
   subdomain: string; // e.g., "john-smith"
   apex27_branch_id: string | null;
+  branch_name: string | null; // Human-readable branch name from Apex27
   bio: string | null;
   qualifications: string[]; // Array of qualification names
   social_media_links: SocialMediaLinks;
   status: AgentStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Agent Onboarding Checklist entity
+ */
+export interface AgentOnboardingChecklist {
+  id: string; // UUID
+  agent_id: string; // UUID, references agents
+
+  // Checklist items
+  user_created: boolean;
+  welcome_email_sent: boolean;
+  profile_completed: boolean;
+  profile_completion_pct: number; // 0-100
+  admin_approved: boolean;
+  site_deployed: boolean;
+
+  // Activation metadata
+  activated_at: string | null; // ISO 8601
+  activated_by_user_id: string | null; // UUID
+  deactivated_at: string | null; // ISO 8601
+  deactivated_by_user_id: string | null; // UUID
+  deactivation_reason: string | null;
+
   created_at: string;
   updated_at: string;
 }

@@ -40,6 +40,18 @@ export const createAgentSchema = z.object({
 
 export type CreateAgentInput = z.infer<typeof createAgentSchema>;
 
+// Agent status schema (T009)
+export const agentStatusSchema = z.enum([
+  'draft',
+  'pending_profile',
+  'pending_admin',
+  'active',
+  'inactive',
+  'suspended'
+]);
+
+export type AgentStatusType = z.infer<typeof agentStatusSchema>;
+
 // Update agent schema
 export const updateAgentSchema = z.object({
   first_name: z.string().min(1).max(100).optional(),
@@ -48,7 +60,7 @@ export const updateAgentSchema = z.object({
   bio: z.string().max(5000).optional(),
   qualifications: z.array(z.string()).optional(),
   social_media_links: socialMediaLinksSchema,
-  status: z.enum(['active', 'suspended', 'archived']).optional(),
+  status: agentStatusSchema.optional(),
 });
 
 export type UpdateAgentInput = z.infer<typeof updateAgentSchema>;
@@ -63,3 +75,25 @@ export const updateAgentProfileSchema = z.object({
 });
 
 export type UpdateAgentProfileInput = z.infer<typeof updateAgentProfileSchema>;
+
+// Activation request schema (T010)
+export const activateAgentSchema = z.object({
+  reason: z.string().optional(),
+});
+
+export type ActivateAgentInput = z.infer<typeof activateAgentSchema>;
+
+// Deactivation request schema (T010)
+export const deactivateAgentSchema = z.object({
+  reason: z.string().min(10, 'Deactivation reason must be at least 10 characters'),
+});
+
+export type DeactivateAgentInput = z.infer<typeof deactivateAgentSchema>;
+
+// Checklist update schema (T011)
+export const updateChecklistSchema = z.object({
+  field: z.enum(['user_created', 'welcome_email_sent', 'admin_approved']),
+  value: z.boolean(),
+});
+
+export type UpdateChecklistInput = z.infer<typeof updateChecklistSchema>;

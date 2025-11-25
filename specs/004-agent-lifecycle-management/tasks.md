@@ -25,12 +25,12 @@ Based on Turborepo monorepo structure:
 
 **Purpose**: Add new tables and columns to support agent lifecycle
 
-- [ ] T001 [P] Create migration to expand agents.status enum in supabase/migrations/20251125000001_expand_agent_status.sql
-- [ ] T002 [P] Create migration for agent_onboarding_checklist table in supabase/migrations/20251125000002_create_onboarding_checklist.sql
-- [ ] T003 [P] Create migration to add agents.branch_name column in supabase/migrations/20251125000003_add_branch_name.sql
-- [ ] T004 [P] Create migration to add indexes on agents.status and agents.branch_id in supabase/migrations/20251125000004_add_indexes.sql
-- [ ] T005 Create migration to migrate existing agents to 'active' status in supabase/migrations/20251125000005_migrate_existing_agents.sql
-- [ ] T006 Apply all migrations and verify schema changes
+- [x] T001 [P] Create migration to expand agents.status enum in supabase/migrations/20251125000001_expand_agent_status.sql
+- [x] T002 [P] Create migration for agent_onboarding_checklist table in supabase/migrations/20251125000002_create_onboarding_checklist.sql
+- [x] T003 [P] Create migration to add agents.branch_name column in supabase/migrations/20251125000003_add_branch_name.sql
+- [x] T004 [P] Create migration to add indexes on agents.status and agents.apex27_branch_id in supabase/migrations/20251125000004_add_indexes.sql
+- [x] T005 Create migration to migrate existing agents to 'active' status in supabase/migrations/20251125000005_migrate_existing_agents.sql
+- [x] T006 Apply all migrations and verify schema changes
 
 ---
 
@@ -38,11 +38,11 @@ Based on Turborepo monorepo structure:
 
 **Purpose**: Update shared types and validation schemas
 
-- [ ] T007 [P] Update Agent type in packages/shared-types/src/entities.ts to include new status values and branch_name
-- [ ] T008 [P] Create AgentOnboardingChecklist type in packages/shared-types/src/entities.ts
-- [ ] T009 [P] Update agent validation schema in packages/validation/src/agent.ts to include new status enum
-- [ ] T010 [P] Create activation/deactivation request schemas in packages/validation/src/agent.ts
-- [ ] T011 [P] Create checklist update schema in packages/validation/src/agent.ts
+- [x] T007 [P] Update Agent type in packages/shared-types/src/entities.ts to include new status values and branch_name
+- [x] T008 [P] Create AgentOnboardingChecklist type in packages/shared-types/src/entities.ts
+- [x] T009 [P] Update agent validation schema in packages/validation/src/agent.ts to include new status enum
+- [x] T010 [P] Create activation/deactivation request schemas in packages/validation/src/agent.ts
+- [x] T011 [P] Create checklist update schema in packages/validation/src/agent.ts
 
 ---
 
@@ -56,26 +56,26 @@ Based on Turborepo monorepo structure:
 
 **Auto-Detection Service**
 
-- [ ] T012 [P] [US1] Create agent detection service in apps/dashboard/lib/services/agent-detection.ts
-- [ ] T013 [US1] Implement ensureAgentExists() function with idempotent logic in agent-detection.ts
-- [ ] T014 [US1] Implement scanPropertiesForNewAgents() function in agent-detection.ts
-- [ ] T015 [US1] Implement notifyAdminNewAgent() email function in agent-detection.ts
+- [x] T012 [P] [US1] Create agent detection service in apps/dashboard/lib/services/agent-detection.ts
+- [x] T013 [US1] Implement ensureAgentExists() function with idempotent logic in agent-detection.ts
+- [x] T014 [US1] Implement scanPropertiesForNewAgents() function in agent-detection.ts
+- [x] T015 [US1] Implement notifyAdminNewAgent() email function in agent-detection.ts
 
 **Webhook Integration**
 
-- [ ] T016 [US1] Modify Apex27 webhook handler in apps/dashboard/app/api/webhooks/apex27/route.ts to call ensureAgentExists()
-- [ ] T017 [US1] Add unique constraint check for agents.branch_id in webhook handler
-- [ ] T018 [US1] Add error handling for duplicate branch_id in webhook handler
+- [x] T016 [US1] Modify Apex27 webhook handler in apps/dashboard/app/api/webhooks/apex27/route.ts to call ensureAgentExists()
+- [x] T017 [US1] Add unique constraint check for agents.apex27_branch_id in webhook handler
+- [x] T018 [US1] Add error handling for duplicate branch_id in webhook handler
 
 **Admin Notification**
 
-- [ ] T019 [P] [US1] Create agent-detected email template in packages/email/templates/agent-detected.tsx
-- [ ] T020 [US1] Integrate email sending in agent detection service
+- [x] T019 [P] [US1] Create agent-detected email template in packages/email/templates/agent-detected.tsx
+- [x] T020 [US1] Integrate email sending in agent detection service
 
 **Manual Trigger**
 
-- [ ] T021 [P] [US1] Create POST /api/admin/agents/auto-detect endpoint in apps/dashboard/app/api/admin/agents/auto-detect/route.ts
-- [ ] T022 [US1] Implement scan all properties logic in auto-detect endpoint
+- [x] T021 [P] [US1] Create POST /api/admin/agents/auto-detect endpoint in apps/dashboard/app/api/admin/agents/auto-detect/route.ts
+- [x] T022 [US1] Implement scan all properties logic in auto-detect endpoint
 
 **Checkpoint**: New agents auto-created from Apex27, admins notified, no builds triggered
 
