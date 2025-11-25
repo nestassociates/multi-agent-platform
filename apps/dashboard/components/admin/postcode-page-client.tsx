@@ -71,7 +71,7 @@ export default function PostcodePageClient({ agents }: Props) {
         const color = colors[index % colors.length];
 
         // Assign the same color to all postcodes in this territory
-        postcodeMatches.forEach(postcode => {
+        postcodeMatches.forEach((postcode: string) => {
           assignments[postcode] = {
             agentId: territory.id,
             agentName: territory.agentName,
