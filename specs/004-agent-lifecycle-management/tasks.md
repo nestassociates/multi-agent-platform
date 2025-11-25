@@ -121,25 +121,25 @@ Based on Turborepo monorepo structure:
 
 **Profile Completion Service**
 
-- [ ] T032 [P] [US3] Create profile completion calculator in apps/dashboard/lib/services/profile-completion.ts
-- [ ] T033 [US3] Implement calculateProfileCompletion() function (6 required fields)
-- [ ] T034 [US3] Implement updateChecklistProgress() function
+- [x] T032 [P] [US3] Create profile completion calculator in apps/dashboard/lib/services/profile-completion.ts
+- [x] T033 [US3] Implement calculateProfileCompletion() function (6 required fields)
+- [x] T034 [US3] Implement updateChecklistProgress() function
 
 **Profile API Integration**
 
-- [ ] T035 [US3] Modify PATCH /api/agent/profile endpoint in apps/dashboard/app/api/agent/profile/route.ts
-- [ ] T036 [US3] Add profile completion calculation after each profile update
-- [ ] T037 [US3] Add auto-status transition when completion reaches 100%
-- [ ] T038 [US3] Add admin notification email when agent ready for review
+- [x] T035 [US3] Modify PATCH /api/agent/profile endpoint in apps/dashboard/app/api/agent/profile/route.ts
+- [x] T036 [US3] Add profile completion calculation after each profile update
+- [x] T037 [US3] Add auto-status transition when completion reaches 100%
+- [x] T038 [US3] Add admin notification email when agent ready for review
 
 **Email Template**
 
-- [ ] T039 [P] [US3] Create profile-complete email template in packages/email/templates/profile-complete.tsx
+- [x] T039 [P] [US3] Create profile-complete email template in packages/email/templates/profile-complete.tsx
 
 **UI Updates**
 
-- [ ] T040 [P] [US3] Add profile completion progress bar to apps/dashboard/app/(agent)/profile/page.tsx
-- [ ] T041 [US3] Display checklist of required fields in profile page
+- [x] T040 [P] [US3] Add profile completion progress bar to apps/dashboard/app/(agent)/profile/page.tsx
+- [x] T041 [US3] Display checklist of required fields in profile page
 
 **Checkpoint**: Profile completion tracked, auto-transitions work, admins notified
 
@@ -155,41 +155,41 @@ Based on Turborepo monorepo structure:
 
 **Activation Service**
 
-- [ ] T042 [P] [US4] Create agent activation service in apps/dashboard/lib/services/agent-activation.ts
-- [ ] T043 [US4] Implement activateAgent() function (status update, checklist update, queue build, audit log)
-- [ ] T044 [US4] Implement validateReadyForActivation() function (check profile complete)
-- [ ] T045 [US4] Implement queueActivationBuild() function (P1 priority build)
+- [x] T042 [P] [US4] Create agent activation service in apps/dashboard/lib/services/agent-activation.ts
+- [x] T043 [US4] Implement activateAgent() function (status update, checklist update, queue build, audit log)
+- [x] T044 [US4] Implement validateReadyForActivation() function (check profile complete)
+- [x] T045 [US4] Implement queueActivationBuild() function (P1 priority build)
 
 **Activation API**
 
-- [ ] T046 [P] [US4] Create POST /api/admin/agents/[id]/activate endpoint in apps/dashboard/app/api/admin/agents/[id]/activate/route.ts
-- [ ] T047 [US4] Implement activation validation in endpoint
-- [ ] T048 [US4] Call activation service from endpoint
-- [ ] T049 [US4] Add error handling for duplicate activation
+- [x] T046 [P] [US4] Create POST /api/admin/agents/[id]/activate endpoint in apps/dashboard/app/api/admin/agents/[id]/activate/route.ts
+- [x] T047 [US4] Implement activation validation in endpoint
+- [x] T048 [US4] Call activation service from endpoint
+- [x] T049 [US4] Add error handling for duplicate activation
 
 **Onboarding Checklist UI**
 
-- [ ] T050 [P] [US4] Create onboarding checklist component in apps/dashboard/components/admin/agent-onboarding-checklist.tsx
-- [ ] T051 [P] [US4] Create GET /api/admin/agents/[id]/checklist endpoint in apps/dashboard/app/api/admin/agents/[id]/checklist/route.ts
-- [ ] T052 [US4] Add "Onboarding" tab to agent detail page in apps/dashboard/app/(admin)/agents/[id]/page.tsx
-- [ ] T053 [US4] Display checklist component in onboarding tab
-- [ ] T054 [US4] Add "Approve & Deploy Site" button to onboarding tab
+- [x] T050 [P] [US4] Create onboarding checklist component in apps/dashboard/components/admin/agent-onboarding-checklist.tsx
+- [x] T051 [P] [US4] Create GET /api/admin/agents/[id]/checklist endpoint in apps/dashboard/app/api/admin/agents/[id]/checklist/route.ts
+- [x] T052 [US4] Add "Onboarding" tab to agent detail page in apps/dashboard/app/(admin)/agents/[id]/page.tsx
+- [x] T053 [US4] Display checklist component in onboarding tab
+- [x] T054 [US4] Add "Approve & Deploy Site" button to onboarding tab
 
 **Email Template**
 
-- [ ] T055 [P] [US4] Create site-activated email template in packages/email/templates/site-activated.tsx
-- [ ] T056 [US4] Send activation email after successful activation
+- [x] T055 [P] [US4] Create site-activated email template in packages/email/templates/site-activated.tsx
+- [x] T056 [US4] Send activation email after successful activation
 
 **Build System Integration**
 
-- [ ] T057 [US4] Modify build processor in packages/build-system/builder.ts to filter by agents.status='active'
-- [ ] T058 [US4] Add JOIN with agents table in build queue query
-- [ ] T059 [US4] Add logging for skipped builds (non-active agents)
+- [x] T057 [US4] Modify build processor in packages/build-system/builder.ts to filter by agents.status='active'
+- [x] T058 [US4] Add JOIN with agents table in build queue query
+- [x] T059 [US4] Add logging for skipped builds (non-active agents)
 
 **Audit Logging**
 
-- [ ] T060 [US4] Add audit log entry on activation in activation service
-- [ ] T061 [US4] Include activated_by_user_id and timestamp in audit log
+- [x] T060 [US4] Add audit log entry on activation in activation service
+- [x] T061 [US4] Include activated_by_user_id and timestamp in audit log
 
 **Checkpoint**: Admins can activate agents, sites deploy only for active agents, audit trail complete
 

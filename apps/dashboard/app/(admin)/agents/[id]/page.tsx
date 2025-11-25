@@ -11,6 +11,7 @@ import { AgentPropertiesTab } from '@/components/admin/agent-properties-tab';
 import { AgentAnalyticsTab } from '@/components/admin/agent-analytics-tab';
 import { AgentSettingsTab } from '@/components/admin/agent-settings-tab';
 import { EditAgentButton } from '@/components/admin/edit-agent-button';
+import { AgentOnboardingChecklistComponent } from '@/components/admin/agent-onboarding-checklist';
 
 export default async function AgentDetailPage({ params }: { params: { id: string } }) {
   const user = await getUser();
@@ -33,8 +34,8 @@ export default async function AgentDetailPage({ params }: { params: { id: string
     notFound();
   }
 
-  // Fetch stats
-  const [contentResult, propertiesResult, buildsResult] = await Promise.all([
+  // T052: Fetch stats and checklist
+  const [contentResult, propertiesResult, buildsResult, checklistResult] = await Promise.all([
     supabase
       .from('content_submissions')
       .select('id', { count: 'exact', head: true })
@@ -53,6 +54,11 @@ export default async function AgentDetailPage({ params }: { params: { id: string
       .order('completed_at', { ascending: false })
       .limit(1)
       .single(),
+    supabase
+      .from('agent_onboarding_checklist')
+      .select('*')
+      .eq('agent_id', params.id)
+      .maybeSingle(),
   ]);
 
   const stats = {
@@ -60,6 +66,8 @@ export default async function AgentDetailPage({ params }: { params: { id: string
     propertiesCount: propertiesResult.count || 0,
     lastBuildDate: buildsResult.data?.completed_at || null,
   };
+
+  const checklist = checklistResult.data;
 
   const micrositeUrl = `https://${agent.subdomain}.agents.nestassociates.com`;
 
@@ -86,10 +94,18 @@ export default async function AgentDetailPage({ params }: { params: { id: string
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* T052-T054: Tabs with onboarding */}
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="onboarding">
+            Onboarding
+            {agent.status !== 'active' && (
+              <span className="ml-2 rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800">
+                {agent.status === 'pending_admin' ? 'Ready' : 'In Progress'}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="content">
             Content
             {stats.contentCount > 0 && (
@@ -112,6 +128,10 @@ export default async function AgentDetailPage({ params }: { params: { id: string
 
         <TabsContent value="overview" className="space-y-6">
           <AgentOverview agent={agent} stats={stats} />
+        </TabsContent>
+
+        <TabsContent value="onboarding">
+          <AgentOnboardingChecklistComponent agent={agent} checklist={checklist} />
         </TabsContent>
 
         <TabsContent value="content">

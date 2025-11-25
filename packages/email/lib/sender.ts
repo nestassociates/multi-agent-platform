@@ -4,6 +4,8 @@ import WelcomeEmail from '../templates/welcome';
 import ContentApprovedEmail from '../templates/content-approved';
 import ContentRejectedEmail from '../templates/content-rejected';
 import AgentDetectedEmail from '../templates/agent-detected';
+import ProfileCompleteEmail from '../templates/profile-complete';
+import SiteActivatedEmail from '../templates/site-activated';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -180,6 +182,80 @@ export async function sendAgentDetectedEmail(
     return result as EmailResponse;
   } catch (error) {
     console.error('Failed to send agent-detected email:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send profile complete email to admins
+ * Feature: 004-agent-lifecycle-management
+ * Task: T038
+ */
+export async function sendProfileCompleteEmail(
+  adminEmail: string,
+  data: {
+    agentName: string;
+    agentId: string;
+    agentSubdomain: string;
+    dashboardUrl?: string;
+  }
+): Promise<EmailResponse> {
+  const html = render(
+    ProfileCompleteEmail({
+      agentName: data.agentName,
+      agentId: data.agentId,
+      agentSubdomain: data.agentSubdomain,
+      dashboardUrl: data.dashboardUrl || process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dashboard.nestassociates.com',
+    })
+  );
+
+  try {
+    const result = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@nestassociates.co.uk',
+      to: adminEmail,
+      subject: `Agent Ready for Review: ${data.agentName}`,
+      html,
+    });
+
+    return result as EmailResponse;
+  } catch (error) {
+    console.error('Failed to send profile-complete email:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send site activated email to agent
+ * Feature: 004-agent-lifecycle-management
+ * Task: T056
+ */
+export async function sendSiteActivatedEmail(
+  agentEmail: string,
+  data: {
+    agentName: string;
+    siteUrl: string;
+    dashboardUrl?: string;
+  }
+): Promise<EmailResponse> {
+  const html = render(
+    SiteActivatedEmail({
+      agentName: data.agentName,
+      siteUrl: data.siteUrl,
+      dashboardUrl: data.dashboardUrl || process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dashboard.nestassociates.com',
+    })
+  );
+
+  try {
+    const result = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@nestassociates.co.uk',
+      to: agentEmail,
+      subject: 'Your Website is Now Live! 🎉',
+      html,
+    });
+
+    return result as EmailResponse;
+  } catch (error) {
+    console.error('Failed to send site-activated email:', error);
     throw error;
   }
 }

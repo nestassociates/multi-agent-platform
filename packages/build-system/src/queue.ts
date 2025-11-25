@@ -71,13 +71,17 @@ export async function addBuild(request: BuildRequest): Promise<{ success: boolea
 /**
  * Get next build from the queue
  * Prioritizes high priority builds, then by creation time
+ *
+ * T057-T059: ONLY processes builds for agents with status='active'
  */
 export async function getNextBuild(): Promise<any | null> {
   try {
+    // T057: Add INNER JOIN with agents table and filter by status='active'
     const { data, error } = await supabase
       .from('build_queue')
-      .select('*, agent:agents(subdomain, user_id)')
+      .select('*, agent:agents!inner(subdomain, user_id, status)')
       .eq('status', 'queued')
+      .eq('agent.status', 'active') // T057: ONLY active agents
       .order('priority', { ascending: false }) // high > normal > low
       .order('created_at', { ascending: true }) // oldest first
       .limit(1)
@@ -89,6 +93,23 @@ export async function getNextBuild(): Promise<any | null> {
         return null;
       }
       throw error;
+    }
+
+    // T059: Log if build was skipped due to agent status
+    if (!data) {
+      // Check if there are any pending builds for non-active agents
+      const { data: skippedBuilds } = await supabase
+        .from('build_queue')
+        .select('id, agent:agents!inner(subdomain, status)')
+        .eq('status', 'queued')
+        .neq('agent.status', 'active')
+        .limit(5);
+
+      if (skippedBuilds && skippedBuilds.length > 0) {
+        console.log(`[Builder] Skipping ${skippedBuilds.length} builds for non-active agents:`,
+          skippedBuilds.map((b: any) => `${b.agent.subdomain} (${b.agent.status})`).join(', ')
+        );
+      }
     }
 
     return data;
