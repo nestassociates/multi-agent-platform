@@ -87,8 +87,8 @@ export default function FeesPage() {
         <CardContent>
           <div className="min-h-[400px]">
             <SimpleEditor
-              content={content}
-              onUpdate={({ editor }) => setEditorContent(editor.getHTML())}
+              initialContent={content}
+              onChange={(html) => setEditorContent(html)}
             />
           </div>
           <div className="mt-6 flex justify-end gap-3">
