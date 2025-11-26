@@ -39,10 +39,11 @@ async function main() {
     console.log('  City:', branch.city);
     console.log('  Postal Code:', branch.postalCode);
 
-    // Check if listing has negotiator/user data
-    if (listing.negotiators && listing.negotiators.length > 0) {
+    // Check if listing has negotiator/user data (not in type definition but may exist in API response)
+    const listingAny = listing as any;
+    if (listingAny.negotiators && listingAny.negotiators.length > 0) {
       console.log('\n👤 NEGOTIATORS (Agents):');
-      listing.negotiators.forEach((neg: any, idx: number) => {
+      listingAny.negotiators.forEach((neg: any, idx: number) => {
         console.log(`\n  Negotiator ${idx + 1}:`);
         console.log('    ID:', neg.id);
         console.log('    Email:', neg.email);
