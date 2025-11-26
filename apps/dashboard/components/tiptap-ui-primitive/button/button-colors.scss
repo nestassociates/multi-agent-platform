@@ -140,21 +140,21 @@
       ---------------------------------------------------------------- */
 
   &[data-style="ghost"] {
-    /************************************************** 
-        Ghost button background color 
+    /**************************************************
+        Ghost button background color
     **************************************************/
 
     /* Light mode */
     --tt-button-default-bg-color: var(--transparent);
     --tt-button-hover-bg-color: var(--tt-gray-light-200);
-    --tt-button-active-bg-color: var(--tt-gray-light-300); /* Changed from a-100 (5% opacity) to solid 300 for visibility */
+    --tt-button-active-bg-color: var(--tt-brand-color-100); /* Use brand color for clearly visible active state */
     --tt-button-active-bg-color-emphasized: var(
       --tt-brand-color-100
     ); //more important active state
     --tt-button-active-bg-color-subdued: var(
       --tt-gray-light-a-100
     ); //less important active state
-    --tt-button-active-hover-bg-color: var(--tt-gray-light-200);
+    --tt-button-active-hover-bg-color: var(--tt-brand-color-200); /* Brand color on hover too */
     --tt-button-active-hover-bg-color-emphasized: var(
       --tt-brand-color-200
     ); //more important active state hover
@@ -167,14 +167,14 @@
     .dark & {
       --tt-button-default-bg-color: var(--transparent);
       --tt-button-hover-bg-color: var(--tt-gray-dark-200);
-      --tt-button-active-bg-color: var(--tt-gray-dark-a-100);
+      --tt-button-active-bg-color: var(--tt-brand-color-900); /* Use brand color for clearly visible active state */
       --tt-button-active-bg-color-emphasized: var(
         --tt-brand-color-900
       ); //more important active state
       --tt-button-active-bg-color-subdued: var(
         --tt-gray-dark-a-100
       ); //less important active state
-      --tt-button-active-hover-bg-color: var(--tt-gray-dark-200);
+      --tt-button-active-hover-bg-color: var(--tt-brand-color-800); /* Brand color on hover too */
       --tt-button-active-hover-bg-color-emphasized: var(
         --tt-brand-color-800
       ); //more important active state hover

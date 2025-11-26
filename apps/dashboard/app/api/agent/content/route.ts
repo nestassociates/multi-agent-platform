@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     // Sanitize HTML content (defense-in-depth: server-side + client-side)
     // Server sanitization prevents malicious content from being stored
     // Client sanitization (in preview components) adds additional protection
-    const { sanitizeHtml } = await import('@/lib/sanitize');
+    const { sanitizeHtml } = await import('@/lib/sanitize.server');
     const sanitizedContentBody = data.content_body ? sanitizeHtml(data.content_body) : '';
 
     // Create content
@@ -158,11 +158,12 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const contentType = searchParams.get('content_type');
 
-    // Build query
+    // Build query (exclude archived review/fee_structure types)
     let query = supabase
       .from('content_submissions')
       .select('*')
       .eq('agent_id', agent.id)
+      .eq('is_archived', false)
       .order('updated_at', { ascending: false });
 
     if (status) {

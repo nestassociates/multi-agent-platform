@@ -21,8 +21,6 @@ interface ContentFormProps {
 const contentTypeOptions = [
   { value: 'blog_post', label: 'Blog Post' },
   { value: 'area_guide', label: 'Area Guide' },
-  { value: 'review', label: 'Customer Review' },
-  { value: 'fee_structure', label: 'Fee Structure' },
 ];
 
 export function ContentForm({

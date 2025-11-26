@@ -12,6 +12,8 @@ import {
 // --- Lib ---
 import { cn, parseShortcutKeys } from "@/lib/tiptap-utils"
 
+// Import TipTap CSS variables (required for button colors)
+import "@/styles/_variables.scss"
 import "@/components/tiptap-ui-primitive/button/button-colors.scss"
 import "@/components/tiptap-ui-primitive/button/button-group.scss"
 import "@/components/tiptap-ui-primitive/button/button.scss"

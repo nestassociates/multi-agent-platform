@@ -32,11 +32,11 @@ interface Content {
     id: string;
     subdomain: string;
     user_id?: string;
-    profiles?: Array<{
+    profiles?: {
       first_name: string;
       last_name: string;
       email: string;
-    }>;
+    };
   };
 }
 
@@ -150,12 +150,12 @@ export default async function ContentDetailPage({ params }: ContentDetailPagePro
             <div>
               <p className="text-sm font-medium text-gray-500">Agent Name</p>
               <p className="mt-1 text-base text-gray-900">
-                {typedContent.agent?.profiles?.[0]?.first_name} {typedContent.agent?.profiles?.[0]?.last_name}
+                {typedContent.agent?.profiles?.first_name} {typedContent.agent?.profiles?.last_name}
               </p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Email</p>
-              <p className="mt-1 text-base text-gray-900">{typedContent.agent?.profiles?.[0]?.email}</p>
+              <p className="mt-1 text-base text-gray-900">{typedContent.agent?.profiles?.email}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Subdomain</p>

@@ -18,7 +18,7 @@ interface EditContentPageProps {
 interface ContentData {
   id: string;
   agent_id: string;
-  content_type: 'blog_post' | 'area_guide' | 'review' | 'fee_structure';
+  content_type: 'blog_post' | 'area_guide'; // Archived types (review, fee_structure) not editable
   title: string;
   slug: string;
   content_body: string;

@@ -90,7 +90,7 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    // Update agent record (bio, qualifications, social_media_links, avatar_url)
+    // Update agent record (bio, qualifications, social_media_links, avatar_url, google_place_id)
     const agentUpdates: any = {};
 
     if (validatedData.bio !== undefined) agentUpdates.bio = validatedData.bio;
@@ -99,6 +99,7 @@ export async function PATCH(request: NextRequest) {
     if (validatedData.social_media_links !== undefined)
       agentUpdates.social_media_links = validatedData.social_media_links;
     if (validatedData.avatar_url !== undefined) agentUpdates.avatar_url = validatedData.avatar_url;
+    if (body.google_place_id !== undefined) agentUpdates.google_place_id = body.google_place_id;
 
     const { data: updatedAgent, error: agentError } = await supabase
       .from('agents')

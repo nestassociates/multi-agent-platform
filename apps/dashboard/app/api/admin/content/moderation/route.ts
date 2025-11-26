@@ -111,8 +111,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Transform data to match component interface
+    // Supabase returns profiles as an object (not array) when using the foreign key relationship
+    const transformedContent = (content || []).map((item: any) => ({
+      ...item,
+      agent: item.agent ? {
+        ...item.agent,
+        profile: item.agent.profiles || null, // profiles is already an object, not array
+        profiles: undefined, // Remove to avoid confusion
+      } : null,
+    }));
+
     // Build pagination response
-    const response = buildPaginationResponse(content || [], limit, count || 0);
+    const response = buildPaginationResponse(transformedContent, limit, count || 0);
 
     return NextResponse.json({
       success: true,

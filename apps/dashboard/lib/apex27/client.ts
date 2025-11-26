@@ -4,7 +4,7 @@
  * API Key: Uses X-Api-Key header (not Portal API's form-encoded approach)
  */
 
-import type { Apex27Listing, Apex27Branch } from './types';
+import type { Apex27Listing, Apex27Branch, Apex27User } from './types';
 
 const APEX27_API_URL = 'https://api.apex27.co.uk';
 

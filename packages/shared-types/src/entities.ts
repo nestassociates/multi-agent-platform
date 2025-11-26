@@ -8,7 +8,7 @@ export type UserRole = 'super_admin' | 'admin' | 'agent';
 export type AgentStatus = 'draft' | 'pending_profile' | 'pending_admin' | 'active' | 'inactive' | 'suspended';
 export type TransactionType = 'sale' | 'let' | 'commercial';
 export type PropertyStatus = 'available' | 'under_offer' | 'sold' | 'let';
-export type ContentType = 'blog_post' | 'area_guide' | 'review' | 'fee_structure';
+export type ContentType = 'blog_post' | 'area_guide';
 export type ContentStatus = 'draft' | 'pending_review' | 'approved' | 'rejected' | 'published';
 export type BuildStatus = 'pending' | 'processing' | 'completed' | 'failed';
 export type BuildPriority = 1 | 2 | 3 | 4;
@@ -60,6 +60,7 @@ export interface Agent {
   bio: string | null;
   qualifications: string[]; // Array of qualification names
   social_media_links: SocialMediaLinks;
+  google_place_id: string | null; // Google My Business Place ID for reviews widget
   status: AgentStatus;
   created_at: string;
   updated_at: string;
@@ -89,6 +90,19 @@ export interface AgentOnboardingChecklist {
 
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * Agent Fee Structure entity
+ * Feature: 005-separate-reviews-fees
+ * Uses TipTap rich text editor for flexible content
+ */
+export interface AgentFee {
+  id: string; // UUID
+  agent_id: string; // UUID, references agents
+  content_body: string; // Rich HTML content from TipTap editor
+  created_at: string; // ISO 8601 timestamp
+  updated_at: string; // ISO 8601 timestamp
 }
 
 /**

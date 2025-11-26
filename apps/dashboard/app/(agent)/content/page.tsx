@@ -42,8 +42,6 @@ const statusLabels = {
 const contentTypeLabels = {
   blog_post: 'Blog Post',
   area_guide: 'Area Guide',
-  review: 'Customer Review',
-  fee_structure: 'Fee Structure',
 };
 
 export default async function AgentContentPage() {
@@ -70,11 +68,12 @@ export default async function AgentContentPage() {
     redirect('/login');
   }
 
-  // Fetch agent's content
+  // Fetch agent's content (exclude archived review/fee_structure types)
   const { data: content, error: contentError } = await supabase
     .from('content_submissions')
     .select('*')
     .eq('agent_id', agent.id)
+    .eq('is_archived', false)
     .order('updated_at', { ascending: false });
 
   if (contentError) {

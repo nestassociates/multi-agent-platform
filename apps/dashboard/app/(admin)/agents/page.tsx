@@ -36,7 +36,7 @@ export default async function AgentsPage({ searchParams }: AgentsPageProps) {
     query = query.eq('status', statusFilter);
   }
 
-  const { data: agents, error } = await query.order('created_at', { ascending: false });
+  const { data: agents, error } = await query.order('created_at', { ascending: false }) as { data: any; error: any };
 
   if (error) {
     console.error('Error fetching agents:', error);

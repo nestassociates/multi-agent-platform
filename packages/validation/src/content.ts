@@ -4,8 +4,8 @@ import { z } from 'zod';
  * Content Validation Schemas
  */
 
-// Content type enum
-export const contentTypeSchema = z.enum(['blog_post', 'area_guide', 'review', 'fee_structure']);
+// Content type enum (review and fee_structure deprecated - see 005-separate-reviews-fees)
+export const contentTypeSchema = z.enum(['blog_post', 'area_guide']);
 
 // Content status enum
 export const contentStatusSchema = z.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']);

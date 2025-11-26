@@ -96,7 +96,7 @@ export async function PATCH(
     if (data.slug !== undefined) updateData.slug = data.slug;
     if (data.content_body !== undefined) {
       // Sanitize HTML content (defense-in-depth: server-side + client-side)
-      const { sanitizeHtml } = await import('@/lib/sanitize');
+      const { sanitizeHtml } = await import('@/lib/sanitize.server');
       updateData.content_body = sanitizeHtml(data.content_body);
     }
     if (data.excerpt !== undefined) updateData.excerpt = data.excerpt;

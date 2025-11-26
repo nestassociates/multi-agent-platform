@@ -13,6 +13,8 @@ import {
   Edit3,
   BarChart3,
   LogOut,
+  Star,
+  Banknote,
 } from "lucide-react"
 
 import {
@@ -85,6 +87,16 @@ const agentMenuItems = [
     title: "My Content",
     url: "/content",
     icon: Edit3,
+  },
+  {
+    title: "Reviews",
+    url: "/reviews",
+    icon: Star,
+  },
+  {
+    title: "Fees",
+    url: "/fees",
+    icon: Banknote,
   },
   {
     title: "My Properties",
