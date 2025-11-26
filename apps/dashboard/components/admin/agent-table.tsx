@@ -2,9 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -20,57 +20,78 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Eye } from 'lucide-react';
+import { Search, Eye, UserPlus } from 'lucide-react';
+import { AgentStatusBadge } from '@/components/admin/agent-status-badge';
+import type { AgentStatus } from '@nest/shared-types';
 
 interface Agent {
   id: string;
   subdomain: string;
   apex27_branch_id: string | null;
-  status: string;
+  branch_name: string | null;
+  apex27_contact_data?: {
+    email?: string;
+    phone?: string;
+    address?: string;
+    firstName?: string;
+    lastName?: string;
+  } | null;
+  status: AgentStatus;
   created_at: string;
   profile?: {
     first_name: string;
     last_name: string;
     email: string;
-  };
+  } | null;
 }
 
 interface AgentTableProps {
   agents: Agent[];
-  onRefresh?: () => void;
+  currentStatusFilter?: string;
 }
 
-export function AgentTable({ agents, onRefresh }: AgentTableProps) {
+export function AgentTable({ agents, currentStatusFilter = 'all' }: AgentTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Filter and search agents
+  // Handle status filter change (T025)
+  const handleStatusChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === 'all') {
+      params.delete('status');
+    } else {
+      params.set('status', value);
+    }
+    router.push(`/agents?${params.toString()}`);
+  };
+
+  // Filter agents by search query (status already filtered server-side)
   const filteredAgents = useMemo(() => {
     return agents.filter((agent) => {
-      // Status filter
-      if (statusFilter !== 'all' && agent.status !== statusFilter) {
-        return false;
-      }
-
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        const fullName = `${agent.profile?.first_name} ${agent.profile?.last_name}`.toLowerCase();
+        const fullName = agent.profile
+          ? `${agent.profile.first_name} ${agent.profile.last_name}`.toLowerCase()
+          : '';
         const email = agent.profile?.email?.toLowerCase() || '';
         const subdomain = agent.subdomain.toLowerCase();
         const branchId = agent.apex27_branch_id?.toLowerCase() || '';
+        const branchName = agent.branch_name?.toLowerCase() || '';
 
         return (
           fullName.includes(query) ||
           email.includes(query) ||
           subdomain.includes(query) ||
-          branchId.includes(query)
+          branchId.includes(query) ||
+          branchName.includes(query)
         );
       }
 
       return true;
     });
-  }, [agents, searchQuery, statusFilter]);
+  }, [agents, searchQuery]);
 
   return (
     <div className="space-y-4">
@@ -85,12 +106,16 @@ export function AgentTable({ agents, onRefresh }: AgentTableProps) {
             className="pl-9"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
+        {/* T025: Status filter with new lifecycle states */}
+        <Select value={currentStatusFilter} onValueChange={handleStatusChange}>
+          <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="pending_profile">Pending Profile</SelectItem>
+            <SelectItem value="pending_admin">Pending Approval</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
             <SelectItem value="suspended">Suspended</SelectItem>
@@ -121,10 +146,21 @@ export function AgentTable({ agents, onRefresh }: AgentTableProps) {
               {filteredAgents.map((agent) => (
                 <TableRow key={agent.id}>
                   <TableCell className="font-medium">
-                    {agent.profile?.first_name} {agent.profile?.last_name}
+                    {agent.profile ? (
+                      `${agent.profile.first_name} ${agent.profile.last_name}`
+                    ) : agent.apex27_contact_data?.firstName && agent.apex27_contact_data?.lastName ? (
+                      <span>
+                        {agent.apex27_contact_data.firstName} {agent.apex27_contact_data.lastName}
+                        <span className="ml-2 text-xs text-muted-foreground">(draft)</span>
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground italic">
+                        {agent.branch_name || `(Auto) ${agent.apex27_branch_id}`}
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {agent.profile?.email}
+                    {agent.profile?.email || agent.apex27_contact_data?.email || '—'}
                   </TableCell>
                   <TableCell>
                     <code className="text-sm bg-muted px-1.5 py-0.5 rounded">
@@ -133,37 +169,50 @@ export function AgentTable({ agents, onRefresh }: AgentTableProps) {
                   </TableCell>
                   <TableCell>
                     {agent.apex27_branch_id ? (
-                      <code className="text-sm bg-muted px-1.5 py-0.5 rounded">
-                        {agent.apex27_branch_id}
-                      </code>
+                      <div>
+                        <code className="text-sm bg-muted px-1.5 py-0.5 rounded">
+                          {agent.apex27_branch_id}
+                        </code>
+                        {agent.branch_name && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {agent.branch_name}
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        agent.status === 'active'
-                          ? 'default'
-                          : agent.status === 'inactive'
-                          ? 'secondary'
-                          : 'destructive'
-                      }
-                    >
-                      {agent.status}
-                    </Badge>
+                    {/* T023: Use new status badge component */}
+                    <AgentStatusBadge status={agent.status} showTooltip />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      asChild
-                    >
-                      <Link href={`/agents/${agent.id}`}>
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Link>
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      {/* T026: Setup button for draft agents */}
+                      {agent.status === 'draft' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                        >
+                          <Link href={`/agents/new?draft_agent_id=${agent.id}`}>
+                            <UserPlus className="h-4 w-4 mr-1" />
+                            Setup
+                          </Link>
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                      >
+                        <Link href={`/agents/${agent.id}`}>
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -176,11 +225,11 @@ export function AgentTable({ agents, onRefresh }: AgentTableProps) {
             <Search className="h-10 w-10 text-muted-foreground mb-4" />
             <h3 className="font-semibold">No agents found</h3>
             <p className="text-sm text-muted-foreground mt-2">
-              {searchQuery || statusFilter !== 'all'
+              {searchQuery || currentStatusFilter !== 'all'
                 ? 'Try adjusting your search or filters.'
                 : 'No agents have been created yet.'}
             </p>
-            {!searchQuery && statusFilter === 'all' && (
+            {!searchQuery && currentStatusFilter === 'all' && (
               <Button asChild className="mt-4">
                 <Link href="/agents/new">Create Agent</Link>
               </Button>

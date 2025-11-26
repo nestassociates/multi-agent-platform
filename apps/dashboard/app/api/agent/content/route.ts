@@ -3,6 +3,9 @@ import { createClient } from '@/lib/supabase/server';
 import { createContentSchema } from '@nest/validation';
 import { generateSlug, generateUniqueSlug } from '@/lib/slug-generator';
 
+// Dynamic import of sanitize to avoid build issues with jsdom
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/agent/content
  * Create new content (draft or submit for review)
@@ -70,8 +73,11 @@ export async function POST(request: NextRequest) {
     // Determine status (default to draft if not specified)
     const status = body.status || 'draft';
 
-    // Note: HTML sanitization happens on display (client-side) to avoid build issues
-    // All content is sanitized before rendering with dangerouslySetInnerHTML
+    // Sanitize HTML content (defense-in-depth: server-side + client-side)
+    // Server sanitization prevents malicious content from being stored
+    // Client sanitization (in preview components) adds additional protection
+    const { sanitizeHtml } = await import('@/lib/sanitize.server');
+    const sanitizedContentBody = data.content_body ? sanitizeHtml(data.content_body) : '';
 
     // Create content
     const { data: content, error: insertError } = await supabase
@@ -81,7 +87,7 @@ export async function POST(request: NextRequest) {
         content_type: data.content_type,
         title: data.title,
         slug,
-        content_body: data.content_body,
+        content_body: sanitizedContentBody,
         excerpt: data.excerpt || null,
         featured_image_url: data.featured_image_url || null,
         seo_meta_title: data.seo_meta_title || null,
@@ -152,11 +158,12 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const contentType = searchParams.get('content_type');
 
-    // Build query
+    // Build query (exclude archived review/fee_structure types)
     let query = supabase
       .from('content_submissions')
       .select('*')
       .eq('agent_id', agent.id)
+      .eq('is_archived', false)
       .order('updated_at', { ascending: false });
 
     if (status) {

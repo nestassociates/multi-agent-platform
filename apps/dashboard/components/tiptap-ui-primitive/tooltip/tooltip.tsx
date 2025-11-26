@@ -161,7 +161,7 @@ export function Tooltip({ children, ...props }: TooltipProviderProps) {
 }
 
 export const TooltipTrigger = forwardRef<HTMLElement, TooltipTriggerProps>(
-  function TooltipTrigger({ children, asChild = false, ...props }, propRef) {
+  function TooltipTrigger({ children, asChild = false, className, style, ...props }, propRef) {
     const context = useTooltipContext()
     const childrenRef = isValidElement(children)
       ? parseInt(version, 10) >= 19
@@ -188,11 +188,29 @@ export const TooltipTrigger = forwardRef<HTMLElement, TooltipTriggerProps>(
       )
     }
 
+    // Extract data-* and aria-* attributes to pass them explicitly (not through getReferenceProps which can strip them)
+    const dataProps: Record<string, unknown> = {}
+    const otherProps: Record<string, unknown> = {}
+
+    Object.entries(props).forEach(([key, value]) => {
+      if (key.startsWith('data-') || key.startsWith('aria-')) {
+        dataProps[key] = value
+      } else {
+        otherProps[key] = value
+      }
+    })
+
+    // Get reference props first so we can merge properly
+    const refProps = context.getReferenceProps(otherProps)
+
     return (
       <button
         ref={ref}
+        className={className}
         data-tooltip-state={context.open ? "open" : "closed"}
-        {...context.getReferenceProps(props)}
+        {...refProps}
+        {...dataProps}
+        style={style as React.CSSProperties}
       >
         {children}
       </button>

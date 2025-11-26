@@ -12,6 +12,7 @@ import {
   upsertPropertyFromApex27,
   deletePropertyByApex27Id,
 } from '@/lib/services/property-service';
+import { ensureAgentExists } from '@/lib/services/agent-detection';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +24,21 @@ export async function POST(request: NextRequest) {
     switch (payload.action) {
       case 'create':
       case 'update':
+        // T016-T018: Auto-detect and ensure agent exists for this branch
+        if (payload.listing.branch?.id) {
+          try {
+            await ensureAgentExists(
+              String(payload.listing.branch.id), // Convert number to string
+              payload.listing.branch.name || null,
+              payload.listing.branch, // Pass full branch details for contact data
+              payload.listing.user    // ✅ Pass user data with firstName/lastName
+            );
+          } catch (error) {
+            console.error('Auto-detection failed (non-fatal):', error);
+            // Continue processing property even if agent creation fails
+          }
+        }
+
         // T004-T007: Filter non-exportable properties
         // Check if property is marked as exportable in Apex27
         if (!payload.listing.exportable) {

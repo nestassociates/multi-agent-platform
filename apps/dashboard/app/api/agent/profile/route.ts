@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getCurrentAgent } from '@/lib/auth';
 import { updateAgentProfileSchema } from '@nest/validation';
+import { updateChecklistProgress } from '@/lib/services/profile-completion';
 
 /**
  * GET /api/agent/profile
@@ -89,7 +90,7 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    // Update agent record (bio, qualifications, social_media_links, avatar_url)
+    // Update agent record (bio, qualifications, social_media_links, avatar_url, google_place_id)
     const agentUpdates: any = {};
 
     if (validatedData.bio !== undefined) agentUpdates.bio = validatedData.bio;
@@ -98,6 +99,7 @@ export async function PATCH(request: NextRequest) {
     if (validatedData.social_media_links !== undefined)
       agentUpdates.social_media_links = validatedData.social_media_links;
     if (validatedData.avatar_url !== undefined) agentUpdates.avatar_url = validatedData.avatar_url;
+    if (body.google_place_id !== undefined) agentUpdates.google_place_id = body.google_place_id;
 
     const { data: updatedAgent, error: agentError } = await supabase
       .from('agents')
@@ -114,14 +116,60 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Queue site rebuild (use service role to bypass RLS)
-    await serviceRoleClient.from('build_queue').insert({
-      agent_id: agent.id,
-      priority: 3, // Normal priority
-      trigger_reason: 'profile_update',
-    });
+    // T036-T038: Calculate profile completion and update checklist
+    const completionResult = await updateChecklistProgress(agent.id, agent.user_id);
 
-    return NextResponse.json(updatedAgent);
+    // If status changed to pending_admin, notify admins
+    if (completionResult.statusChanged && completionResult.newStatus === 'pending_admin') {
+      // Notify admins that agent is ready for review
+      const { sendProfileCompleteEmail } = await import('@nest/email');
+
+      // Get agent's profile for name
+      const { data: agentProfile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('user_id', agent.user_id)
+        .single();
+
+      // Get admin emails
+      const { data: admins } = await serviceRoleClient
+        .from('profiles')
+        .select('email, first_name')
+        .in('role', ['admin', 'super_admin']);
+
+      if (admins && admins.length > 0 && agentProfile) {
+        for (const admin of admins) {
+          try {
+            await sendProfileCompleteEmail(admin.email, {
+              agentName: `${agentProfile.first_name} ${agentProfile.last_name}`,
+              agentId: agent.id,
+              agentSubdomain: agent.subdomain,
+              dashboardUrl: process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dashboard.nestassociates.com',
+            });
+          } catch (emailError) {
+            console.error('Failed to send profile-complete email:', emailError);
+          }
+        }
+      }
+    }
+
+    // Only queue rebuild for active agents (not pending status)
+    if (agent.status === 'active') {
+      await serviceRoleClient.from('build_queue').insert({
+        agent_id: agent.id,
+        priority: 3, // Normal priority
+        trigger_reason: 'profile_update',
+      });
+    }
+
+    return NextResponse.json({
+      ...updatedAgent,
+      profileCompletion: {
+        percentage: completionResult.completionPct,
+        isComplete: completionResult.completionPct === 100,
+        statusChanged: completionResult.statusChanged,
+      },
+    });
   } catch (error: any) {
     console.error('Update agent profile error:', error);
 

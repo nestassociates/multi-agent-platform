@@ -215,22 +215,26 @@ export function useCodeBlock(config?: UseCodeBlockConfig) {
 
   const { editor } = useTiptapEditor(providedEditor)
   const [isVisible, setIsVisible] = useState<boolean>(true)
+  const [isActive, setIsActive] = useState<boolean>(false)
   const canToggleState = canToggle(editor)
-  const isActive = editor?.isActive("codeBlock") || false
 
   useEffect(() => {
     if (!editor) return
 
-    const handleSelectionUpdate = () => {
+    const handleUpdate = () => {
       setIsVisible(shouldShowButton({ editor, hideWhenUnavailable }))
+      setIsActive(editor.isActive("codeBlock"))
     }
 
-    handleSelectionUpdate()
+    handleUpdate()
 
-    editor.on("selectionUpdate", handleSelectionUpdate)
+    // Listen to both selection updates and transactions to catch toggles
+    editor.on("selectionUpdate", handleUpdate)
+    editor.on("transaction", handleUpdate)
 
     return () => {
-      editor.off("selectionUpdate", handleSelectionUpdate)
+      editor.off("selectionUpdate", handleUpdate)
+      editor.off("transaction", handleUpdate)
     }
   }, [editor, hideWhenUnavailable])
 

@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       qualifications: agent.qualifications || [],
       social_media_links: agent.social_media_links || {},
       territory: agent.territories?.[0]?.name || null,
-      microsite_url: `https://${agent.subdomain}.agents.nestassociates.com`,
+      microsite_url: `https://${agent.subdomain}.nestassociates.co.uk`,
     }));
 
     // Create response with CORS and caching headers

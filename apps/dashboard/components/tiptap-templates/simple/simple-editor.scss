@@ -58,6 +58,18 @@ body,
   width: 100vw;
   height: 100vh;
   overflow: auto;
+
+  /* Force light mode - override any dark mode from parent */
+  --tt-bg-color: var(--white) !important;
+  --tt-theme-text: var(--tt-gray-light-900) !important;
+  --tt-border-color: var(--tt-gray-light-a-200) !important;
+  --tt-scrollbar-color: var(--tt-gray-light-a-200) !important;
+  --tt-dropdown-menu-bg-color: var(--white) !important;
+  --tt-dropdown-menu-border-color: var(--tt-gray-light-a-100) !important;
+  --tt-dropdown-menu-text-color: var(--tt-gray-light-a-600) !important;
+
+  background-color: var(--white);
+  color: var(--tt-gray-light-900);
 }
 
 .simple-editor-content {

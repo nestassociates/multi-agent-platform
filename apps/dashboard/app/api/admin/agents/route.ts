@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const validatedData = createAgentSchema.parse(body);
+    const draftAgentId = body.draft_agent_id; // Optional: Converting draft agent to real agent
 
     // Use service role client to create user and bypass RLS
     const supabase = createServiceRoleClient();
@@ -54,25 +55,89 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Create agent
-    const { data: agent, error: agentError } = await supabase.from('agents').insert({
-      user_id: authUser.user.id,
-      subdomain: validatedData.subdomain,
-      apex27_branch_id: validatedData.apex27_branch_id || null,
-      bio: validatedData.bio || null,
-      qualifications: validatedData.qualifications || [],
-      social_media_links: validatedData.social_media_links || {},
-      status: 'active',
-    }).select().single();
+    // 3. Create or update agent
+    let agent;
 
-    if (agentError) {
-      console.error('Agent error:', agentError);
-      await supabase.from('profiles').delete().eq('user_id', authUser.user.id);
-      await supabase.auth.admin.deleteUser(authUser.user.id);
-      return NextResponse.json(
-        { error: { code: 'AGENT_ERROR', message: agentError.message } },
-        { status: 400 }
-      );
+    if (draftAgentId) {
+      // Converting draft agent to real agent - UPDATE existing record
+      const { data: updatedAgent, error: updateError } = await supabase
+        .from('agents')
+        .update({
+          user_id: authUser.user.id,
+          subdomain: validatedData.subdomain,
+          status: 'pending_profile', // Now has user, waiting for profile completion
+        })
+        .eq('id', draftAgentId)
+        .eq('status', 'draft') // Safety: only update draft agents
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Draft agent update error:', updateError);
+        await supabase.from('profiles').delete().eq('user_id', authUser.user.id);
+        await supabase.auth.admin.deleteUser(authUser.user.id);
+        return NextResponse.json(
+          { error: { code: 'UPDATE_ERROR', message: updateError.message } },
+          { status: 400 }
+        );
+      }
+
+      agent = updatedAgent;
+      console.log(`Converted draft agent ${draftAgentId} to real agent`);
+    } else {
+      // Creating brand new agent
+      const { data: newAgent, error: agentError } = await supabase.from('agents').insert({
+        user_id: authUser.user.id,
+        subdomain: validatedData.subdomain,
+        apex27_branch_id: validatedData.apex27_branch_id || null,
+        bio: validatedData.bio || null,
+        qualifications: validatedData.qualifications || [],
+        social_media_links: validatedData.social_media_links || {},
+        status: 'pending_profile', // Agent needs to complete profile
+      }).select().single();
+
+      if (agentError) {
+        console.error('Agent error:', agentError);
+        await supabase.from('profiles').delete().eq('user_id', authUser.user.id);
+        await supabase.auth.admin.deleteUser(authUser.user.id);
+        return NextResponse.json(
+          { error: { code: 'AGENT_ERROR', message: agentError.message } },
+          { status: 400 }
+        );
+      }
+
+      agent = newAgent;
+    }
+
+    // T028-T029: Create or update onboarding checklist
+    const { data: existingChecklist } = await supabase
+      .from('agent_onboarding_checklist')
+      .select('id')
+      .eq('agent_id', agent.id)
+      .maybeSingle();
+
+    if (existingChecklist) {
+      // Update existing checklist (for draft agents)
+      await supabase
+        .from('agent_onboarding_checklist')
+        .update({
+          user_created: true,
+          welcome_email_sent: true,
+        })
+        .eq('agent_id', agent.id);
+    } else {
+      // Create new checklist
+      await supabase
+        .from('agent_onboarding_checklist')
+        .insert({
+          agent_id: agent.id,
+          user_created: true,
+          welcome_email_sent: true,
+          profile_completed: false,
+          profile_completion_pct: 0,
+          admin_approved: false,
+          site_deployed: false,
+        });
     }
 
     // Success!

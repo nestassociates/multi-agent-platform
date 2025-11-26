@@ -2,6 +2,7 @@
 export * from './auth';
 export * from './agent';
 export * from './content';
+export * from './fees';
 export * from './property';
 export * from './territory';
 export * from './webhooks';

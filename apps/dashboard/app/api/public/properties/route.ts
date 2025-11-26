@@ -131,9 +131,9 @@ export async function GET(request: NextRequest) {
         email: property.agent?.profile?.email,
         phone: property.agent?.profile?.phone,
         subdomain: property.agent?.subdomain,
-        microsite_url: `https://${property.agent?.subdomain}.agents.nestassociates.com`,
+        microsite_url: `https://${property.agent?.subdomain}.nestassociates.co.uk`,
       },
-      property_url: `https://${property.agent?.subdomain}.agents.nestassociates.com/properties/${property.slug}`,
+      property_url: `https://${property.agent?.subdomain}.nestassociates.co.uk/properties/${property.slug}`,
       updated_at: property.updated_at,
     }));
 

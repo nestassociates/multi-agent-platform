@@ -1,12 +1,14 @@
-import DOMPurify from 'isomorphic-dompurify';
-
 /**
- * Sanitize HTML content to prevent XSS attacks
- * Uses DOMPurify to remove dangerous tags and attributes
+ * CLIENT-SIDE HTML sanitization using DOMPurify
+ * For server-side sanitization, use @/lib/sanitize.server instead
  */
 
+import createDOMPurify from 'dompurify';
+
+const DOMPurify = createDOMPurify(window);
+
 /**
- * Sanitize HTML content for rich text editors (TipTap)
+ * Sanitize HTML content for rich text editors (TipTap) - CLIENT ONLY
  * Allows safe HTML tags but removes scripts, iframes, etc.
  */
 export function sanitizeHtml(dirty: string): string {

@@ -22,6 +22,7 @@ interface Content {
     profile: {
       first_name: string;
       last_name: string;
+      email: string;
     };
   };
 }
@@ -151,9 +152,16 @@ export function ModerationQueue({
                     <div className="text-sm text-muted-foreground">{item.slug}</div>
                   </TableCell>
                   <TableCell>
-                    {item.agent
-                      ? `${item.agent.profile?.first_name} ${item.agent.profile?.last_name}`
-                      : 'Unknown'}
+                    {item.agent?.profile ? (
+                      <div>
+                        <div className="font-medium">
+                          {item.agent.profile.first_name} {item.agent.profile.last_name}
+                        </div>
+                        <div className="text-sm text-muted-foreground">{item.agent.profile.email}</div>
+                      </div>
+                    ) : (
+                      'Unknown'
+                    )}
                   </TableCell>
                   <TableCell>
                     {contentTypeLabels[item.content_type as keyof typeof contentTypeLabels]}

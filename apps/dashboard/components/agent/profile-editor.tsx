@@ -36,6 +36,7 @@ export default function ProfileEditor({ agent }: ProfileEditorProps) {
   });
 
   const onSubmit = async (data: UpdateAgentProfileInput) => {
+    console.log('Form submitting with data:', data);
     setIsSubmitting(true);
     setError('');
     setSuccess(false);
@@ -67,7 +68,9 @@ export default function ProfileEditor({ agent }: ProfileEditorProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
+    <form onSubmit={handleSubmit(onSubmit, (errors) => {
+      console.log('Form validation failed:', errors);
+    })} className="space-y-6 max-w-2xl">
       {error && (
         <div className="rounded-md bg-red-50 p-4 text-sm text-red-800" role="alert">
           {error}
@@ -77,6 +80,18 @@ export default function ProfileEditor({ agent }: ProfileEditorProps) {
       {success && (
         <div className="rounded-md bg-green-50 p-4 text-sm text-green-800" role="alert">
           Profile updated successfully! Your site will be rebuilt shortly.
+        </div>
+      )}
+
+      {/* Debug: Show validation errors */}
+      {Object.keys(errors).length > 0 && (
+        <div className="rounded-md bg-yellow-50 p-4 text-sm text-yellow-800" role="alert">
+          <strong>Validation errors:</strong>
+          <ul className="mt-2 list-disc list-inside">
+            {Object.entries(errors).map(([field, error]) => (
+              <li key={field}>{field}: {error?.message || 'Invalid'}</li>
+            ))}
+          </ul>
         </div>
       )}
 

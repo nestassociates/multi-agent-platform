@@ -33,7 +33,7 @@ interface AgentOverviewProps {
 export function AgentOverview({ agent, stats }: AgentOverviewProps) {
   const fullName = `${agent.profile?.first_name} ${agent.profile?.last_name}`;
   const initials = `${agent.profile?.first_name?.[0]}${agent.profile?.last_name?.[0]}`.toUpperCase();
-  const micrositeUrl = `https://${agent.subdomain}.agents.nestassociates.com`;
+  const micrositeUrl = `https://${agent.subdomain}.nestassociates.co.uk`;
 
   return (
     <div className="space-y-6">
@@ -90,7 +90,7 @@ export function AgentOverview({ agent, stats }: AgentOverviewProps) {
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
-                    {agent.subdomain}.agents.nestassociates.com
+                    {agent.subdomain}.nestassociates.co.uk
                   </a>
                 </div>
                 {agent.apex27_branch_id && (

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { updateContentSchema } from '@nest/validation';
 
+// Dynamic import of sanitize to avoid build issues
+export const dynamic = 'force-dynamic';
+
 /**
  * PATCH /api/agent/content/[id]
  * Update existing content
@@ -92,9 +95,9 @@ export async function PATCH(
     if (data.title !== undefined) updateData.title = data.title;
     if (data.slug !== undefined) updateData.slug = data.slug;
     if (data.content_body !== undefined) {
-      // Note: HTML sanitization happens on display (client-side)
-      // All content is sanitized before rendering with dangerouslySetInnerHTML
-      updateData.content_body = data.content_body;
+      // Sanitize HTML content (defense-in-depth: server-side + client-side)
+      const { sanitizeHtml } = await import('@/lib/sanitize.server');
+      updateData.content_body = sanitizeHtml(data.content_body);
     }
     if (data.excerpt !== undefined) updateData.excerpt = data.excerpt;
     if (data.featured_image_url !== undefined)

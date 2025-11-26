@@ -5,8 +5,17 @@ import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AgentTable } from '@/components/admin/agent-table';
+import { AgentAutoDetectBanner } from '@/components/admin/agent-auto-detect-banner';
+import { AgentActionsMenu } from '@/components/admin/agent-actions-menu';
+import type { AgentStatus } from '@nest/shared-types';
 
-export default async function AgentsPage() {
+interface AgentsPageProps {
+  searchParams: {
+    status?: string;
+  };
+}
+
+export default async function AgentsPage({ searchParams }: AgentsPageProps) {
   const user = await getUser();
 
   if (!user) {
@@ -16,14 +25,28 @@ export default async function AgentsPage() {
   // Use service role to bypass RLS
   const supabase = createServiceRoleClient();
 
-  const { data: agents, error } = await supabase
+  // Build query with status filter (T025, T030, T031)
+  let query = supabase
     .from('agents')
-    .select('*, profile:profiles!agents_user_id_fkey(first_name, last_name, email)')
-    .order('created_at', { ascending: false });
+    .select('id, subdomain, apex27_branch_id, branch_name, apex27_contact_data, status, created_at, profile:profiles!agents_user_id_fkey(first_name, last_name, email)');
+
+  // Apply status filter if provided
+  const statusFilter = searchParams.status;
+  if (statusFilter && statusFilter !== 'all') {
+    query = query.eq('status', statusFilter);
+  }
+
+  const { data: agents, error } = await query.order('created_at', { ascending: false }) as { data: any; error: any };
 
   if (error) {
     console.error('Error fetching agents:', error);
   }
+
+  // Get count of draft agents for banner
+  const { count: draftCount } = await supabase
+    .from('agents')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'draft');
 
   return (
     <div className="space-y-6">
@@ -34,10 +57,11 @@ export default async function AgentsPage() {
             Manage your real estate agents ({agents?.length || 0} total)
           </p>
         </div>
-        <Button asChild>
-          <Link href="/agents/new">Create Agent</Link>
-        </Button>
+        <AgentActionsMenu />
       </div>
+
+      {/* T024: Auto-detect banner */}
+      <AgentAutoDetectBanner draftAgentCount={draftCount || 0} />
 
       <Card>
         <CardHeader>
@@ -47,7 +71,11 @@ export default async function AgentsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <AgentTable agents={agents || []} />
+          {/* T025, T026: Pass current status filter and show status badges */}
+          <AgentTable
+            agents={agents || []}
+            currentStatusFilter={statusFilter || 'all'}
+          />
         </CardContent>
       </Card>
     </div>
