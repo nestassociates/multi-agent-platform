@@ -186,6 +186,9 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^3.10
         version: 3.10.4
+      '@types/jsdom':
+        specifier: ^27.0.0
+        version: 27.0.0
       '@types/lodash.throttle':
         specifier: ^4.1.9
         version: 4.1.9
@@ -286,9 +289,6 @@ importers:
       '@types/dompurify':
         specifier: ^3.2.0
         version: 3.2.0
-      '@types/jsdom':
-        specifier: ^27.0.0
-        version: 27.0.0
       '@types/mapbox-gl':
         specifier: ^3.0.1
         version: 3.4.1
