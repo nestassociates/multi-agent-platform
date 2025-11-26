@@ -107,15 +107,22 @@ export function ListDropdownMenu({
               {filteredLists.map((option) => (
                 <DropdownMenuItem
                   key={option.type}
-                  asChild
-                  onClick={() => setIsOpen(false)}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    if (editor) {
+                      if (option.type === 'bulletList') {
+                        editor.chain().focus().toggleBulletList().run();
+                      } else if (option.type === 'orderedList') {
+                        editor.chain().focus().toggleOrderedList().run();
+                      } else if (option.type === 'taskList') {
+                        editor.chain().focus().toggleTaskList().run();
+                      }
+                    }
+                    setIsOpen(false);
+                  }}
+                  className="cursor-pointer"
                 >
-                  <ListButton
-                    editor={editor}
-                    type={option.type}
-                    text={option.label}
-                    showTooltip={false}
-                  />
+                  <span className="text-sm">{option.label}</span>
                 </DropdownMenuItem>
               ))}
             </ButtonGroup>

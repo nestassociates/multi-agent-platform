@@ -108,15 +108,14 @@ export const HeadingDropdownMenu = forwardRef<
                 {levels.map((level) => (
                   <DropdownMenuItem
                     key={`heading-${level}`}
-                    asChild
-                    onClick={() => setIsOpen(false)}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      editor?.chain().focus().toggleHeading({ level }).run();
+                      setIsOpen(false);
+                    }}
+                    className="cursor-pointer"
                   >
-                    <HeadingButton
-                      editor={editor}
-                      level={level}
-                      text={`Heading ${level}`}
-                      showTooltip={false}
-                    />
+                    <span className="text-sm">Heading {level}</span>
                   </DropdownMenuItem>
                 ))}
               </ButtonGroup>
