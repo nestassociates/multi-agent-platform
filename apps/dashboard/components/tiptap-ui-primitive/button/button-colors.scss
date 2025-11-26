@@ -6,7 +6,7 @@
   /* Light mode */
   --tt-button-default-bg-color: var(--tt-gray-light-a-100);
   --tt-button-hover-bg-color: var(--tt-gray-light-200);
-  --tt-button-active-bg-color: var(--tt-gray-light-a-200);
+  --tt-button-active-bg-color: var(--tt-gray-light-300); /* Changed from a-200 (10% opacity) to solid 300 for visibility */
   --tt-button-active-bg-color-emphasized: var(
     --tt-brand-color-100
   ); //more important active state
