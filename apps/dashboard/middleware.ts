@@ -148,9 +148,9 @@ export async function middleware(request: NextRequest) {
   // Refresh session if exists
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Get user profile with role
+  // Get user profile with role (only for page routes that need redirects, not API routes)
   let userRole: string | null = null;
-  if (user) {
+  if (user && !path.startsWith('/api/')) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
