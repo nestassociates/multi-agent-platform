@@ -15,6 +15,7 @@ import {
   LogOut,
   Star,
   Banknote,
+  Globe,
 } from "lucide-react"
 
 import {
@@ -54,6 +55,11 @@ const adminMenuItems = [
     title: "Content Moderation",
     url: "/content-moderation",
     icon: FileText,
+  },
+  {
+    title: "Global Content",
+    url: "/global-content",
+    icon: Globe,
   },
   {
     title: "Properties",

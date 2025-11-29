@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { loginSchema } from '@nest/validation';
-import { isRateLimited, getRemainingAttempts, resetRateLimit } from '@/lib/rate-limiter';
+import { checkLoginRateLimit, formatResetTime } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,20 +10,28 @@ export async function POST(request: NextRequest) {
     // Validate input
     const validatedData = loginSchema.parse(body);
 
-    // Check rate limiting (FR-004: 5 attempts per 15 minutes)
-    const rateLimitKey = `login:${validatedData.email}`;
-    if (isRateLimited(rateLimitKey)) {
-      const remaining = getRemainingAttempts(rateLimitKey);
-      return NextResponse.json(
+    // Check rate limiting (FR-002: 5 attempts per 15 minutes)
+    const rateLimit = await checkLoginRateLimit(validatedData.email);
+
+    if (rateLimit.limited) {
+      const retryAfter = formatResetTime(rateLimit.resetAt);
+      const response = NextResponse.json(
         {
           error: {
             code: 'RATE_LIMITED',
-            message: 'Too many login attempts. Please try again in 15 minutes.',
-            remainingAttempts: remaining,
+            message: `Too many login attempts. Try again in ${retryAfter}.`,
+            remaining: rateLimit.remaining,
+            resetAt: rateLimit.resetAt,
           },
         },
         { status: 429 }
       );
+
+      // Add rate limit headers (FR-006, T013)
+      response.headers.set('X-RateLimit-Remaining', String(rateLimit.remaining));
+      response.headers.set('X-RateLimit-Reset', String(rateLimit.resetAt));
+
+      return response;
     }
 
     const supabase = createClient();
@@ -35,17 +43,21 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         {
           error: { code: 'INVALID_CREDENTIALS', message: error.message },
-          remainingAttempts: getRemainingAttempts(rateLimitKey) - 1,
+          remaining: rateLimit.remaining,
+          resetAt: rateLimit.resetAt,
         },
         { status: 401 }
       );
-    }
 
-    // Successful login - reset rate limit
-    resetRateLimit(rateLimitKey);
+      // Add rate limit headers even on failed auth
+      response.headers.set('X-RateLimit-Remaining', String(rateLimit.remaining));
+      response.headers.set('X-RateLimit-Reset', String(rateLimit.resetAt));
+
+      return response;
+    }
 
     // Get user profile with role
     const { data: profile } = await supabase

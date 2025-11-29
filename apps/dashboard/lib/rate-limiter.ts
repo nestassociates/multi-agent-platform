@@ -1,71 +1,162 @@
 /**
  * Rate Limiter Utility
- * Simple in-memory rate limiting for login attempts
- * FR-004: Maximum 5 attempts per 15 minutes per email address
+ * Distributed rate limiting using Upstash Redis
+ * Falls back to in-memory if Redis unavailable (fail-open)
+ *
+ * FR-001: Distributed storage for rate limiting
+ * FR-004: Graceful degradation if Redis unavailable
+ * FR-005: Backwards-compatible interface
  */
 
+import { loginRateLimiter, contactRateLimiter, isRedisConfigured } from './redis';
+import type { Ratelimit } from '@upstash/ratelimit';
+
+// In-memory fallback store
 interface RateLimitEntry {
   count: number;
   resetAt: number;
 }
 
-// In-memory store for rate limiting
-// In production, this should use Redis or similar
-const rateLimitStore = new Map<string, RateLimitEntry>();
+const fallbackStore = new Map<string, RateLimitEntry>();
 
-// Cleanup old entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of rateLimitStore.entries()) {
-    if (entry.resetAt < now) {
-      rateLimitStore.delete(key);
+// Cleanup fallback store every 5 minutes
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of fallbackStore.entries()) {
+      if (entry.resetAt < now) {
+        fallbackStore.delete(key);
+      }
     }
-  }
-}, 5 * 60 * 1000);
+  }, 5 * 60 * 1000);
+}
 
 /**
- * Check if request is rate limited
- * @param key - Unique identifier (e.g., email address)
- * @param maxAttempts - Maximum attempts allowed (default: 5)
- * @param windowMs - Time window in milliseconds (default: 15 minutes)
- * @returns True if rate limited, false if allowed
+ * Rate limit result
+ */
+export interface RateLimitResult {
+  limited: boolean;
+  remaining: number;
+  resetAt: number; // Unix timestamp in milliseconds
+}
+
+/**
+ * In-memory fallback rate limit check
+ */
+function checkFallback(
+  key: string,
+  maxAttempts: number,
+  windowMs: number
+): RateLimitResult {
+  const now = Date.now();
+  const entry = fallbackStore.get(key);
+
+  if (!entry || entry.resetAt < now) {
+    // First attempt or window expired
+    fallbackStore.set(key, {
+      count: 1,
+      resetAt: now + windowMs,
+    });
+    return {
+      limited: false,
+      remaining: maxAttempts - 1,
+      resetAt: now + windowMs,
+    };
+  }
+
+  // Increment count
+  entry.count++;
+
+  return {
+    limited: entry.count > maxAttempts,
+    remaining: Math.max(0, maxAttempts - entry.count),
+    resetAt: entry.resetAt,
+  };
+}
+
+/**
+ * Check rate limit using Redis, with fallback to in-memory
+ */
+async function checkRateLimit(
+  limiter: Ratelimit,
+  key: string,
+  maxAttempts: number,
+  windowMs: number
+): Promise<RateLimitResult> {
+  if (!isRedisConfigured()) {
+    console.warn('Redis not configured, using in-memory rate limiting');
+    return checkFallback(key, maxAttempts, windowMs);
+  }
+
+  try {
+    const result = await limiter.limit(key);
+    return {
+      limited: !result.success,
+      remaining: result.remaining,
+      resetAt: result.reset,
+    };
+  } catch (error) {
+    // Fail-open: allow request if Redis is unavailable
+    console.error('Rate limit check failed, allowing request (fail-open):', error);
+    return {
+      limited: false,
+      remaining: -1, // Indicates unknown
+      resetAt: 0,
+    };
+  }
+}
+
+/**
+ * Check if login attempt is rate limited
+ * FR-002: 5 attempts per email per 15 minutes
+ *
+ * @param email - Email address to check
+ * @returns Rate limit result
+ */
+export async function checkLoginRateLimit(email: string): Promise<RateLimitResult> {
+  const normalizedEmail = email.toLowerCase().trim();
+  return checkRateLimit(
+    loginRateLimiter,
+    normalizedEmail,
+    5, // maxAttempts
+    15 * 60 * 1000 // 15 minutes
+  );
+}
+
+/**
+ * Check if contact form submission is rate limited
+ * FR-003: 5 requests per IP per hour
+ *
+ * @param ip - IP address to check
+ * @returns Rate limit result
+ */
+export async function checkContactRateLimit(ip: string): Promise<RateLimitResult> {
+  return checkRateLimit(
+    contactRateLimiter,
+    ip,
+    5, // maxAttempts
+    60 * 60 * 1000 // 1 hour
+  );
+}
+
+// ============================================================
+// BACKWARDS COMPATIBLE INTERFACE
+// These functions maintain the original sync-like API for existing code
+// ============================================================
+
+/**
+ * @deprecated Use checkLoginRateLimit() for async rate limiting
+ * Check if request is rate limited (sync wrapper)
  */
 export function isRateLimited(
   key: string,
   maxAttempts: number = 5,
   windowMs: number = 15 * 60 * 1000
 ): boolean {
-  const now = Date.now();
-  const entry = rateLimitStore.get(key);
-
-  if (!entry) {
-    // First attempt
-    rateLimitStore.set(key, {
-      count: 1,
-      resetAt: now + windowMs,
-    });
-    return false;
-  }
-
-  // Check if window has expired
-  if (entry.resetAt < now) {
-    // Reset the counter
-    rateLimitStore.set(key, {
-      count: 1,
-      resetAt: now + windowMs,
-    });
-    return false;
-  }
-
-  // Increment count
-  entry.count++;
-
-  // Check if over limit
-  if (entry.count > maxAttempts) {
-    return true;
-  }
-
-  return false;
+  // For backwards compatibility, use fallback store synchronously
+  // New code should use async checkLoginRateLimit/checkContactRateLimit
+  const result = checkFallback(key, maxAttempts, windowMs);
+  return result.limited;
 }
 
 /**
@@ -73,20 +164,19 @@ export function isRateLimited(
  * @param key - Unique identifier
  */
 export function resetRateLimit(key: string): void {
-  rateLimitStore.delete(key);
+  fallbackStore.delete(key);
+  // Note: Redis rate limits auto-expire, no explicit reset needed
 }
 
 /**
- * Get remaining attempts
- * @param key - Unique identifier
- * @param maxAttempts - Maximum attempts allowed (default: 5)
- * @returns Number of remaining attempts
+ * @deprecated Use checkLoginRateLimit() for async rate limiting
+ * Get remaining attempts (sync wrapper)
  */
 export function getRemainingAttempts(
   key: string,
   maxAttempts: number = 5
 ): number {
-  const entry = rateLimitStore.get(key);
+  const entry = fallbackStore.get(key);
 
   if (!entry) {
     return maxAttempts;
@@ -101,12 +191,11 @@ export function getRemainingAttempts(
 }
 
 /**
+ * @deprecated Use checkLoginRateLimit() for async rate limiting
  * Get time until rate limit resets
- * @param key - Unique identifier
- * @returns Milliseconds until reset, or 0 if not rate limited
  */
 export function getResetTime(key: string): number {
-  const entry = rateLimitStore.get(key);
+  const entry = fallbackStore.get(key);
 
   if (!entry) {
     return 0;
@@ -114,4 +203,25 @@ export function getResetTime(key: string): number {
 
   const now = Date.now();
   return Math.max(0, entry.resetAt - now);
+}
+
+/**
+ * Format reset time as human-readable string
+ */
+export function formatResetTime(resetAt: number): string {
+  const now = Date.now();
+  const diffMs = resetAt - now;
+
+  if (diffMs <= 0) {
+    return 'now';
+  }
+
+  const diffMinutes = Math.ceil(diffMs / (60 * 1000));
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'}`;
+  }
+
+  const diffHours = Math.ceil(diffMinutes / 60);
+  return `${diffHours} hour${diffHours === 1 ? '' : 's'}`;
 }

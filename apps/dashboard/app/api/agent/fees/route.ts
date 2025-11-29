@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { feeStructureSchema } from '@nest/validation';
 
 /**
@@ -100,6 +100,23 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error saving fee structure:', error);
       return NextResponse.json({ error: 'Failed to save' }, { status: 500 });
+    }
+
+    // T052: Queue rebuild with priority 4 (Low) for fees update
+    // Only queue for active agents
+    const { data: agentStatus } = await supabase
+      .from('agents')
+      .select('status')
+      .eq('id', agent.id)
+      .single();
+
+    if (agentStatus?.status === 'active') {
+      const serviceRoleClient = createServiceRoleClient();
+      await serviceRoleClient.from('build_queue').insert({
+        agent_id: agent.id,
+        priority: 4, // Low priority for fees updates
+        trigger_reason: 'fees_update',
+      });
     }
 
     return NextResponse.json({ success: true, fees: data });

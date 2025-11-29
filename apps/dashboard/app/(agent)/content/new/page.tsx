@@ -2,21 +2,50 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { type CreateContentInput } from '@nest/validation';
-import ContentForm from '@/components/agent/content-form';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { createContentSchema, type CreateContentInput } from '@nest/validation';
+import { ContentEditor } from '@/components/agent/content-editor';
+import { ContentSidebar } from '@/components/agent/content-sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Settings } from 'lucide-react';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 export default function NewContentPage() {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleSubmit = async (data: CreateContentInput) => {
+  const form = useForm<CreateContentInput>({
+    resolver: zodResolver(createContentSchema),
+    defaultValues: {
+      content_type: 'blog_post',
+      title: '',
+      slug: '',
+      content_body: '',
+      excerpt: '',
+      featured_image_url: '',
+      seo_meta_title: '',
+      seo_meta_description: '',
+    },
+  });
+
+  const handleSubmit = async () => {
+    const isValid = await form.trigger();
+    if (!isValid) return;
+
     setIsSubmitting(true);
     setError(null);
 
     try {
+      const data = form.getValues();
       const response = await fetch('/api/agent/content', {
         method: 'POST',
         headers: {
@@ -24,7 +53,7 @@ export default function NewContentPage() {
         },
         body: JSON.stringify({
           ...data,
-          status: 'pending_review', // Submit for review
+          status: 'pending_review',
         }),
       });
 
@@ -33,9 +62,6 @@ export default function NewContentPage() {
         throw new Error(errorData.error?.message || 'Failed to create content');
       }
 
-      const result = await response.json();
-
-      // Redirect to content list on success
       router.push('/content');
       router.refresh();
     } catch (err: any) {
@@ -46,8 +72,10 @@ export default function NewContentPage() {
     }
   };
 
-  const handleSaveDraft = async (data: Partial<CreateContentInput>) => {
+  const handleSaveDraft = async () => {
+    setAutoSaving(true);
     try {
+      const data = form.getValues();
       const response = await fetch('/api/agent/content', {
         method: 'POST',
         headers: {
@@ -55,7 +83,7 @@ export default function NewContentPage() {
         },
         body: JSON.stringify({
           ...data,
-          status: 'draft', // Save as draft
+          status: 'draft',
         }),
       });
 
@@ -63,67 +91,91 @@ export default function NewContentPage() {
         throw new Error('Failed to save draft');
       }
 
-      // Optionally show success message
-      console.log('Draft saved successfully');
+      setLastSaved(new Date());
     } catch (err: any) {
       console.error('Error saving draft:', err);
+      setError(err.message);
+    } finally {
+      setAutoSaving(false);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Create New Content</h1>
-        <p className="text-gray-600 mt-2">
-          Write blog posts, area guides, reviews, or fee structures to showcase your expertise.
-          Your content will be reviewed before publishing.
-        </p>
-      </div>
-
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg
-                className="h-5 w-5 text-red-400"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+    <FormProvider {...form}>
+      <div className="h-[calc(100vh-4rem)] flex flex-col">
+        {/* Header Bar */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+          <div className="flex items-center gap-2 md:gap-4">
+            <Link
+              href="/content"
+              className="flex items-center gap-1 md:gap-2 text-sm text-gray-600 hover:text-gray-900"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Back to Content</span>
+              <span className="sm:hidden">Back</span>
+            </Link>
+            <span className="text-gray-300 hidden md:inline">|</span>
+            <h1 className="text-base md:text-lg font-semibold text-gray-900 hidden md:block">Create New Content</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            {error && (
+              <div className="text-sm text-red-600 bg-red-50 px-3 py-1 rounded hidden md:block">
+                {error}
+              </div>
+            )}
+            {isMobile && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSidebarOpen(true)}
               >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <div className="mt-2 text-sm text-red-700">{error}</div>
-            </div>
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+            )}
           </div>
         </div>
-      )}
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <ContentForm
-          onSubmit={handleSubmit}
-          onSaveDraft={handleSaveDraft}
-          isSubmitting={isSubmitting}
-        />
-      </div>
+        {/* Error on mobile - separate line */}
+        {error && isMobile && (
+          <div className="px-4 py-2 bg-red-50 border-b border-red-200">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
 
-      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-sm font-medium text-blue-800 mb-2">Content Guidelines</h3>
-        <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
-          <li>Ensure all content is original and not plagiarized</li>
-          <li>Use proper grammar and spelling</li>
-          <li>Include relevant images where appropriate</li>
-          <li>Focus on providing value to potential clients</li>
-          <li>Avoid promotional or sales-heavy language</li>
-          <li>Content will be reviewed within 24-48 hours</li>
-        </ul>
+        {/* Main Content Area - 2 Column Layout on desktop, single column on mobile */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Editor Column */}
+          <ContentEditor form={form} />
+
+          {/* Sidebar Column - hidden on mobile, visible in sheet */}
+          {!isMobile && (
+            <ContentSidebar
+              form={form}
+              onSubmit={handleSubmit}
+              onSaveDraft={handleSaveDraft}
+              isSubmitting={isSubmitting}
+              autoSaving={autoSaving}
+              lastSaved={lastSaved}
+            />
+          )}
+        </div>
+
+        {/* Mobile Sidebar Sheet */}
+        {isMobile && (
+          <ContentSidebar
+            form={form}
+            onSubmit={handleSubmit}
+            onSaveDraft={handleSaveDraft}
+            isSubmitting={isSubmitting}
+            autoSaving={autoSaving}
+            lastSaved={lastSaved}
+            isMobile
+            isOpen={sidebarOpen}
+            onOpenChange={setSidebarOpen}
+          />
+        )}
       </div>
-    </div>
+    </FormProvider>
   );
 }

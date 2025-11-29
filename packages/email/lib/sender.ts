@@ -6,6 +6,7 @@ import ContentRejectedEmail from '../templates/content-rejected';
 import AgentDetectedEmail from '../templates/agent-detected';
 import ProfileCompleteEmail from '../templates/profile-complete';
 import SiteActivatedEmail from '../templates/site-activated';
+import ContactNotificationEmail from '../templates/contact-notification';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -256,6 +257,50 @@ export async function sendSiteActivatedEmail(
     return result as EmailResponse;
   } catch (error) {
     console.error('Failed to send site-activated email:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send contact form notification email to agent
+ * Feature: 006-astro-microsite-deployment
+ * Task: T049
+ */
+export async function sendContactNotificationEmail(
+  agentEmail: string,
+  data: {
+    agentName: string;
+    senderName: string;
+    senderEmail: string;
+    senderPhone?: string;
+    message: string;
+    propertyAddress?: string;
+    dashboardUrl?: string;
+  }
+): Promise<EmailResponse> {
+  const html = render(
+    ContactNotificationEmail({
+      agentName: data.agentName,
+      senderName: data.senderName,
+      senderEmail: data.senderEmail,
+      senderPhone: data.senderPhone,
+      message: data.message,
+      propertyAddress: data.propertyAddress,
+      dashboardUrl: data.dashboardUrl || process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dashboard.nestassociates.com',
+    })
+  );
+
+  try {
+    const result = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@nestassociates.co.uk',
+      to: agentEmail,
+      subject: `New inquiry from ${data.senderName}`,
+      html,
+    });
+
+    return result as EmailResponse;
+  } catch (error) {
+    console.error('Failed to send contact notification email:', error);
     throw error;
   }
 }
