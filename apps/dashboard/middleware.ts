@@ -176,9 +176,12 @@ export async function middleware(request: NextRequest) {
   const publicPaths = [
     '/login',
     '/reset-password',
+    '/api/auth',
     '/api/public',
     '/api/cron',
     '/api/webhooks',
+    '/api-docs',
+    '/api/openapi.json',
   ];
 
   const isPublicPath = publicPaths.some(publicPath => path.startsWith(publicPath));
