@@ -307,3 +307,81 @@ export declare namespace GeoJSON {
     coordinates: number[][][]; // Array of rings, each ring is array of [lon, lat] points
   }
 }
+
+/**
+ * Public API Types
+ * Used for public-facing API endpoints (no authentication required)
+ */
+
+/**
+ * Public property listing for agent microsites
+ * Subset of Property with only public-safe fields
+ */
+export interface PublicPropertyListing {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  property_type: string | null;
+  address: PropertyAddress;
+  postcode: string | null;
+  images: PropertyImage[];
+  status: PropertyStatus;
+  is_featured: boolean;
+  transaction_type: TransactionType;
+}
+
+/**
+ * Public properties API response with cursor pagination
+ */
+export interface PublicPropertyResponse {
+  data: PublicPropertyListing[];
+  pagination: {
+    cursor: string | null;
+    hasMore: boolean;
+    total: number;
+  };
+}
+
+/**
+ * Contact form submission request
+ */
+export interface ContactFormRequest {
+  agentId: string;
+  propertyId?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+  honeypot?: string; // Bot detection field - must be empty
+}
+
+/**
+ * Contact form submission success response
+ */
+export interface ContactFormSuccessResponse {
+  success: true;
+  message: string;
+}
+
+/**
+ * Contact form submission error response
+ */
+export interface ContactFormErrorResponse {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+    details?: {
+      field: string;
+      reason: string;
+    };
+  };
+}
+
+/**
+ * Contact form response (union type)
+ */
+export type ContactFormResponse = ContactFormSuccessResponse | ContactFormErrorResponse;

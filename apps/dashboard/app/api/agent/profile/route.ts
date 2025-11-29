@@ -153,11 +153,12 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    // Only queue rebuild for active agents (not pending status)
+    // T051: Only queue rebuild for active agents (not pending status)
+    // Use priority 4 (Low) for profile updates
     if (agent.status === 'active') {
       await serviceRoleClient.from('build_queue').insert({
         agent_id: agent.id,
-        priority: 3, // Normal priority
+        priority: 4, // Low priority for profile updates
         trigger_reason: 'profile_update',
       });
     }

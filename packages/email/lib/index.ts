@@ -11,6 +11,7 @@ export {
   sendAgentDetectedEmail,
   sendProfileCompleteEmail,
   sendSiteActivatedEmail,
+  sendContactNotificationEmail,
   type WelcomeEmailData,
 } from './sender';
 
@@ -21,3 +22,4 @@ export { default as ContentRejectedEmail } from '../templates/content-rejected';
 export { default as AgentDetectedEmail } from '../templates/agent-detected';
 export { default as ProfileCompleteEmail } from '../templates/profile-complete';
 export { default as SiteActivatedEmail } from '../templates/site-activated';
+export { default as ContactNotificationEmail } from '../templates/contact-notification';

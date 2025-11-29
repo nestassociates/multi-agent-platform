@@ -1,5 +1,10 @@
 import { useState, type FormEvent } from 'react';
 
+/**
+ * Contact Form Component
+ * T032: Enhanced error handling for rate limit messages with retry time
+ */
+
 interface FormData {
   name: string;
   email: string;
@@ -7,9 +12,34 @@ interface FormData {
   message: string;
 }
 
+interface RateLimitInfo {
+  remaining: number;
+  resetAt: number;
+}
+
 interface FormState {
-  status: 'idle' | 'submitting' | 'success' | 'error';
+  status: 'idle' | 'submitting' | 'success' | 'error' | 'rate_limited';
   message: string;
+  rateLimitInfo?: RateLimitInfo;
+}
+
+/**
+ * Format time remaining until rate limit reset (T033)
+ */
+function formatTimeRemaining(resetAt: number): string {
+  const now = Date.now();
+  const diffMs = resetAt - now;
+
+  if (diffMs <= 0) return 'now';
+
+  const diffMinutes = Math.ceil(diffMs / (60 * 1000));
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'}`;
+  }
+
+  const diffHours = Math.ceil(diffMinutes / 60);
+  return `${diffHours} hour${diffHours === 1 ? '' : 's'}`;
 }
 
 export default function ContactForm() {
@@ -38,13 +68,43 @@ export default function ContactForm() {
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
+      // Handle rate limiting (429)
+      if (response.status === 429) {
+        const resetAt = data.error?.resetAt || (Date.now() + 60 * 60 * 1000);
+        const remaining = data.error?.remaining ?? 0;
+
+        setFormState({
+          status: 'rate_limited',
+          message: `Too many submissions. Please try again in ${formatTimeRemaining(resetAt)}.`,
+          rateLimitInfo: { remaining, resetAt },
+        });
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        // Handle validation errors
+        if (data.error?.code === 'VALIDATION_ERROR') {
+          const fieldError = data.error.details?.field
+            ? `${data.error.details.field}: ${data.error.details.reason}`
+            : data.error.message;
+          setFormState({
+            status: 'error',
+            message: fieldError || 'Please check your form inputs and try again.',
+          });
+        } else {
+          setFormState({
+            status: 'error',
+            message: data.error?.message || 'Failed to send message. Please try again.',
+          });
+        }
+        return;
       }
 
       setFormState({
         status: 'success',
-        message: 'Thank you! Your message has been sent successfully. I will get back to you soon.',
+        message: data.message || 'Thank you! Your message has been sent successfully. I will get back to you soon.',
       });
 
       // Reset form
@@ -54,7 +114,7 @@ export default function ContactForm() {
         phone: '',
         message: '',
       });
-    } catch (error) {
+    } catch {
       setFormState({
         status: 'error',
         message: 'Sorry, there was an error sending your message. Please try again or contact me directly.',
@@ -71,6 +131,8 @@ export default function ContactForm() {
       [name]: value,
     }));
   };
+
+  const isDisabled = formState.status === 'submitting' || formState.status === 'rate_limited';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -89,9 +151,9 @@ export default function ContactForm() {
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-100 disabled:cursor-not-allowed"
           placeholder="John Smith"
-          disabled={formState.status === 'submitting'}
+          disabled={isDisabled}
         />
       </div>
 
@@ -110,9 +172,9 @@ export default function ContactForm() {
           value={formData.email}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-100 disabled:cursor-not-allowed"
           placeholder="john@example.com"
-          disabled={formState.status === 'submitting'}
+          disabled={isDisabled}
         />
       </div>
 
@@ -130,9 +192,9 @@ export default function ContactForm() {
           name="phone"
           value={formData.phone}
           onChange={handleChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-100 disabled:cursor-not-allowed"
           placeholder="020 7123 4567"
-          disabled={formState.status === 'submitting'}
+          disabled={isDisabled}
         />
       </div>
 
@@ -151,9 +213,9 @@ export default function ContactForm() {
           onChange={handleChange}
           required
           rows={6}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
           placeholder="Tell me about your property requirements..."
-          disabled={formState.status === 'submitting'}
+          disabled={isDisabled}
         />
       </div>
 
@@ -163,6 +225,8 @@ export default function ContactForm() {
           className={`p-4 rounded-lg ${
             formState.status === 'success'
               ? 'bg-green-50 text-green-800 border border-green-200'
+              : formState.status === 'rate_limited'
+              ? 'bg-amber-50 text-amber-800 border border-amber-200'
               : 'bg-red-50 text-red-800 border border-red-200'
           }`}
         >
@@ -179,6 +243,20 @@ export default function ContactForm() {
                   clipRule="evenodd"
                 />
               </svg>
+            ) : formState.status === 'rate_limited' ? (
+              <svg
+                className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-amber-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
             ) : (
               <svg
                 className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5"
@@ -192,7 +270,14 @@ export default function ContactForm() {
                 />
               </svg>
             )}
-            <p className="text-sm">{formState.message}</p>
+            <div>
+              <p className="text-sm">{formState.message}</p>
+              {formState.rateLimitInfo && formState.rateLimitInfo.remaining > 0 && (
+                <p className="mt-1 text-xs opacity-75">
+                  {formState.rateLimitInfo.remaining} submission{formState.rateLimitInfo.remaining === 1 ? '' : 's'} remaining
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -200,7 +285,7 @@ export default function ContactForm() {
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={formState.status === 'submitting'}
+        disabled={isDisabled}
         className="w-full bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
       >
         {formState.status === 'submitting' ? (
@@ -226,6 +311,8 @@ export default function ContactForm() {
             </svg>
             Sending...
           </>
+        ) : formState.status === 'rate_limited' ? (
+          'Please wait...'
         ) : (
           'Send Message'
         )}

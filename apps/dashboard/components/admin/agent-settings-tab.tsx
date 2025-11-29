@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -13,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Settings, Loader2, ExternalLink, Trash2, AlertTriangle } from 'lucide-react';
+import { Settings, Loader2, ExternalLink, Trash2, AlertTriangle, Key, Mail, Eye, EyeOff } from 'lucide-react';
 import { DeleteAgentDialog } from './delete-agent-dialog';
 
 interface AgentSettingsTabProps {
@@ -24,6 +25,7 @@ interface AgentSettingsTabProps {
     profile?: {
       first_name: string;
       last_name: string;
+      email?: string;
     };
   };
   onUpdate?: () => void;
@@ -35,6 +37,13 @@ export function AgentSettingsTab({ agent, onUpdate }: AgentSettingsTabProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Password management state
+  const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSettingPassword, setIsSettingPassword] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const handleStatusUpdate = async (newStatus: string) => {
     setError(null);
@@ -87,6 +96,68 @@ export function AgentSettingsTab({ agent, onUpdate }: AgentSettingsTabProps) {
     }
   };
 
+  const handleSetPassword = async () => {
+    if (!newPassword || newPassword.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
+    setError(null);
+    setSuccessMessage(null);
+    setIsSettingPassword(true);
+
+    try {
+      const response = await fetch(`/api/admin/agents/${agent.id}/password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: newPassword }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error?.message || 'Failed to set password');
+      }
+
+      setSuccessMessage('Password updated successfully');
+      setNewPassword('');
+      setShowPassword(false);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSettingPassword(false);
+    }
+  };
+
+  const handleSendResetEmail = async () => {
+    setError(null);
+    setSuccessMessage(null);
+    setIsSendingReset(true);
+
+    try {
+      const response = await fetch(`/api/admin/agents/${agent.id}/password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error?.message || 'Failed to send reset email');
+      }
+
+      const data = await response.json();
+      setSuccessMessage(data.message || 'Password reset email sent');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSendingReset(false);
+    }
+  };
+
   const micrositeUrl = `https://${agent.subdomain}.nestassociates.co.uk`;
 
   return (
@@ -94,6 +165,12 @@ export function AgentSettingsTab({ agent, onUpdate }: AgentSettingsTabProps) {
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
           {error}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="rounded-md bg-green-50 p-4 text-sm text-green-800">
+          {successMessage}
         </div>
       )}
 
@@ -195,6 +272,100 @@ export function AgentSettingsTab({ agent, onUpdate }: AgentSettingsTabProps) {
               Manually trigger a rebuild of this agent's microsite. Use this after updating
               content or settings.
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Password Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            Password Management
+          </CardTitle>
+          <CardDescription>
+            Reset or change the agent's login password
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Send Password Reset Email */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Send Password Reset Email</p>
+              <p className="text-sm text-muted-foreground">
+                Send a password reset link to {agent.profile?.email || 'the agent'}
+              </p>
+            </div>
+            <Button
+              onClick={handleSendResetEmail}
+              disabled={isSendingReset}
+              variant="outline"
+            >
+              {isSendingReset ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Send Reset Email
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="border-t border-gray-200 pt-6">
+            {/* Set Password Directly */}
+            <div>
+              <p className="text-sm font-medium mb-2">Set Password Directly</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Set a specific password for this agent. They can use this to log in immediately.
+              </p>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter new password (min 8 characters)"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <Button
+                  onClick={handleSetPassword}
+                  disabled={isSettingPassword || newPassword.length < 8}
+                >
+                  {isSettingPassword ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Setting...
+                    </>
+                  ) : (
+                    <>
+                      <Key className="mr-2 h-4 w-4" />
+                      Set Password
+                    </>
+                  )}
+                </Button>
+              </div>
+              {newPassword.length > 0 && newPassword.length < 8 && (
+                <p className="text-xs text-amber-600 mt-1">
+                  Password must be at least 8 characters
+                </p>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

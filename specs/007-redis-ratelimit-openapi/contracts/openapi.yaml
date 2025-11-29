@@ -1,0 +1,556 @@
+openapi: 3.0.3
+info:
+  title: Nest Platform API
+  description: |
+    API for the Nest multi-agent real estate platform.
+
+    ## Authentication
+    - **Admin/Agent routes**: Require Supabase session cookie
+    - **Public routes**: No authentication required
+    - **Webhook routes**: Require webhook signature validation
+
+    ## Rate Limiting
+    - Login: 5 attempts per email per 15 minutes
+    - Contact form: 5 requests per IP per hour
+  version: 1.0.0
+  contact:
+    name: Nest Associates
+servers:
+  - url: https://dashboard.nestassociates.com
+    description: Production
+  - url: http://localhost:3000
+    description: Development
+
+tags:
+  - name: Auth
+    description: Authentication and password management
+  - name: Admin - Agents
+    description: Agent management (admin only)
+  - name: Admin - Content
+    description: Content moderation (admin only)
+  - name: Admin - Global Content
+    description: Global content management (admin only)
+  - name: Admin - Territories
+    description: Territory/postcode management (admin only)
+  - name: Agent
+    description: Agent self-service operations
+  - name: Public
+    description: Public API endpoints
+  - name: Webhooks
+    description: External service webhooks
+
+paths:
+  # ============ AUTH ============
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with email and password
+      description: |
+        Authenticates a user with email and password.
+        Rate limited to 5 attempts per email per 15 minutes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+        '429':
+          description: Too many login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout current user
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Logout successful
+
+  /api/auth/reset:
+    post:
+      tags: [Auth]
+      summary: Request password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '200':
+          description: Reset email sent (always returns 200 for security)
+
+  /api/auth/change-password:
+    post:
+      tags: [Auth]
+      summary: Change password
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed successfully
+        '400':
+          description: Invalid current password
+
+  # ============ ADMIN - AGENTS ============
+  /api/admin/agents:
+    get:
+      tags: [Admin - Agents]
+      summary: List all agents
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, pending_admin, active, inactive]
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of agents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentListResponse'
+    post:
+      tags: [Admin - Agents]
+      summary: Create new agent
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAgentRequest'
+      responses:
+        '201':
+          description: Agent created
+        '400':
+          description: Validation error
+
+  /api/admin/agents/{id}:
+    get:
+      tags: [Admin - Agents]
+      summary: Get agent details
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Agent details
+        '404':
+          description: Agent not found
+    patch:
+      tags: [Admin - Agents]
+      summary: Update agent
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAgentRequest'
+      responses:
+        '200':
+          description: Agent updated
+    delete:
+      tags: [Admin - Agents]
+      summary: Delete agent
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Agent deleted
+
+  /api/admin/agents/{id}/activate:
+    post:
+      tags: [Admin - Agents]
+      summary: Activate agent
+      description: Sets agent status to active and triggers site build
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Agent activated
+
+  # ============ AGENT ============
+  /api/agent/profile:
+    get:
+      tags: [Agent]
+      summary: Get current agent profile
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Agent profile
+    patch:
+      tags: [Agent]
+      summary: Update agent profile
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated
+
+  /api/agent/content:
+    get:
+      tags: [Agent]
+      summary: List agent's content
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of content submissions
+    post:
+      tags: [Agent]
+      summary: Create content submission
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentSubmissionRequest'
+      responses:
+        '201':
+          description: Content created
+
+  /api/agent/fees:
+    get:
+      tags: [Agent]
+      summary: Get fee structure
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Current fee structure
+    post:
+      tags: [Agent]
+      summary: Update fee structure
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeeStructureRequest'
+      responses:
+        '200':
+          description: Fee structure updated
+
+  # ============ PUBLIC ============
+  /api/public/contact:
+    post:
+      tags: [Public]
+      summary: Submit contact form
+      description: |
+        Rate limited to 5 requests per IP per hour.
+        Includes honeypot field for bot detection.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactFormRequest'
+      responses:
+        '200':
+          description: Form submitted successfully
+        '429':
+          description: Too many submissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+  /api/public/properties:
+    get:
+      tags: [Public]
+      summary: List properties
+      parameters:
+        - name: agent_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [for_sale, under_offer, sold, for_rent, let_agreed, let]
+      responses:
+        '200':
+          description: List of properties
+
+  /api/public/agents:
+    get:
+      tags: [Public]
+      summary: List public agents
+      responses:
+        '200':
+          description: List of active agents
+
+  # ============ WEBHOOKS ============
+  /api/webhooks/apex27:
+    post:
+      tags: [Webhooks]
+      summary: Apex27 property webhook
+      description: Receives property updates from Apex27 CRM
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Apex27WebhookPayload'
+      responses:
+        '200':
+          description: Webhook processed
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-access-token
+      description: Supabase session cookie
+
+  schemas:
+    # Auth
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+            role:
+              type: string
+              enum: [admin, super_admin, agent]
+
+    PasswordResetRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+
+    ChangePasswordRequest:
+      type: object
+      required: [current_password, new_password]
+      properties:
+        current_password:
+          type: string
+        new_password:
+          type: string
+          minLength: 8
+
+    # Agent
+    CreateAgentRequest:
+      type: object
+      required: [email, first_name, last_name, subdomain]
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        subdomain:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+
+    UpdateAgentRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [draft, pending_admin, active, inactive]
+        bio:
+          type: string
+        qualifications:
+          type: string
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+        bio:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+
+    # Content
+    ContentSubmissionRequest:
+      type: object
+      required: [content_type, title, content_body]
+      properties:
+        content_type:
+          type: string
+          enum: [blog, guide, news]
+        title:
+          type: string
+          maxLength: 200
+        content_body:
+          type: string
+        featured_image_url:
+          type: string
+          format: uri
+
+    FeeStructureRequest:
+      type: object
+      required: [content_body]
+      properties:
+        content_body:
+          type: string
+          description: HTML content for fee structure
+
+    # Contact
+    ContactFormRequest:
+      type: object
+      required: [agent_id, name, email, message]
+      properties:
+        agent_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        message:
+          type: string
+          maxLength: 2000
+        property_id:
+          type: string
+          format: uuid
+        honeypot:
+          type: string
+          description: Must be empty (bot detection)
+
+    # Webhook
+    Apex27WebhookPayload:
+      type: object
+      properties:
+        event:
+          type: string
+          enum: [property.created, property.updated, property.deleted]
+        data:
+          type: object
+
+    # Responses
+    AgentListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    PaginationInfo:
+      type: object
+      properties:
+        nextCursor:
+          type: string
+          nullable: true
+        hasNextPage:
+          type: boolean
+        total:
+          type: integer
+
+    RateLimitError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Too many requests
+        remaining:
+          type: integer
+          example: 0
+        resetAt:
+          type: integer
+          description: Unix timestamp when limit resets

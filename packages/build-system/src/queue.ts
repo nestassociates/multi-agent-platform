@@ -199,3 +199,59 @@ export async function getQueueStats(): Promise<{
     return { queued: 0, building: 0, completed_today: 0, failed_today: 0 };
   }
 }
+
+/**
+ * Queue rebuilds for ALL active agents when global content is published
+ * T011: Used when header, footer, or legal pages are updated
+ *
+ * @param contentType - The type of global content that was published
+ * @returns Number of builds queued
+ */
+export async function queueGlobalContentRebuild(contentType: string): Promise<{ queued: number; errors: number }> {
+  try {
+    // Get all active agents
+    const { data: agents, error: agentsError } = await supabase
+      .from('agents')
+      .select('id, subdomain')
+      .eq('status', 'active');
+
+    if (agentsError) {
+      console.error('Error fetching active agents:', agentsError);
+      return { queued: 0, errors: 1 };
+    }
+
+    if (!agents || agents.length === 0) {
+      console.log('[Queue] No active agents found for global content rebuild');
+      return { queued: 0, errors: 0 };
+    }
+
+    console.log(`[Queue] Queuing rebuilds for ${agents.length} active agents due to ${contentType} update`);
+
+    // Queue builds for all agents with emergency priority (1)
+    const builds = agents.map((agent) => ({
+      agent_id: agent.id,
+      trigger_reason: `global_content:${contentType}`,
+      priority: 1, // Emergency priority for global content changes
+      status: 'pending',
+    }));
+
+    // Insert all builds in a single batch
+    const { data: insertedBuilds, error: insertError } = await supabase
+      .from('build_queue')
+      .insert(builds)
+      .select('id');
+
+    if (insertError) {
+      console.error('Error queuing global content rebuilds:', insertError);
+      return { queued: 0, errors: agents.length };
+    }
+
+    const queuedCount = insertedBuilds?.length || 0;
+    console.log(`[Queue] Successfully queued ${queuedCount} rebuilds for global content change`);
+
+    return { queued: queuedCount, errors: agents.length - queuedCount };
+  } catch (error) {
+    console.error('Error in queueGlobalContentRebuild:', error);
+    return { queued: 0, errors: 1 };
+  }
+}
