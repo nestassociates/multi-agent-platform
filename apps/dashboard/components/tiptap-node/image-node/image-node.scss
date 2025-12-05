@@ -28,4 +28,143 @@
   .tiptap-thread img {
     margin: 0;
   }
+
+  // ===== Image Alignment =====
+  img[data-align="left"] {
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  img[data-align="center"] {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  img[data-align="right"] {
+    margin-left: auto;
+    margin-right: 0;
+  }
+
+  // ===== Image Float (Text Wrapping) =====
+  img[data-float="left"] {
+    float: left;
+    margin: 0.5rem 1.5rem 1rem 0;
+    clear: left;
+  }
+
+  img[data-float="right"] {
+    float: right;
+    margin: 0.5rem 0 1rem 1.5rem;
+    clear: right;
+  }
+
+  img[data-float="none"] {
+    float: none;
+    clear: both;
+  }
+
+  // ===== Resizable Image Container =====
+  .image-resizer {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    margin: 1rem 0;
+
+    img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 0;
+    }
+  }
+
+  // Alignment for resizable images
+  .image-resizer[data-align="left"] {
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  .image-resizer[data-align="center"] {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+  }
+
+  .image-resizer[data-align="right"] {
+    margin-left: auto;
+    margin-right: 0;
+    display: block;
+  }
+
+  // Float for resizable images
+  .image-resizer[data-float="left"] {
+    float: left;
+    margin: 0.5rem 1.5rem 1rem 0;
+    clear: left;
+  }
+
+  .image-resizer[data-float="right"] {
+    float: right;
+    margin: 0.5rem 0 1rem 1.5rem;
+    clear: right;
+  }
+
+  .image-resizer[data-float="none"] {
+    float: none;
+    clear: both;
+  }
+
+  // ===== Resize Handles =====
+  .image-resizer-handle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: var(--tt-brand-color-500, #3b82f6);
+    border: 2px solid white;
+    border-radius: 50%;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.15s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      transform: scale(1.2);
+    }
+  }
+
+  .image-resizer:hover .image-resizer-handle,
+  .image-resizer.ProseMirror-selectednode .image-resizer-handle {
+    opacity: 1;
+  }
+
+  .image-resizer-handle-nw {
+    top: -6px;
+    left: -6px;
+    cursor: nwse-resize;
+  }
+
+  .image-resizer-handle-ne {
+    top: -6px;
+    right: -6px;
+    cursor: nesw-resize;
+  }
+
+  .image-resizer-handle-sw {
+    bottom: -6px;
+    left: -6px;
+    cursor: nesw-resize;
+  }
+
+  .image-resizer-handle-se {
+    bottom: -6px;
+    right: -6px;
+    cursor: nwse-resize;
+  }
+
+  // Clear floats after content
+  &::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
 }

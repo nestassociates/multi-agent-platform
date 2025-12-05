@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getUser } from '@/lib/auth';
 import { z } from 'zod';
+import { addBuild } from '@nest/build-system';
 
 const updateAgentSchema = z.object({
   phone: z.string().optional(),
@@ -140,12 +141,16 @@ export async function PATCH(
 
     // Trigger rebuild if bio or status changed
     if (validatedData.bio !== undefined || validatedData.status !== undefined) {
-      await supabase.from('build_queue').insert({
-        agent_id: params.id,
-        priority: 'P2',
-        trigger_reason: 'agent_updated',
-        status: 'pending',
-      });
+      try {
+        await addBuild({
+          agent_id: params.id,
+          trigger_reason: validatedData.bio !== undefined ? 'Profile bio updated' : 'Agent status changed',
+          priority: 3, // Normal priority for profile updates
+        });
+      } catch (buildError) {
+        console.error('Error queuing build:', buildError);
+        // Don't fail the request if queue fails
+      }
     }
 
     // Fetch updated agent

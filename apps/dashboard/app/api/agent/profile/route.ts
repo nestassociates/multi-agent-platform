@@ -74,11 +74,15 @@ export async function PATCH(request: NextRequest) {
     const supabase = createClient();
     const serviceRoleClient = createServiceRoleClient();
 
-    // Update profile (phone number)
-    if (validatedData.phone !== undefined) {
+    // Update profile (phone number, avatar_url)
+    const profileUpdates: any = {};
+    if (validatedData.phone !== undefined) profileUpdates.phone = validatedData.phone;
+    if (validatedData.avatar_url !== undefined) profileUpdates.avatar_url = validatedData.avatar_url;
+
+    if (Object.keys(profileUpdates).length > 0) {
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ phone: validatedData.phone })
+        .update(profileUpdates)
         .eq('user_id', agent.user_id);
 
       if (profileError) {
@@ -90,7 +94,8 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    // Update agent record (bio, qualifications, social_media_links, avatar_url, google_place_id)
+    // Update agent record (bio, qualifications, social_media_links, google_place_id)
+    // Note: avatar_url is stored on profiles table, not agents
     const agentUpdates: any = {};
 
     if (validatedData.bio !== undefined) agentUpdates.bio = validatedData.bio;
@@ -98,7 +103,6 @@ export async function PATCH(request: NextRequest) {
       agentUpdates.qualifications = validatedData.qualifications;
     if (validatedData.social_media_links !== undefined)
       agentUpdates.social_media_links = validatedData.social_media_links;
-    if (validatedData.avatar_url !== undefined) agentUpdates.avatar_url = validatedData.avatar_url;
     if (body.google_place_id !== undefined) agentUpdates.google_place_id = body.google_place_id;
 
     const { data: updatedAgent, error: agentError } = await supabase

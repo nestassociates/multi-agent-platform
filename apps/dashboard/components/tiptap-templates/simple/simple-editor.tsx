@@ -5,7 +5,6 @@ import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
-import { Image } from "@tiptap/extension-image"
 import { TaskItem, TaskList } from "@tiptap/extension-list"
 import { TextAlign } from "@tiptap/extension-text-align"
 import { Typography } from "@tiptap/extension-typography"
@@ -13,6 +12,10 @@ import { Highlight } from "@tiptap/extension-highlight"
 import { Subscript } from "@tiptap/extension-subscript"
 import { Superscript } from "@tiptap/extension-superscript"
 import { Selection } from "@tiptap/extensions"
+
+// --- Custom Extensions ---
+import { ResizableImage } from "@/components/tiptap-node/resizable-image/resizable-image-extension"
+import { MediaText } from "@/components/tiptap-node/media-text-node"
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button"
@@ -33,6 +36,7 @@ import "@/components/tiptap-node/list-node/list-node.scss"
 import "@/components/tiptap-node/image-node/image-node.scss"
 import "@/components/tiptap-node/heading-node/heading-node.scss"
 import "@/components/tiptap-node/paragraph-node/paragraph-node.scss"
+import "@/components/tiptap-node/media-text-node/media-text.scss"
 
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu"
@@ -53,6 +57,8 @@ import {
 import { MarkButton } from "@/components/tiptap-ui/mark-button"
 import { TextAlignButton } from "@/components/tiptap-ui/text-align-button"
 import { UndoRedoButton } from "@/components/tiptap-ui/undo-redo-button"
+import { ImageAlignPopover } from "@/components/tiptap-ui/image-align-popover"
+import { MediaTextButton } from "@/components/tiptap-ui/media-text-button"
 
 // --- Icons ---
 import { ArrowLeftIcon } from "@/components/tiptap-icons/arrow-left-icon"
@@ -138,6 +144,7 @@ const MainToolbarContent = ({
 
       <ToolbarGroup>
         <ImageUploadButton text="Add" />
+        <MediaTextButton text="Layout" />
       </ToolbarGroup>
 
       <Spacer />
@@ -212,7 +219,10 @@ export function SimpleEditor({ initialContent = '', onChange }: SimpleEditorProp
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
-      Image,
+      ResizableImage.configure({
+        inline: false,
+        allowBase64: true,
+      }),
       Typography,
       Superscript,
       Subscript,
@@ -224,6 +234,7 @@ export function SimpleEditor({ initialContent = '', onChange }: SimpleEditorProp
         upload: handleImageUpload,
         onError: (error) => console.error("Upload failed:", error),
       }),
+      MediaText,
     ],
     content: initialContent || '',
     onUpdate: ({ editor }) => {
@@ -244,17 +255,20 @@ export function SimpleEditor({ initialContent = '', onChange }: SimpleEditorProp
   }, [isMobile, mobileView])
 
   return (
-    <div className="simple-editor-wrapper" style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div
+      className="simple-editor-wrapper"
+      style={{ width: '100%', height: '100%', position: 'relative' }}
+    >
       <EditorContext.Provider value={{ editor }}>
         <Toolbar
           ref={toolbarRef}
-          style={{
-            ...(isMobile
+          style={
+            isMobile
               ? {
                   bottom: `calc(100% - ${height - rect.y}px)`,
                 }
-              : {}),
-          }}
+              : {}
+          }
         >
           {mobileView === "main" ? (
             <MainToolbarContent
@@ -269,6 +283,9 @@ export function SimpleEditor({ initialContent = '', onChange }: SimpleEditorProp
             />
           )}
         </Toolbar>
+
+        {/* Image alignment bubble menu */}
+        <ImageAlignPopover editor={editor} />
 
         <EditorContent
           editor={editor}

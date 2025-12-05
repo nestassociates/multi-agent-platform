@@ -150,6 +150,7 @@ export async function middleware(request: NextRequest) {
 
   // Get user profile with role (only for page routes that need redirects, not API routes)
   let userRole: string | null = null;
+  let agentStatus: string | null = null;
   if (user && !path.startsWith('/api/')) {
     const { data: profile } = await supabase
       .from('profiles')
@@ -158,6 +159,17 @@ export async function middleware(request: NextRequest) {
       .single();
 
     userRole = profile?.role || null;
+
+    // For agents, also fetch their agent status for onboarding flow
+    if (userRole === 'agent') {
+      const { data: agent } = await supabase
+        .from('agents')
+        .select('status')
+        .eq('user_id', user.id)
+        .single();
+
+      agentStatus = agent?.status || null;
+    }
   }
 
   // TODO: Enforce 2FA for admin users (FR-002)
@@ -182,6 +194,7 @@ export async function middleware(request: NextRequest) {
     '/api/webhooks',
     '/api-docs',
     '/api/openapi.json',
+    '/api/agent-site', // Agent microsite data API
   ];
 
   const isPublicPath = publicPaths.some(publicPath => path.startsWith(publicPath));
@@ -192,6 +205,19 @@ export async function middleware(request: NextRequest) {
     redirectUrl.pathname = '/login';
     redirectUrl.searchParams.set('redirectTo', path);
     return NextResponse.redirect(redirectUrl);
+  }
+
+  // Force profile completion for pending_profile agents
+  if (user && userRole === 'agent' && agentStatus === 'pending_profile') {
+    // Allow access to profile page, logout, and profile API
+    const allowedPaths = ['/profile', '/api/auth/logout', '/api/agent/profile'];
+    const isAllowedPath = allowedPaths.some(p => path.startsWith(p));
+
+    if (!isAllowedPath) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = '/profile';
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   // Role-based redirects

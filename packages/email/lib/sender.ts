@@ -7,6 +7,7 @@ import AgentDetectedEmail from '../templates/agent-detected';
 import ProfileCompleteEmail from '../templates/profile-complete';
 import SiteActivatedEmail from '../templates/site-activated';
 import ContactNotificationEmail from '../templates/contact-notification';
+import ViewingRequestNotificationEmail from '../templates/viewing-request-notification';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -301,6 +302,61 @@ export async function sendContactNotificationEmail(
     return result as EmailResponse;
   } catch (error) {
     console.error('Failed to send contact notification email:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send viewing request notification email to agent
+ * Notifies agent when someone submits a viewing request for a property
+ */
+export async function sendViewingRequestNotificationEmail(
+  agentEmail: string,
+  data: {
+    agentName: string;
+    viewerName: string;
+    viewerEmail: string;
+    viewerPhone?: string;
+    propertyAddress?: string;
+    propertyPrice?: string;
+    preferredDate?: string;
+    preferredTime?: string;
+    flexibleDates?: boolean;
+    buyerStatus?: string;
+    mortgageStatus?: string;
+    additionalNotes?: string;
+    dashboardUrl?: string;
+  }
+): Promise<EmailResponse> {
+  const html = render(
+    ViewingRequestNotificationEmail({
+      agentName: data.agentName,
+      viewerName: data.viewerName,
+      viewerEmail: data.viewerEmail,
+      viewerPhone: data.viewerPhone,
+      propertyAddress: data.propertyAddress,
+      propertyPrice: data.propertyPrice,
+      preferredDate: data.preferredDate,
+      preferredTime: data.preferredTime,
+      flexibleDates: data.flexibleDates,
+      buyerStatus: data.buyerStatus,
+      mortgageStatus: data.mortgageStatus,
+      additionalNotes: data.additionalNotes,
+      dashboardUrl: data.dashboardUrl || process.env.NEXT_PUBLIC_DASHBOARD_URL || 'https://dashboard.nestassociates.com',
+    })
+  );
+
+  try {
+    const result = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@nestassociates.co.uk',
+      to: agentEmail,
+      subject: `Viewing request from ${data.viewerName}${data.propertyAddress ? ` for ${data.propertyAddress}` : ''}`,
+      html,
+    });
+
+    return result as EmailResponse;
+  } catch (error) {
+    console.error('Failed to send viewing request notification email:', error);
     throw error;
   }
 }

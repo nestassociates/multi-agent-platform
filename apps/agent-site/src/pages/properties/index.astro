@@ -1,55 +1,152 @@
 ---
+/**
+ * Properties Page
+ * T066: Updated to use real property data from API
+ */
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PropertyCard from '../../components/PropertyCard.astro';
+import { getSiteData, getProperties, placeholderData } from '../../lib/data';
 
-// Properties will be loaded from generated data file in production
-const properties: any[] = [];
+const siteData = await getSiteData() || placeholderData;
+const properties = await getProperties(siteData.agent.id);
+
+// Separate by transaction type
+const forSale = properties.filter(p => p.transactionType === 'sale');
+const forRent = properties.filter(p => p.transactionType === 'rent');
 ---
 
-<BaseLayout title="Properties for Sale & Rent">
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <section class="bg-white border-b py-8">
-      <div class="container mx-auto px-4">
-        <nav class="flex gap-6">
-          <a href="/" class="text-gray-600 hover:text-blue-600 transition">Home</a>
-          <a href="/about" class="text-gray-600 hover:text-blue-600 transition">About</a>
-          <a href="/properties" class="text-blue-600 font-semibold">Properties</a>
-          <a href="/contact" class="text-gray-600 hover:text-blue-600 transition">Contact</a>
-        </nav>
+<BaseLayout
+  title={`Properties - ${siteData.agent.name}`}
+  description={`Browse ${properties.length} properties available for sale and rent with ${siteData.agent.name}`}
+  siteData={siteData}
+>
+  <!-- Page Header -->
+  <section class="bg-blue-600 text-white py-16">
+    <div class="container mx-auto px-4">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">My Properties</h1>
+      <p class="text-xl text-blue-100">
+        {properties.length > 0
+          ? `${properties.length} properties available`
+          : 'Browse my latest property listings'}
+      </p>
+    </div>
+  </section>
+
+  <!-- Filters (future enhancement) -->
+  <section class="bg-white border-b">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex flex-wrap gap-4 items-center">
+        <span class="font-medium text-gray-700">Filter by:</span>
+        <a href="#for-sale" class="px-4 py-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+          For Sale ({forSale.length})
+        </a>
+        <a href="#for-rent" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
+          To Let ({forRent.length})
+        </a>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Properties Content -->
-    <section class="py-16">
-      <div class="container mx-auto px-4">
-        <h1 class="text-4xl font-bold mb-8">Available Properties</h1>
-
-        {properties.length === 0 ? (
-          <div class="bg-white p-12 rounded-lg shadow-sm text-center">
-            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+  <!-- Properties Content -->
+  <section class="py-16">
+    <div class="container mx-auto px-4">
+      {properties.length === 0 ? (
+        <div class="bg-white p-12 rounded-xl shadow-sm text-center max-w-2xl mx-auto">
+          <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            <h2 class="text-2xl font-semibold mb-2">No Properties Available</h2>
-            <p class="text-gray-600">Check back soon for new listings.</p>
           </div>
-        ) : (
-          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {properties.map((property) => (
-              <div class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition">
-                <img src={property.image || '/placeholder.jpg'} alt={property.title} class="w-full h-48 object-cover" />
-                <div class="p-6">
-                  <h3 class="text-xl font-semibold mb-2">{property.title}</h3>
-                  <p class="text-2xl font-bold text-blue-600 mb-4">£{property.price.toLocaleString()}</p>
-                  <div class="flex gap-4 text-sm text-gray-600">
-                    <span>{property.bedrooms} bed</span>
-                    <span>{property.bathrooms} bath</span>
-                  </div>
-                </div>
+          <h2 class="text-2xl font-bold mb-3">No Properties Available</h2>
+          <p class="text-gray-600 mb-6">
+            I'm currently updating my property portfolio. Check back soon for new listings, or get in touch to discuss your requirements.
+          </p>
+          <a
+            href="/contact"
+            class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+          >
+            Contact Me
+          </a>
+        </div>
+      ) : (
+        <div class="space-y-16">
+          <!-- For Sale Section -->
+          {forSale.length > 0 && (
+            <div id="for-sale">
+              <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                <span class="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm">
+                  For Sale
+                </span>
+                <span class="text-gray-400 font-normal text-lg">
+                  {forSale.length} {forSale.length === 1 ? 'property' : 'properties'}
+                </span>
+              </h2>
+              <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {forSale.map((property) => (
+                  <PropertyCard
+                    property={{
+                      slug: property.slug || property.id,
+                      title: property.title,
+                      price: property.price,
+                      bedrooms: property.bedrooms,
+                      bathrooms: property.bathrooms,
+                      address: property.address || property.postcode,
+                      images: property.images,
+                      listingType: property.status === 'under_offer' ? 'Under Offer' : 'For Sale',
+                    }}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  </div>
+            </div>
+          )}
+
+          <!-- For Rent Section -->
+          {forRent.length > 0 && (
+            <div id="for-rent">
+              <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                <span class="bg-gray-700 text-white px-3 py-1 rounded-lg text-sm">
+                  To Let
+                </span>
+                <span class="text-gray-400 font-normal text-lg">
+                  {forRent.length} {forRent.length === 1 ? 'property' : 'properties'}
+                </span>
+              </h2>
+              <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {forRent.map((property) => (
+                  <PropertyCard
+                    property={{
+                      slug: property.slug || property.id,
+                      title: property.title,
+                      price: property.price,
+                      bedrooms: property.bedrooms,
+                      bathrooms: property.bathrooms,
+                      address: property.address || property.postcode,
+                      images: property.images,
+                      listingType: property.status === 'under_offer' ? 'Let Agreed' : 'To Let',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-16 bg-gray-100">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl font-bold mb-4">Can't Find What You're Looking For?</h2>
+      <p class="text-gray-600 mb-8 max-w-2xl mx-auto">
+        I have access to properties before they hit the market. Register your requirements and I'll be in touch when something suitable becomes available.
+      </p>
+      <a
+        href="/contact"
+        class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+      >
+        Register Your Interest
+      </a>
+    </div>
+  </section>
 </BaseLayout>

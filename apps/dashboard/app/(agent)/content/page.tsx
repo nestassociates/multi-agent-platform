@@ -200,12 +200,14 @@ export default async function AgentContentPage() {
                       {new Date(item.updated_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link
-                        href={`/content/${item.id}/edit`}
-                        className="text-primary hover:underline mr-4"
-                      >
-                        Edit
-                      </Link>
+                      {(item.status === 'draft' || item.status === 'rejected') && (
+                        <Link
+                          href={`/content/${item.id}/edit`}
+                          className="text-primary hover:underline mr-4"
+                        >
+                          Edit
+                        </Link>
+                      )}
                       <Link href={`/content/${item.id}`} className="text-muted-foreground hover:underline">
                         View
                       </Link>

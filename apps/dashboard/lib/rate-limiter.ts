@@ -8,7 +8,7 @@
  * FR-005: Backwards-compatible interface
  */
 
-import { loginRateLimiter, contactRateLimiter, isRedisConfigured } from './redis';
+import { loginRateLimiter, contactRateLimiter, isRedisConfigured, resetLoginRateLimit as resetRedisLoginRateLimit } from './redis';
 import type { Ratelimit } from '@upstash/ratelimit';
 
 // In-memory fallback store
@@ -121,6 +121,22 @@ export async function checkLoginRateLimit(email: string): Promise<RateLimitResul
     5, // maxAttempts
     15 * 60 * 1000 // 15 minutes
   );
+}
+
+/**
+ * Clear login rate limit for an email after successful login
+ * This ensures only failed attempts count towards the limit
+ *
+ * @param email - Email address to clear rate limit for
+ */
+export async function clearLoginRateLimit(email: string): Promise<void> {
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Clear from in-memory fallback
+  fallbackStore.delete(normalizedEmail);
+
+  // Clear from Redis
+  await resetRedisLoginRateLimit(email);
 }
 
 /**

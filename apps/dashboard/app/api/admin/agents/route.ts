@@ -65,6 +65,9 @@ export async function POST(request: NextRequest) {
         .update({
           user_id: authUser.user.id,
           subdomain: validatedData.subdomain,
+          bio: validatedData.bio || null,
+          qualifications: validatedData.qualifications || [],
+          social_media_links: validatedData.social_media_links || {},
           status: 'pending_profile', // Now has user, waiting for profile completion
         })
         .eq('id', draftAgentId)

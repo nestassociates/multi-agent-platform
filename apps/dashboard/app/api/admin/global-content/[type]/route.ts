@@ -175,6 +175,7 @@ export async function PUT(
       case 'privacy_policy':
       case 'terms_of_service':
       case 'cookie_policy':
+      case 'complaints_procedure':
         validationResult = legalContentSchema.safeParse(content);
         break;
       default:

@@ -42,7 +42,12 @@ function formatTimeRemaining(resetAt: number): string {
   return `${diffHours} hour${diffHours === 1 ? '' : 's'}`;
 }
 
-export default function ContactForm() {
+interface ContactFormProps {
+  agentId?: string;
+  agentName?: string;
+}
+
+export default function ContactForm({ agentId, agentName }: ContactFormProps) {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',

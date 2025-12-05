@@ -281,3 +281,57 @@ export interface Apex27ListingsResponse {
   page: number;
   pageSize: number;
 }
+
+/**
+ * Apex27 Contact types for lead creation
+ */
+export interface Apex27ContactInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  source?: string;
+}
+
+export interface Apex27Contact {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  source: string | null;
+  dtsCreated: string;
+  dtsUpdated: string;
+}
+
+/**
+ * Apex27 Lead types for viewing requests
+ */
+export interface Apex27LeadInput {
+  branchId: number;
+  contactId: number;
+  listingId?: number;
+  source: string;
+  status?: string;
+  howDidYouHear?: string;
+  requestViewing: boolean;
+  requestListingDetails?: boolean;
+  requestValuation?: boolean;
+  notes?: string;
+}
+
+export interface Apex27Lead {
+  id: number;
+  branchId: number;
+  contactId: number;
+  listingId: number | null;
+  source: string;
+  status: string;
+  howDidYouHear: string | null;
+  requestViewing: boolean;
+  requestListingDetails: boolean;
+  requestValuation: boolean;
+  notes: string | null;
+  dtsCreated: string;
+  dtsUpdated: string;
+}

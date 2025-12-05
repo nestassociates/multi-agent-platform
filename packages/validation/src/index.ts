@@ -8,3 +8,4 @@ export * from './territory';
 export * from './webhooks';
 export * from './contact';
 export * from './global-content';
+export * from './viewing-request';

@@ -19,13 +19,14 @@ export interface ProfileCompletionResult {
 /**
  * Calculate profile completion percentage
  *
- * Required Fields (6 total):
- * 1. first_name AND last_name
- * 2. email AND phone
- * 3. bio (min 100 characters)
- * 4. avatar_url (profile photo)
- * 5. qualifications (at least 1)
- * 6. subdomain
+ * Required Fields (5 total) - Agent-controlled:
+ * 1. first_name AND last_name (set by admin, but counted)
+ * 2. phone (agent provides)
+ * 3. bio (min 100 characters) - stored on agents table
+ * 4. qualifications (at least 1)
+ * 5. subdomain (set by admin, but counted)
+ *
+ * Note: avatar_url (profile photo) is admin-controlled and NOT required for agent completion
  *
  * Task: T033
  */
@@ -35,16 +36,15 @@ export function calculateProfileCompletion(
     last_name?: string | null;
     email?: string | null;
     phone?: string | null;
-    bio?: string | null;
-    avatar_url?: string | null;
   },
   agent: {
     subdomain?: string | null;
     qualifications?: string[] | null;
+    bio?: string | null;
   }
 ): ProfileCompletionResult {
   let completed = 0;
-  const total = 6;
+  const total = 5;
   const missing: string[] = [];
 
   // 1. First and last name
@@ -54,35 +54,28 @@ export function calculateProfileCompletion(
     missing.push('Full name');
   }
 
-  // 2. Email and phone
-  if (profile.email && profile.phone) {
+  // 2. Phone number
+  if (profile.phone) {
     completed++;
   } else {
-    missing.push('Email and phone');
+    missing.push('Phone number');
   }
 
-  // 3. Bio (min 100 characters)
-  if (profile.bio && profile.bio.length >= 100) {
+  // 3. Bio (min 100 characters) - stored on agents table
+  if (agent.bio && agent.bio.length >= 100) {
     completed++;
   } else {
     missing.push('Bio (min 100 characters)');
   }
 
-  // 4. Profile photo
-  if (profile.avatar_url) {
-    completed++;
-  } else {
-    missing.push('Profile photo');
-  }
-
-  // 5. At least one qualification
+  // 4. At least one qualification
   if (agent.qualifications && agent.qualifications.length > 0) {
     completed++;
   } else {
     missing.push('At least 1 qualification');
   }
 
-  // 6. Subdomain
+  // 5. Subdomain
   if (agent.subdomain) {
     completed++;
   } else {
@@ -116,7 +109,7 @@ export async function updateChecklistProgress(
   // Get profile and agent data
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('first_name, last_name, email, phone, avatar_url')
+    .select('first_name, last_name, email, phone')
     .eq('user_id', userId)
     .single();
 

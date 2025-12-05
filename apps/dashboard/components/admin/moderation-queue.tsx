@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { ApprovalDialog } from '@/components/admin/approval-dialog';
 
 interface Content {
   id: string;
@@ -47,30 +48,36 @@ export function ModerationQueue({
   onReject,
   onRefresh,
 }: ModerationQueueProps) {
-  const [selectedContent, setSelectedContent] = useState<string | null>(null);
+  const [selectedContent, setSelectedContent] = useState<Content | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
 
-  const handleApprove = async (id: string) => {
-    if (!confirm('Are you sure you want to approve this content?')) {
-      return;
-    }
+  const handleApproveClick = (item: Content) => {
+    setSelectedContent(item);
+    setShowApprovalDialog(true);
+  };
+
+  const handleApproveConfirm = async () => {
+    if (!selectedContent) return;
 
     setIsProcessing(true);
     try {
-      await onApprove(id);
+      await onApprove(selectedContent.id);
+      setShowApprovalDialog(false);
+      setSelectedContent(null);
       onRefresh?.();
     } catch (error) {
       console.error('Error approving content:', error);
-      alert('Failed to approve content');
+      throw error; // Let ApprovalDialog handle the error display
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleRejectClick = (id: string) => {
-    setSelectedContent(id);
+  const handleRejectClick = (item: Content) => {
+    setSelectedContent(item);
     setRejectionReason('');
     setShowRejectModal(true);
   };
@@ -85,7 +92,7 @@ export function ModerationQueue({
 
     setIsProcessing(true);
     try {
-      await onReject(selectedContent, rejectionReason);
+      await onReject(selectedContent.id, rejectionReason);
       setShowRejectModal(false);
       setSelectedContent(null);
       setRejectionReason('');
@@ -177,7 +184,7 @@ export function ModerationQueue({
                       Review
                     </Link>
                     <Button
-                      onClick={() => handleApprove(item.id)}
+                      onClick={() => handleApproveClick(item)}
                       disabled={isProcessing}
                       variant="ghost"
                       size="sm"
@@ -186,7 +193,7 @@ export function ModerationQueue({
                       Approve
                     </Button>
                     <Button
-                      onClick={() => handleRejectClick(item.id)}
+                      onClick={() => handleRejectClick(item)}
                       disabled={isProcessing}
                       variant="ghost"
                       size="sm"
@@ -201,6 +208,17 @@ export function ModerationQueue({
           </Table>
         </CardContent>
       </Card>
+
+      {/* Approval Dialog */}
+      <ApprovalDialog
+        isOpen={showApprovalDialog}
+        onClose={() => {
+          setShowApprovalDialog(false);
+          setSelectedContent(null);
+        }}
+        onConfirm={handleApproveConfirm}
+        contentTitle={selectedContent?.title || ''}
+      />
 
       {/* Rejection Modal */}
       <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>

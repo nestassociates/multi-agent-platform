@@ -20,7 +20,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Eye, UserPlus } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Search, Eye, UserPlus, ChevronDown, Loader2, Pause, Play, Ban, AlertTriangle } from 'lucide-react';
 import { AgentStatusBadge } from '@/components/admin/agent-status-badge';
 import type { AgentStatus } from '@nest/shared-types';
 
@@ -50,8 +68,15 @@ interface AgentTableProps {
   currentStatusFilter?: string;
 }
 
+type BulkAction = 'deactivate' | 'reactivate' | 'suspend' | null;
+
 export function AgentTable({ agents, currentStatusFilter = 'all' }: AgentTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<BulkAction>(null);
+  const [bulkReason, setBulkReason] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -93,6 +118,110 @@ export function AgentTable({ agents, currentStatusFilter = 'all' }: AgentTablePr
     });
   }, [agents, searchQuery]);
 
+  // Handle selection
+  const toggleSelect = (id: string) => {
+    const newSelection = new Set(selectedIds);
+    if (newSelection.has(id)) {
+      newSelection.delete(id);
+    } else {
+      newSelection.add(id);
+    }
+    setSelectedIds(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredAgents.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredAgents.map(a => a.id)));
+    }
+  };
+
+  // Handle bulk action
+  const handleBulkAction = async () => {
+    if (!bulkAction || selectedIds.size === 0) return;
+
+    if (['deactivate', 'suspend'].includes(bulkAction) && bulkReason.trim().length < 10) {
+      setBulkError('Reason must be at least 10 characters');
+      return;
+    }
+
+    setIsProcessing(true);
+    setBulkError(null);
+
+    try {
+      const response = await fetch('/api/admin/agents/bulk-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agent_ids: Array.from(selectedIds),
+          action: bulkAction,
+          reason: bulkReason.trim() || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'Bulk update failed');
+      }
+
+      // Reset state and refresh
+      setBulkAction(null);
+      setBulkReason('');
+      setSelectedIds(new Set());
+      router.refresh();
+    } catch (err: any) {
+      setBulkError(err.message);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const closeBulkModal = () => {
+    if (isProcessing) return;
+    setBulkAction(null);
+    setBulkReason('');
+    setBulkError(null);
+  };
+
+  // Bulk action modal config
+  const getBulkModalConfig = () => {
+    switch (bulkAction) {
+      case 'deactivate':
+        return {
+          title: 'Deactivate Agents',
+          description: `Deactivate ${selectedIds.size} agent(s). Sites will remain live but no new builds will be processed.`,
+          buttonText: 'Deactivate All',
+          buttonVariant: 'outline' as const,
+          icon: <Pause className="h-5 w-5 text-orange-600" />,
+          requireReason: true,
+        };
+      case 'reactivate':
+        return {
+          title: 'Reactivate Agents',
+          description: `Reactivate ${selectedIds.size} agent(s). Sites will resume normal build processing.`,
+          buttonText: 'Reactivate All',
+          buttonVariant: 'default' as const,
+          icon: <Play className="h-5 w-5 text-green-600" />,
+          requireReason: false,
+        };
+      case 'suspend':
+        return {
+          title: 'Suspend Agents',
+          description: `Suspend ${selectedIds.size} agent(s). Sites will be removed from public access and pending builds will be cancelled.`,
+          buttonText: 'Suspend All',
+          buttonVariant: 'destructive' as const,
+          icon: <Ban className="h-5 w-5 text-red-600" />,
+          requireReason: true,
+        };
+      default:
+        return null;
+    }
+  };
+
+  const bulkModalConfig = getBulkModalConfig();
+
   return (
     <div className="space-y-4">
       {/* Search and Filter Bar */}
@@ -121,6 +250,34 @@ export function AgentTable({ agents, currentStatusFilter = 'all' }: AgentTablePr
             <SelectItem value="suspended">Suspended</SelectItem>
           </SelectContent>
         </Select>
+        {/* T075: Bulk Actions Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              disabled={selectedIds.size === 0}
+              className="w-full sm:w-auto"
+            >
+              Bulk Actions ({selectedIds.size})
+              <ChevronDown className="h-4 w-4 ml-2" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setBulkAction('deactivate')}>
+              <Pause className="h-4 w-4 mr-2 text-orange-600" />
+              Deactivate Selected
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setBulkAction('reactivate')}>
+              <Play className="h-4 w-4 mr-2 text-green-600" />
+              Reactivate Selected
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setBulkAction('suspend')} className="text-red-600">
+              <Ban className="h-4 w-4 mr-2" />
+              Suspend Selected
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Results Count */}
@@ -134,6 +291,13 @@ export function AgentTable({ agents, currentStatusFilter = 'all' }: AgentTablePr
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedIds.size === filteredAgents.length && filteredAgents.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Subdomain</TableHead>
@@ -144,7 +308,14 @@ export function AgentTable({ agents, currentStatusFilter = 'all' }: AgentTablePr
             </TableHeader>
             <TableBody>
               {filteredAgents.map((agent) => (
-                <TableRow key={agent.id}>
+                <TableRow key={agent.id} className={selectedIds.has(agent.id) ? 'bg-muted/50' : ''}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(agent.id)}
+                      onCheckedChange={() => toggleSelect(agent.id)}
+                      aria-label={`Select ${agent.profile?.first_name || agent.subdomain}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     {agent.profile ? (
                       `${agent.profile.first_name} ${agent.profile.last_name}`
@@ -237,6 +408,97 @@ export function AgentTable({ agents, currentStatusFilter = 'all' }: AgentTablePr
           </div>
         </div>
       )}
+
+      {/* Bulk Action Confirmation Modal (T076) */}
+      <Dialog open={bulkAction !== null} onOpenChange={() => closeBulkModal()}>
+        {bulkModalConfig && (
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                {bulkModalConfig.icon}
+                <DialogTitle>{bulkModalConfig.title}</DialogTitle>
+              </div>
+              <DialogDescription className="pt-2">
+                {bulkModalConfig.description}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              {/* Selected Agents Summary */}
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-sm font-medium text-gray-900">
+                  {selectedIds.size} agent(s) selected
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {filteredAgents
+                    .filter(a => selectedIds.has(a.id))
+                    .slice(0, 3)
+                    .map(a => a.profile?.first_name || a.subdomain)
+                    .join(', ')}
+                  {selectedIds.size > 3 && ` and ${selectedIds.size - 3} more...`}
+                </p>
+              </div>
+
+              {/* Reason Input */}
+              {bulkModalConfig.requireReason && (
+                <div className="space-y-2">
+                  <Label htmlFor="bulk-reason">
+                    Reason <span className="text-red-500">*</span>
+                  </Label>
+                  <Textarea
+                    id="bulk-reason"
+                    value={bulkReason}
+                    onChange={(e) => setBulkReason(e.target.value)}
+                    placeholder="Please provide a reason (minimum 10 characters)..."
+                    rows={3}
+                  />
+                  <p className="text-xs text-gray-500">{bulkReason.length}/10 characters minimum</p>
+                </div>
+              )}
+
+              {/* Warning for Suspend */}
+              {bulkAction === 'suspend' && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 rounded-lg border border-red-200">
+                  <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-red-800">
+                    <p className="font-medium">This is a severe action</p>
+                    <p className="mt-1">
+                      All selected agents&apos; sites will be removed from public access.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {bulkError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800">
+                  {bulkError}
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={closeBulkModal} disabled={isProcessing}>
+                Cancel
+              </Button>
+              <Button
+                variant={bulkModalConfig.buttonVariant}
+                onClick={handleBulkAction}
+                disabled={isProcessing || (bulkModalConfig.requireReason && bulkReason.trim().length < 10)}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  bulkModalConfig.buttonText
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 }

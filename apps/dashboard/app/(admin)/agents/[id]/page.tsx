@@ -12,6 +12,8 @@ import { AgentAnalyticsTab } from '@/components/admin/agent-analytics-tab';
 import { AgentSettingsTab } from '@/components/admin/agent-settings-tab';
 import { EditAgentButton } from '@/components/admin/edit-agent-button';
 import { AgentOnboardingChecklistComponent } from '@/components/admin/agent-onboarding-checklist';
+import { AgentStatusHistory } from '@/components/admin/agent-status-history';
+import { getAgentStatusHistory } from '@/lib/services/status-history';
 
 export default async function AgentDetailPage({ params }: { params: { id: string } }) {
   const user = await getUser();
@@ -35,7 +37,8 @@ export default async function AgentDetailPage({ params }: { params: { id: string
   }
 
   // T052: Fetch stats and checklist
-  const [contentResult, propertiesResult, buildsResult, checklistResult] = await Promise.all([
+  // T079: Fetch status history
+  const [contentResult, propertiesResult, buildsResult, checklistResult, statusHistory] = await Promise.all([
     supabase
       .from('content_submissions')
       .select('id', { count: 'exact', head: true })
@@ -59,6 +62,7 @@ export default async function AgentDetailPage({ params }: { params: { id: string
       .select('*')
       .eq('agent_id', params.id)
       .maybeSingle(),
+    getAgentStatusHistory(params.id),
   ]);
 
   const stats = {
@@ -130,8 +134,10 @@ export default async function AgentDetailPage({ params }: { params: { id: string
           <AgentOverview agent={agent} stats={stats} />
         </TabsContent>
 
-        <TabsContent value="onboarding">
+        <TabsContent value="onboarding" className="space-y-6">
           <AgentOnboardingChecklistComponent agent={agent} checklist={checklist} />
+          {/* T078: Status History Timeline */}
+          <AgentStatusHistory history={statusHistory} />
         </TabsContent>
 
         <TabsContent value="content">

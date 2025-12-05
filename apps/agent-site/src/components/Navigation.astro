@@ -1,0 +1,117 @@
+---
+/**
+ * Navigation Component
+ * T058: Renders navigation menu from site data
+ */
+import type { NavItem } from '../lib/types';
+
+interface Props {
+  items: NavItem[];
+  agentName: string;
+  currentPath?: string;
+}
+
+const { items, agentName, currentPath = '/' } = Astro.props;
+const primaryItems = items.filter((item) => item.primary);
+---
+
+<nav class="flex items-center justify-between">
+  <!-- Logo / Agent Name -->
+  <a href="/" class="text-xl font-bold text-blue-600 hover:text-blue-700 transition">
+    {agentName}
+  </a>
+
+  <!-- Desktop Navigation -->
+  <div class="hidden md:flex items-center gap-1">
+    {primaryItems.map((item) => (
+      <a
+        href={item.href}
+        class={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+          currentPath === item.href
+            ? 'bg-blue-100 text-blue-700'
+            : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600'
+        }`}
+      >
+        {item.label}
+      </a>
+    ))}
+  </div>
+
+  <!-- Mobile Menu Button -->
+  <button
+    type="button"
+    class="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+    aria-label="Open menu"
+    id="mobile-menu-btn"
+  >
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  </button>
+</nav>
+
+<!-- Mobile Navigation Overlay -->
+<div
+  id="mobile-menu"
+  class="fixed inset-0 z-50 bg-white transform translate-x-full transition-transform duration-300 md:hidden"
+>
+  <div class="flex flex-col h-full">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b">
+      <a href="/" class="text-xl font-bold text-blue-600">
+        {agentName}
+      </a>
+      <button
+        type="button"
+        class="p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+        aria-label="Close menu"
+        id="mobile-menu-close"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Menu Items -->
+    <div class="flex-1 overflow-y-auto p-4">
+      {primaryItems.map((item) => (
+        <a
+          href={item.href}
+          class={`block px-4 py-3 rounded-lg text-lg font-medium transition mb-2 ${
+            currentPath === item.href
+              ? 'bg-blue-100 text-blue-700'
+              : 'text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          {item.label}
+        </a>
+      ))}
+    </div>
+  </div>
+</div>
+
+<script>
+  // Mobile menu toggle
+  const menuBtn = document.getElementById('mobile-menu-btn');
+  const menuClose = document.getElementById('mobile-menu-close');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  menuBtn?.addEventListener('click', () => {
+    mobileMenu?.classList.remove('translate-x-full');
+    document.body.style.overflow = 'hidden';
+  });
+
+  menuClose?.addEventListener('click', () => {
+    mobileMenu?.classList.add('translate-x-full');
+    document.body.style.overflow = '';
+  });
+
+  // Close on link click
+  mobileMenu?.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => {
+      mobileMenu?.classList.add('translate-x-full');
+      document.body.style.overflow = '';
+    });
+  });
+</script>

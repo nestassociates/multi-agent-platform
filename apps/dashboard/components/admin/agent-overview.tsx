@@ -185,14 +185,16 @@ export function AgentOverview({ agent, stats }: AgentOverviewProps) {
       )}
 
       {/* Social Media Links */}
-      {agent.social_media_links && Object.keys(agent.social_media_links).length > 0 && (
+      {agent.social_media_links && Object.entries(agent.social_media_links).filter(([_, url]) => url && url.trim()).length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Social Media</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {Object.entries(agent.social_media_links).map(([platform, url]) => (
+              {Object.entries(agent.social_media_links)
+                .filter(([_, url]) => url && url.trim())
+                .map(([platform, url]) => (
                 <a
                   key={platform}
                   href={url}

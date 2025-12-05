@@ -1,0 +1,6 @@
+---
+// Redirect agents to the admin dashboard login page
+const dashboardUrl = import.meta.env.PUBLIC_DASHBOARD_URL || 'https://multi-agent-platform-eight.vercel.app';
+
+return Astro.redirect(`${dashboardUrl}/login`, 302);
+---

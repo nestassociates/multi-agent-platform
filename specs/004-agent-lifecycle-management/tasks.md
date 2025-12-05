@@ -205,40 +205,40 @@ Based on Turborepo monorepo structure:
 
 **Deactivation Service**
 
-- [ ] T062 [P] [US5] Implement deactivateAgent() function in apps/dashboard/lib/services/agent-activation.ts
-- [ ] T063 [P] [US5] Implement reactivateAgent() function in agent-activation.ts
-- [ ] T064 [P] [US5] Implement suspendAgent() function in agent-activation.ts
+- [x] T062 [P] [US5] Implement deactivateAgent() function in apps/dashboard/lib/services/agent-activation.ts
+- [x] T063 [P] [US5] Implement reactivateAgent() function in agent-activation.ts
+- [x] T064 [P] [US5] Implement suspendAgent() function in agent-activation.ts
 
 **Deactivation API**
 
-- [ ] T065 [P] [US5] Create POST /api/admin/agents/[id]/deactivate endpoint in apps/dashboard/app/api/admin/agents/[id]/deactivate/route.ts
-- [ ] T066 [US5] Add deactivation reason validation (required, min 10 chars)
-- [ ] T067 [US5] Update checklist with deactivation metadata
+- [x] T065 [P] [US5] Create POST /api/admin/agents/[id]/deactivate endpoint in apps/dashboard/app/api/admin/agents/[id]/deactivate/route.ts
+- [x] T066 [US5] Add deactivation reason validation (required, min 10 chars)
+- [x] T067 [US5] Update checklist with deactivation metadata
 
 **Status Transition Guards**
 
-- [ ] T068 [P] [US5] Create status transition validator in apps/dashboard/lib/services/status-validator.ts
-- [ ] T069 [US5] Implement canTransition() function with allowed transitions map
-- [ ] T070 [US5] Add transition validation to all status change endpoints
+- [x] T068 [P] [US5] Create status transition validator in apps/dashboard/lib/services/status-validator.ts
+- [x] T069 [US5] Implement canTransition() function with allowed transitions map
+- [x] T070 [US5] Add transition validation to all status change endpoints
 
 **UI Actions**
 
-- [ ] T071 [P] [US5] Add "Deactivate" action to agent detail page in apps/dashboard/app/(admin)/agents/[id]/page.tsx
-- [ ] T072 [P] [US5] Add "Reactivate" action for inactive agents
-- [ ] T073 [P] [US5] Add "Suspend" action with confirmation dialog
-- [ ] T074 [US5] Add deactivation reason input modal
+- [x] T071 [P] [US5] Add "Deactivate" action to agent detail page in apps/dashboard/app/(admin)/agents/[id]/page.tsx
+- [x] T072 [P] [US5] Add "Reactivate" action for inactive agents
+- [x] T073 [P] [US5] Add "Suspend" action with confirmation dialog
+- [x] T074 [US5] Add deactivation reason input modal
 
 **Bulk Operations**
 
-- [ ] T075 [P] [US5] Add bulk status update UI to agents list page
-- [ ] T076 [US5] Create POST /api/admin/agents/bulk-update endpoint in apps/dashboard/app/api/admin/agents/bulk-update/route.ts
-- [ ] T077 [US5] Implement bulk status change logic with transaction
+- [x] T075 [P] [US5] Add bulk status update UI to agents list page
+- [x] T076 [US5] Create POST /api/admin/agents/bulk-update endpoint in apps/dashboard/app/api/admin/agents/bulk-update/route.ts
+- [x] T077 [US5] Implement bulk status change logic with transaction
 
 **Status History**
 
-- [ ] T078 [P] [US5] Display status change history in agent detail page
-- [ ] T079 [US5] Query audit_logs for status changes
-- [ ] T080 [US5] Format status timeline with dates and admin names
+- [x] T078 [P] [US5] Display status change history in agent detail page
+- [x] T079 [US5] Query audit_logs for status changes
+- [x] T080 [US5] Format status timeline with dates and admin names
 
 **Checkpoint**: Complete status management, bulk operations, audit trail for all changes
 

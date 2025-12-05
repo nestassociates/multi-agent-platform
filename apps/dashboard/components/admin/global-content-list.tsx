@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileText, Settings, Shield, Cookie, Edit } from 'lucide-react';
+import { FileText, Settings, Shield, Cookie, Edit, MessageSquareWarning } from 'lucide-react';
 
 interface GlobalContentItem {
   id: string;
@@ -45,11 +45,16 @@ const contentTypeConfig: Record<string, { label: string; icon: React.ElementType
     icon: Cookie,
     description: 'Legal page for cookie usage',
   },
+  complaints_procedure: {
+    label: 'Complaints Procedure',
+    icon: MessageSquareWarning,
+    description: 'Legal page for complaints handling',
+  },
 };
 
 export function GlobalContentList({ content }: GlobalContentListProps) {
   // Ensure all content types are represented, even if not in database
-  const allTypes = ['header', 'footer', 'privacy_policy', 'terms_of_service', 'cookie_policy'];
+  const allTypes = ['header', 'footer', 'privacy_policy', 'terms_of_service', 'cookie_policy', 'complaints_procedure'];
   const contentMap = content.reduce((acc, item) => {
     acc[item.contentType] = item;
     return acc;

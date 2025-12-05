@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createContentSchema, type CreateContentInput } from '@nest/validation';
@@ -12,12 +12,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, ArrowLeft, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-
-interface EditContentPageProps {
-  params: {
-    id: string;
-  };
-}
 
 interface ContentData {
   id: string;
@@ -34,8 +28,10 @@ interface ContentData {
   rejection_reason: string | null;
 }
 
-export default function EditContentPage({ params }: EditContentPageProps) {
+export default function EditContentPage() {
   const router = useRouter();
+  const params = useParams();
+  const contentId = params.id as string;
   const isMobile = useIsMobile();
   const [content, setContent] = useState<ContentData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +59,7 @@ export default function EditContentPage({ params }: EditContentPageProps) {
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const response = await fetch(`/api/agent/content/${params.id}`);
+        const response = await fetch(`/api/agent/content/${contentId}`);
 
         if (!response.ok) {
           if (response.status === 404) {
@@ -95,7 +91,7 @@ export default function EditContentPage({ params }: EditContentPageProps) {
     };
 
     fetchContent();
-  }, [params.id, form]);
+  }, [contentId, form]);
 
   const handleSubmit = async () => {
     const isValid = await form.trigger();
@@ -106,7 +102,7 @@ export default function EditContentPage({ params }: EditContentPageProps) {
 
     try {
       const data = form.getValues();
-      const response = await fetch(`/api/agent/content/${params.id}`, {
+      const response = await fetch(`/api/agent/content/${contentId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +132,7 @@ export default function EditContentPage({ params }: EditContentPageProps) {
     setAutoSaving(true);
     try {
       const data = form.getValues();
-      const response = await fetch(`/api/agent/content/${params.id}`, {
+      const response = await fetch(`/api/agent/content/${contentId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

@@ -104,3 +104,8 @@ body,
     padding: 1rem 1rem 30vh;
   }
 }
+
+/* Image alignment bubble menu - needs to be above sticky toolbar */
+.tiptap-image-align-popover {
+  z-index: 60;
+}

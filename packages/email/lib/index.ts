@@ -12,6 +12,7 @@ export {
   sendProfileCompleteEmail,
   sendSiteActivatedEmail,
   sendContactNotificationEmail,
+  sendViewingRequestNotificationEmail,
   type WelcomeEmailData,
 } from './sender';
 

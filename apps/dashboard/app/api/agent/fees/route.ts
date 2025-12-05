@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { feeStructureSchema } from '@nest/validation';
+import { addBuild } from '@nest/build-system';
 
 /**
  * GET /api/agent/fees
@@ -90,10 +91,13 @@ export async function POST(request: NextRequest) {
     // Upsert fee structure (create if doesn't exist, update if exists)
     const { data, error } = await supabase
       .from('agent_fees')
-      .upsert({
-        agent_id: agent.id,
-        content_body: sanitizedContent,
-      })
+      .upsert(
+        {
+          agent_id: agent.id,
+          content_body: sanitizedContent,
+        },
+        { onConflict: 'agent_id' }
+      )
       .select()
       .single();
 
@@ -103,20 +107,16 @@ export async function POST(request: NextRequest) {
     }
 
     // T052: Queue rebuild with priority 4 (Low) for fees update
-    // Only queue for active agents
-    const { data: agentStatus } = await supabase
-      .from('agents')
-      .select('status')
-      .eq('id', agent.id)
-      .single();
-
-    if (agentStatus?.status === 'active') {
-      const serviceRoleClient = createServiceRoleClient();
-      await serviceRoleClient.from('build_queue').insert({
+    // addBuild() only queues for active agents (checked via INNER JOIN)
+    try {
+      await addBuild({
         agent_id: agent.id,
+        trigger_reason: 'Fee structure updated',
         priority: 4, // Low priority for fees updates
-        trigger_reason: 'fees_update',
       });
+    } catch (buildError) {
+      console.error('Error queuing build:', buildError);
+      // Don't fail the request if queue fails
     }
 
     return NextResponse.json({ success: true, fees: data });

@@ -112,7 +112,7 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T034 [P] Add Upstash environment variables to Vercel project (Production + Preview) **[MANUAL - Requires Vercel dashboard access]**
+- [x] T034 [P] Add Upstash environment variables to Vercel project (Production + Preview) **[MANUAL - Completed by user]**
 - [x] T035 [P] Update `.env.local.example` with comments explaining each Upstash variable
 - [ ] T036 Validate OpenAPI spec against contracts/openapi.yaml reference **[OPTIONAL - No reference file exists]**
 - [ ] T037 Run quickstart.md validation steps to verify setup **[OPTIONAL - Manual validation]**

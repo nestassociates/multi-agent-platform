@@ -80,6 +80,7 @@ export const globalContentTypes = [
   'privacy_policy',
   'terms_of_service',
   'cookie_policy',
+  'complaints_procedure',
 ] as const;
 
 export type GlobalContentType = typeof globalContentTypes[number];
@@ -101,6 +102,7 @@ export function getContentSchema(type: GlobalContentType): z.ZodSchema {
     case 'privacy_policy':
     case 'terms_of_service':
     case 'cookie_policy':
+    case 'complaints_procedure':
       return legalContentSchema;
     default:
       throw new Error(`Unknown content type: ${type}`);

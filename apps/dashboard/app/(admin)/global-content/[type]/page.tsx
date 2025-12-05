@@ -1,10 +1,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getUser } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
-import Link from 'next/link';
 import { GlobalContentEditor } from '@/components/admin/global-content-editor';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 import { globalContentTypes, type GlobalContentType } from '@nest/validation';
 
 interface GlobalContentEditPageProps {
@@ -72,17 +69,23 @@ export default async function GlobalContentEditPage({ params }: GlobalContentEdi
       }
     : undefined;
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <Button asChild variant="ghost" className="mb-4">
-          <Link href="/global-content">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Global Content
-          </Link>
-        </Button>
-      </div>
+  const isLegalPage = ['privacy_policy', 'terms_of_service', 'cookie_policy', 'complaints_procedure'].includes(type);
 
+  // For legal pages, render the editor directly (it handles its own layout)
+  // For header/footer, wrap in the standard layout
+  if (isLegalPage) {
+    return (
+      <GlobalContentEditor
+        contentType={type as GlobalContentType}
+        initialData={initialData}
+        activeAgentCount={activeAgentCount || 0}
+      />
+    );
+  }
+
+  // Header/footer use the original wrapped layout
+  return (
+    <div className="space-y-6 p-4 md:p-6">
       <GlobalContentEditor
         contentType={type as GlobalContentType}
         initialData={initialData}

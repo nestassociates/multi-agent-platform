@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { loginSchema } from '@nest/validation';
-import { checkLoginRateLimit, formatResetTime } from '@/lib/rate-limiter';
+import { checkLoginRateLimit, clearLoginRateLimit, formatResetTime } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,6 +58,9 @@ export async function POST(request: NextRequest) {
 
       return response;
     }
+
+    // Clear rate limit on successful login (only count failed attempts)
+    await clearLoginRateLimit(validatedData.email);
 
     // Get user profile with role
     const { data: profile } = await supabase

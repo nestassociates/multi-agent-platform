@@ -90,6 +90,21 @@ export const deactivateAgentSchema = z.object({
 
 export type DeactivateAgentInput = z.infer<typeof deactivateAgentSchema>;
 
+// Reactivation request schema (T063)
+export const reactivateAgentSchema = z.object({
+  reason: z.string().optional(),
+  queueBuild: z.boolean().optional().default(false),
+});
+
+export type ReactivateAgentInput = z.infer<typeof reactivateAgentSchema>;
+
+// Suspension request schema (T064)
+export const suspendAgentSchema = z.object({
+  reason: z.string().min(10, 'Suspension reason must be at least 10 characters'),
+});
+
+export type SuspendAgentInput = z.infer<typeof suspendAgentSchema>;
+
 // Checklist update schema (T011)
 export const updateChecklistSchema = z.object({
   field: z.enum(['user_created', 'welcome_email_sent', 'admin_approved']),

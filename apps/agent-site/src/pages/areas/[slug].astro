@@ -1,44 +1,20 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getSiteData, getContentBySlug, placeholderData } from '../../lib/data';
 
-// Generate static paths from data file
-export async function getStaticPaths() {
-  // In production, this will read from generated JSON
-  // For now, return empty array for build to succeed
-  return [];
-}
-
+// Server-side rendering - fetch data on each request
 const { slug } = Astro.params;
+const siteData = await getSiteData() || placeholderData;
+const area = getContentBySlug(siteData, slug as string);
 
-const area = {
-  name: 'Area Name',
-  featuredImageUrl: null,
-  contentBody: '<p>Area guide content will appear here when generated from the dashboard.</p>',
-  excerpt: 'Discover this wonderful neighborhood',
-  averagePrice: null,
-  schools: [],
-  transport: [],
-  amenities: [],
-};
+// 404 if area guide not found
+if (!area) {
+  return Astro.redirect('/areas');
+}
 ---
 
-<BaseLayout title={area.name} description={area.excerpt}>
+<BaseLayout title={area.title} description={area.excerpt || undefined} siteData={siteData} currentPath="/areas">
   <div class="min-h-screen bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-white border-b">
-      <div class="container mx-auto px-4 py-4">
-        <div class="flex gap-6">
-          <a href="/" class="text-gray-600 hover:text-blue-600 transition">Home</a>
-          <a href="/about" class="text-gray-600 hover:text-blue-600 transition">About</a>
-          <a href="/services" class="text-gray-600 hover:text-blue-600 transition">Services</a>
-          <a href="/properties" class="text-gray-600 hover:text-blue-600 transition">Properties</a>
-          <a href="/areas" class="text-blue-600 font-semibold">Area Guides</a>
-          <a href="/blog" class="text-gray-600 hover:text-blue-600 transition">Blog</a>
-          <a href="/contact" class="text-gray-600 hover:text-blue-600 transition">Contact</a>
-        </div>
-      </div>
-    </nav>
-
     <!-- Article -->
     <article class="py-16">
       <div class="container mx-auto px-4 max-w-4xl">
@@ -54,132 +30,28 @@ const area = {
         {area.featuredImageUrl && (
           <img
             src={area.featuredImageUrl}
-            alt={area.name}
+            alt={area.title}
             class="w-full h-96 object-cover rounded-lg mb-8"
           />
         )}
 
         <!-- Title -->
         <div class="mb-8">
-          <h1 class="text-4xl font-bold mb-4">{area.name}</h1>
-          <p class="text-xl text-gray-600">{area.excerpt}</p>
+          <h1 class="text-4xl font-bold mb-4">{area.title}</h1>
+          {area.excerpt && (
+            <p class="text-xl text-gray-600">{area.excerpt}</p>
+          )}
         </div>
-
-        <!-- Quick Stats -->
-        {area.averagePrice && (
-          <div class="bg-blue-50 rounded-lg p-6 mb-8">
-            <div class="grid md:grid-cols-3 gap-6">
-              <div>
-                <h3 class="text-sm font-semibold text-gray-600 mb-2">Average Price</h3>
-                <p class="text-2xl font-bold text-blue-600">£{area.averagePrice.toLocaleString()}</p>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold text-gray-600 mb-2">Property Type</h3>
-                <p class="text-lg">Mixed</p>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold text-gray-600 mb-2">Transport</h3>
-                <p class="text-lg">Excellent Links</p>
-              </div>
-            </div>
-          </div>
-        )}
 
         <!-- Content -->
-        <div class="prose prose-lg max-w-none mb-8">
+        <div class="prose prose-lg max-w-none bg-white rounded-lg shadow-sm p-8 mb-8">
           <Fragment set:html={area.contentBody} />
-        </div>
-
-        <!-- Map Placeholder -->
-        <div class="bg-gray-200 rounded-lg h-96 flex items-center justify-center mb-8">
-          <div class="text-center text-gray-500">
-            <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-            </svg>
-            <p class="text-lg font-medium">Interactive Map</p>
-            <p class="text-sm">Location and local amenities</p>
-          </div>
-        </div>
-
-        <!-- Key Features Grid -->
-        <div class="grid md:grid-cols-2 gap-8 mb-8">
-          <!-- Schools -->
-          <div class="bg-white rounded-lg shadow-sm p-6">
-            <h3 class="text-xl font-bold mb-4 flex items-center">
-              <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-              </svg>
-              Schools & Education
-            </h3>
-            {area.schools.length > 0 ? (
-              <ul class="space-y-2">
-                {area.schools.map((school: string) => (
-                  <li class="flex items-start">
-                    <svg class="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span>{school}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p class="text-gray-600">Contact me for information about local schools</p>
-            )}
-          </div>
-
-          <!-- Transport -->
-          <div class="bg-white rounded-lg shadow-sm p-6">
-            <h3 class="text-xl font-bold mb-4 flex items-center">
-              <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-              </svg>
-              Transport Links
-            </h3>
-            {area.transport.length > 0 ? (
-              <ul class="space-y-2">
-                {area.transport.map((link: string) => (
-                  <li class="flex items-start">
-                    <svg class="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span>{link}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p class="text-gray-600">Excellent transport connections available</p>
-            )}
-          </div>
-
-          <!-- Amenities -->
-          <div class="bg-white rounded-lg shadow-sm p-6 md:col-span-2">
-            <h3 class="text-xl font-bold mb-4 flex items-center">
-              <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-              </svg>
-              Local Amenities
-            </h3>
-            {area.amenities.length > 0 ? (
-              <div class="grid md:grid-cols-2 gap-2">
-                {area.amenities.map((amenity: string) => (
-                  <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span>{amenity}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p class="text-gray-600">Full range of local shops, restaurants, and facilities nearby</p>
-            )}
-          </div>
         </div>
 
         <!-- CTA -->
         <div class="bg-blue-50 rounded-lg p-8 text-center">
-          <h2 class="text-2xl font-bold mb-4">Interested in Properties in {area.name}?</h2>
-          <p class="text-gray-700 mb-6">Let me help you find your perfect home in this area</p>
+          <h2 class="text-2xl font-bold mb-4">Interested in Properties in {area.title}?</h2>
+          <p class="text-gray-700 mb-6">Let {siteData.agent.name} help you find your perfect home in this area</p>
           <div class="flex justify-center gap-4">
             <a href="/properties" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
               View Properties

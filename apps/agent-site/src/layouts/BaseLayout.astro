@@ -1,14 +1,32 @@
 ---
+/**
+ * Base Layout Component
+ * T060: Main layout wrapper with header, footer, and SEO
+ */
 import '../styles/global.css';
+import GlobalHeader from '../components/GlobalHeader.astro';
+import GlobalFooter from '../components/GlobalFooter.astro';
+import type { AgentSiteData } from '../lib/types';
 
 interface Props {
   title: string;
   description?: string;
   image?: string;
+  siteData: AgentSiteData;
+  currentPath?: string;
 }
 
-const { title, description = 'Professional real estate services', image } = Astro.props;
+const {
+  title,
+  description = 'Professional real estate services',
+  image,
+  siteData,
+  currentPath = Astro.url.pathname,
+} = Astro.props;
+
 const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : Astro.url;
+const agentName = siteData.agent.name;
+const agentUrl = `https://${siteData.agent.subdomain}.agents.nestassociates.com`;
 ---
 
 <!doctype html>
@@ -39,23 +57,41 @@ const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : Astr
     {image && <meta property="twitter:image" content={image} />}
 
     <!-- Schema.org Markup -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "RealEstateAgent",
-        "name": "Agent Name",
-        "url": "https://agent-subdomain.agents.nestassociates.com",
-        "logo": "https://agent-subdomain.agents.nestassociates.com/logo.png",
-        "description": "Professional real estate agent",
-        "address": {
-          "@type": "PostalAddress",
-          "addressCountry": "GB"
-        },
-        "sameAs": []
-      }
-    </script>
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "RealEstateAgent",
+      "name": agentName,
+      "url": agentUrl,
+      "description": siteData.agent.bio || description,
+      "telephone": siteData.agent.phone || undefined,
+      "email": siteData.agent.email || undefined,
+      "image": siteData.agent.avatarUrl || undefined,
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "GB"
+      },
+      "sameAs": Object.values(siteData.agent.socialLinks || {}).filter(Boolean)
+    })} />
   </head>
-  <body>
-    <slot />
+  <body class="min-h-screen flex flex-col bg-gray-50">
+    <GlobalHeader
+      agentName={agentName}
+      navigation={siteData.navigation}
+      phone={siteData.agent.phone}
+      email={siteData.agent.email}
+      currentPath={currentPath}
+    />
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <GlobalFooter
+      agentName={agentName}
+      navigation={siteData.navigation}
+      phone={siteData.agent.phone}
+      email={siteData.agent.email}
+      socialLinks={siteData.agent.socialLinks}
+    />
   </body>
 </html>

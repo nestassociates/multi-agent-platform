@@ -1,0 +1,71 @@
+---
+/**
+ * Cookie Policy Page
+ * Displays global cookie policy content from the dashboard
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getSiteData, placeholderData } from '../lib/data';
+
+const siteData = await getSiteData() || placeholderData;
+const cookieContent = siteData.globalContent?.cookiePolicy;
+---
+
+<BaseLayout title="Cookie Policy" siteData={siteData} currentPath="/cookies">
+  <div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <section class="bg-white border-b py-12">
+      <div class="container mx-auto px-4">
+        <h1 class="text-4xl font-bold mb-4">Cookie Policy</h1>
+        <p class="text-gray-600 text-lg">
+          How {siteData.agent.name}'s website uses cookies
+        </p>
+      </div>
+    </section>
+
+    <!-- Content -->
+    <section class="py-16">
+      <div class="container mx-auto px-4 max-w-3xl">
+        <div class="bg-white rounded-lg shadow-sm p-8">
+          {cookieContent ? (
+            <div class="prose prose-lg max-w-none">
+              <Fragment set:html={cookieContent} />
+            </div>
+          ) : (
+            <div class="text-center py-12">
+              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 class="text-xl font-semibold mb-3">Cookie Policy Coming Soon</h2>
+              <p class="text-gray-600 mb-6">
+                Our cookie policy is being prepared and will be available shortly.
+              </p>
+              <p class="text-sm text-gray-500">
+                This website may use essential cookies to ensure basic functionality.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <!-- What Are Cookies Section -->
+        <div class="mt-8 bg-gray-100 rounded-lg p-6">
+          <h3 class="font-semibold text-lg mb-3">What are cookies?</h3>
+          <p class="text-gray-600 text-sm">
+            Cookies are small text files that are placed on your device when you visit a website.
+            They are widely used to make websites work more efficiently and provide information to
+            the website owners. Essential cookies are necessary for the website to function properly.
+          </p>
+        </div>
+
+        <!-- Contact CTA -->
+        <div class="mt-8 bg-blue-50 rounded-lg p-6 text-center">
+          <p class="text-gray-700 mb-4">Have questions about cookies?</p>
+          <a href="/contact" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+            Contact Us
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

@@ -36,3 +36,19 @@ export const contactRateLimiter = new Ratelimit({
   prefix: 'ratelimit:contact',
   analytics: true,
 });
+
+/**
+ * Reset login rate limit for a specific email
+ * Called after successful login to only count failed attempts
+ */
+export async function resetLoginRateLimit(email: string): Promise<void> {
+  if (!isRedisConfigured()) return;
+
+  const normalizedEmail = email.toLowerCase().trim();
+  try {
+    // Delete all keys matching the login rate limit pattern for this email
+    await redis.del(`ratelimit:login:${normalizedEmail}`);
+  } catch (error) {
+    console.error('Failed to reset login rate limit:', error);
+  }
+}
