@@ -8,9 +8,10 @@ A JAMstack platform enabling a central admin team to manage 1,000+ independent r
 - **Agent Dashboard**: Create content, manage profile, view analytics
 - **Agent Microsites**: 1,000+ static sites deployed to subdomains (Astro 4.x)
 - **Property Sync**: Real-time synchronization from Apex27 CRM
-- **Territory Management**: Visual polygon drawing with property count calculation
+- **Territory Management**: Postcode-based territory assignment system
 - **Content Moderation**: Approval workflow with email notifications
 - **Build System**: Automated static site generation with priority queue
+- **Agent Lifecycle**: Auto-detection from Apex27, profile completion tracking, admin approval workflow
 
 ## Technology Stack
 
@@ -105,12 +106,17 @@ npm run build
 
 ## Documentation
 
+### Platform Foundation
 - **[Feature Specification](./specs/001-multi-agent-platform/spec.md)**: Requirements and user stories
 - **[Implementation Plan](./specs/001-multi-agent-platform/plan.md)**: Technical architecture
 - **[Data Model](./specs/001-multi-agent-platform/data-model.md)**: Database schema
 - **[API Contracts](./specs/001-multi-agent-platform/contracts/openapi.yaml)**: OpenAPI specification
-- **[Tasks](./specs/001-multi-agent-platform/tasks.md)**: Implementation task list
 - **[Quickstart Guide](./specs/001-multi-agent-platform/quickstart.md)**: Detailed setup instructions
+
+### Agent Lifecycle Management
+- **[Admin Guide](./specs/004-agent-lifecycle-management/admin-guide.md)**: Managing agent onboarding and status
+- **[Agent Guide](./specs/004-agent-lifecycle-management/agent-guide.md)**: Profile completion and site activation
+- **[Lifecycle Spec](./specs/004-agent-lifecycle-management/spec.md)**: Technical specification
 
 ## Contributing
 

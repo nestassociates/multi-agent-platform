@@ -250,22 +250,22 @@ Based on Turborepo monorepo structure:
 
 **Testing**
 
-- [ ] T081 [P] Create integration test for auto-detection in tests/integration/agent-auto-detection.spec.ts
-- [ ] T082 [P] Create integration test for activation flow in tests/integration/agent-activation.spec.ts
-- [ ] T083 [P] Create E2E test for complete lifecycle in tests/e2e/agent-lifecycle.spec.ts
+- [x] T081 [P] Create integration test for auto-detection in tests/integration/agent-auto-detection.spec.ts
+- [x] T082 [P] Create integration test for activation flow in tests/integration/agent-activation.spec.ts
+- [x] T083 [P] Create E2E test for complete lifecycle in tests/e2e/agent-lifecycle.spec.ts
 - [ ] T084 Test auto-detection with real Apex27 webhook
 - [ ] T085 Test activation flow end-to-end with test agent
 - [ ] T086 Verify build filtering works (draft agents skipped)
 
 **Documentation**
 
-- [ ] T087 [P] Update main README.md to link to agent lifecycle docs
-- [ ] T088 [P] Create admin guide for agent lifecycle in specs/004-agent-lifecycle-management/admin-guide.md
-- [ ] T089 [P] Create agent guide for onboarding in specs/004-agent-lifecycle-management/agent-guide.md
+- [x] T087 [P] Update main README.md to link to agent lifecycle docs
+- [x] T088 [P] Create admin guide for agent lifecycle in specs/004-agent-lifecycle-management/admin-guide.md
+- [x] T089 [P] Create agent guide for onboarding in specs/004-agent-lifecycle-management/agent-guide.md
 
 **Migration & Deployment**
 
-- [ ] T090 Create migration script in apps/dashboard/scripts/migrate-existing-agents.ts
+- [x] T090 Create migration script in apps/dashboard/scripts/migrate-existing-agents.ts
 - [ ] T091 Test migration script on staging database
 - [ ] T092 Run migration on production database (16 agents → 'active')
 - [ ] T093 Verify all existing agents have checklists created
@@ -273,8 +273,8 @@ Based on Turborepo monorepo structure:
 
 **Monitoring**
 
-- [ ] T095 [P] Add metrics for agent activation time in apps/dashboard/lib/metrics.ts
-- [ ] T096 [P] Add dashboard widget for draft agents count
+- [x] T095 [P] Add metrics for agent activation time in apps/dashboard/lib/metrics.ts
+- [x] T096 [P] Add dashboard widget for draft agents count
 - [ ] T097 Monitor auto-detection success rate (should be >99%)
 
 ---
