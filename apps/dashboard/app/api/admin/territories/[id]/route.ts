@@ -57,7 +57,10 @@ export async function PATCH(
 
 /**
  * DELETE /api/admin/territories/:id
- * Delete territory
+ * Delete all postcode assignments for an agent
+ *
+ * Updated for Feature 008: Now deletes from agent_postcodes table
+ * The :id parameter is the agent_id (territories are grouped by agent)
  */
 export async function DELETE(
   request: NextRequest,
@@ -72,14 +75,17 @@ export async function DELETE(
       );
     }
 
-    const { id: territoryId } = params;
+    const { id: agentId } = params;
     const supabase = createServiceRoleClient();
 
-    // Delete territory
-    const { error } = await supabase.from('territories').delete().eq('id', territoryId);
+    // Delete all postcode assignments for this agent
+    const { error } = await supabase
+      .from('agent_postcodes')
+      .delete()
+      .eq('agent_id', agentId);
 
     if (error) {
-      console.error('Error deleting territory:', error);
+      console.error('Error deleting territory assignments:', error);
       return NextResponse.json(
         { error: { code: 'DELETE_ERROR', message: error.message } },
         { status: 500 }

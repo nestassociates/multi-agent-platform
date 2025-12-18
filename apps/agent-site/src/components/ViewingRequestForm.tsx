@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react';
+import { trackViewingRequest } from '../lib/analytics';
 
 /**
  * Viewing Request Form Component
  * Collects visitor information and viewing preferences for property viewings
  * Submits to /api/public/viewing-request endpoint
+ * GA4: Tracks generate_lead event on successful submission
  */
 
 // Options matching the validation schema
@@ -168,6 +170,11 @@ export default function ViewingRequestForm({
           data.message ||
           'Thank you! Your viewing request has been sent. The agent will be in touch shortly.',
       });
+
+      // Track successful lead generation in GA4
+      if (propertyId && propertyAddress) {
+        trackViewingRequest(propertyId, propertyAddress);
+      }
 
       // Call success callback if provided
       if (onSuccess) {

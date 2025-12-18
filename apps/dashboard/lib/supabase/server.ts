@@ -1,6 +1,9 @@
 import { cookies } from 'next/headers';
 import { createServerClient as createSupabaseServerClient, type CookieOptions } from '@supabase/ssr';
 
+// Database types available at ./database.types.ts for type-safe queries
+// Usage: import type { Database } from '@/lib/supabase/database.types'
+
 /**
  * Create Supabase client for Next.js Server Components and Route Handlers
  * Uses cookies for session management

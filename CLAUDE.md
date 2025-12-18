@@ -11,6 +11,8 @@ Auto-generated from all feature plans. Last updated: 2025-10-29
 - PostgreSQL (Supabase) - existing tables: content_submissions, agents, profiles (005-separate-reviews-fees)
 - TypeScript 5.3+ / Next.js 14 (App Router) + @upstash/ratelimit, @upstash/redis, @asteasolutions/zod-to-openapi, swagger-ui-reac (007-redis-ratelimit-openapi)
 - Upstash Redis (rate limits), PostgreSQL/Supabase (existing data) (007-redis-ratelimit-openapi)
+- TypeScript 5.3+ / Next.js 14 (App Router) + @supabase/supabase-js, Mapbox GL JS, Zod, React Hook Form (008-postcode-sector-territories)
+- PostgreSQL (Supabase) with PostGIS extension (008-postcode-sector-territories)
 
 - TypeScript 5.3+ / JavaScript ES2023 (001-multi-agent-platform)
 
@@ -31,9 +33,9 @@ npm test && npm run lint
 TypeScript 5.3+ / JavaScript ES2023: Follow standard conventions
 
 ## Recent Changes
+- 008-postcode-sector-territories: Added TypeScript 5.3+ / Next.js 14 (App Router) + @supabase/supabase-js, Mapbox GL JS, Zod, React Hook Form
 - 007-redis-ratelimit-openapi: Added TypeScript 5.3+ / Next.js 14 (App Router) + @upstash/ratelimit, @upstash/redis, @asteasolutions/zod-to-openapi, swagger-ui-reac
 - 005-separate-reviews-fees: Added TypeScript 5.3+ / JavaScript ES2023 + Next.js 14 App Router, React 18, Supabase JS Client, Zod, React Hook Form
-- 004-agent-lifecycle-management: Added TypeScript 5.3+ / Next.js 14 (App Router) / Astro 4.x + @supabase/supabase-js, Zod, React Hook Form, Resend (email)
 
 
 <!-- MANUAL ADDITIONS START -->

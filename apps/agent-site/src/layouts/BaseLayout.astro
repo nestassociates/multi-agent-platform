@@ -6,6 +6,7 @@
 import '../styles/global.css';
 import GlobalHeader from '../components/GlobalHeader.astro';
 import GlobalFooter from '../components/GlobalFooter.astro';
+import Analytics from '../components/Analytics.astro';
 import type { AgentSiteData } from '../lib/types';
 
 interface Props {
@@ -72,6 +73,9 @@ const agentUrl = `https://${siteData.agent.subdomain}.agents.nestassociates.com`
       },
       "sameAs": Object.values(siteData.agent.socialLinks || {}).filter(Boolean)
     })} />
+
+    <!-- Google Analytics 4 -->
+    <Analytics />
   </head>
   <body class="min-h-screen flex flex-col bg-gray-50">
     <GlobalHeader

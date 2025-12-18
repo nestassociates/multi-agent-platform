@@ -28,7 +28,6 @@ pop3_port = 54326
 
 [storage]
 enabled = true
-port = 54327
 file_size_limit = "50MiB"
 
 [auth]
@@ -48,5 +47,6 @@ enable_confirmations = false
 [auth.external.google]
 enabled = false
 
-[auth.mfa]
-enable_totp = true
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true

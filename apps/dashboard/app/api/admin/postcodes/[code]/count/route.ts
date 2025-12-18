@@ -40,10 +40,13 @@ export async function GET(
     }
 
     // Fetch from OS Places API
-    // Use postcode as filter (simpler than boundary query)
+    // Use the "find" endpoint with quoted search to get exact district match
+    // This prevents "TA1" from matching "TA10", "TA11", etc.
     const OS_API_KEY = process.env.OS_DATA_HUB_API_KEY;
-    // Query for all addresses starting with this postcode and filter for residential (R class codes)
-    const url = `https://api.os.uk/search/places/v1/postcode?postcode=${encodeURIComponent(postcodeCode)}&key=${OS_API_KEY}&dataset=DPA&fq=CLASSIFICATION_CODE:R*&maxresults=1`;
+
+    // Quote the district code with a trailing space for exact matching
+    const searchQuery = `"${postcodeCode} "`;
+    const url = `https://api.os.uk/search/places/v1/find?query=${encodeURIComponent(searchQuery)}&key=${OS_API_KEY}&dataset=DPA&fq=CLASSIFICATION_CODE:R*&maxresults=1`;
 
     const response = await fetch(url);
     const data = await response.json();

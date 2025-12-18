@@ -51,3 +51,6 @@ tmp/
 # Supabase
 .branches/
 .temp/
+
+# Local documentation (not for repo)
+DEMO-PLAN.md

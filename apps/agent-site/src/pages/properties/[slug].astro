@@ -226,4 +226,26 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
       </div>
     </article>
   </div>
+
+  <!-- GA4: Track property view -->
+  <script is:inline define:vars={{
+    propertyId: property.id,
+    propertyTitle: property.title,
+    propertyPrice: property.price,
+    propertyBedrooms: property.bedrooms,
+    propertyType: property.propertyType,
+    transactionType: property.transactionType
+  }}>
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'view_property', {
+        property_id: propertyId,
+        property_title: propertyTitle,
+        value: propertyPrice,
+        currency: 'GBP',
+        bedrooms: propertyBedrooms,
+        property_type: propertyType || 'unknown',
+        status: transactionType === 'rent' ? 'for_rent' : 'for_sale'
+      });
+    }
+  </script>
 </BaseLayout>

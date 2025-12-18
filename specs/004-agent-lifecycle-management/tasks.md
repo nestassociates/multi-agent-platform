@@ -253,9 +253,9 @@ Based on Turborepo monorepo structure:
 - [x] T081 [P] Create integration test for auto-detection in tests/integration/agent-auto-detection.spec.ts
 - [x] T082 [P] Create integration test for activation flow in tests/integration/agent-activation.spec.ts
 - [x] T083 [P] Create E2E test for complete lifecycle in tests/e2e/agent-lifecycle.spec.ts
-- [ ] T084 Test auto-detection with real Apex27 webhook
-- [ ] T085 Test activation flow end-to-end with test agent
-- [ ] T086 Verify build filtering works (draft agents skipped)
+- [x] T084 Test auto-detection with real Apex27 webhook
+- [x] T085 Test activation flow end-to-end with test agent
+- [x] T086 Verify build filtering works (draft agents skipped)
 
 **Documentation**
 

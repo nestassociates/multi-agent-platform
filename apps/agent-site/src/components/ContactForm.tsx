@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react';
+import { trackContactFormSubmit } from '../lib/analytics';
 
 /**
  * Contact Form Component
  * T032: Enhanced error handling for rate limit messages with retry time
+ * GA4: Tracks generate_lead event on successful submission
  */
 
 interface FormData {
@@ -111,6 +113,9 @@ export default function ContactForm({ agentId, agentName }: ContactFormProps) {
         status: 'success',
         message: data.message || 'Thank you! Your message has been sent successfully. I will get back to you soon.',
       });
+
+      // Track successful lead generation in GA4
+      trackContactFormSubmit();
 
       // Reset form
       setFormData({

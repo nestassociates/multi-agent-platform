@@ -18,7 +18,9 @@ function geojsonPolygonToWKT(polygon: any): string {
 
 /**
  * GET /api/admin/territories
- * List all territories with agent information
+ * List all postcode-based territory assignments with agent information
+ *
+ * Updated for Feature 008: Now queries agent_postcodes table instead of territories
  */
 export async function GET(request: NextRequest) {
   try {
@@ -32,12 +34,16 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceRoleClient();
 
-    // Fetch all territories with agent details
-    const { data: territories, error } = await supabase
-      .from('territories')
+    // Fetch all postcode assignments with agent details
+    const { data: assignments, error } = await supabase
+      .from('agent_postcodes')
       .select(`
-        *,
-        agent:agents!territories_agent_id_fkey(
+        id,
+        agent_id,
+        postcode_code,
+        sector_code,
+        assigned_at,
+        agent:agents!agent_postcodes_agent_id_fkey(
           id,
           subdomain,
           profile:profiles!agents_user_id_fkey(
@@ -46,23 +52,137 @@ export async function GET(request: NextRequest) {
           )
         )
       `)
-      .order('created_at', { ascending: false });
+      .order('assigned_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching territories:', error);
+      console.error('Error fetching assignments:', error);
       return NextResponse.json(
         { error: { code: 'QUERY_ERROR', message: error.message } },
         { status: 500 }
       );
     }
 
-    // Add colors to territories
-    const territoriesWithColors = (territories || []).map((territory, index) => ({
-      ...territory,
-      color: getAgentColor(territory.agent_id, index),
-    }));
+    // Group assignments by agent to create "territory" summaries
+    const agentTerritories: Record<string, {
+      id: string;
+      agent_id: string;
+      postcodes: string[];
+      sectors: string[];
+      agent: any;
+      assigned_at: string;
+    }> = {};
 
-    return NextResponse.json({ data: territoriesWithColors });
+    for (const assignment of assignments || []) {
+      const agentId = assignment.agent_id;
+
+      if (!agentTerritories[agentId]) {
+        agentTerritories[agentId] = {
+          id: agentId, // Use agent_id as territory id for grouping
+          agent_id: agentId,
+          postcodes: [],
+          sectors: [],
+          agent: assignment.agent,
+          assigned_at: assignment.assigned_at,
+        };
+      }
+
+      if (assignment.sector_code) {
+        // Sector-level assignment
+        if (!agentTerritories[agentId].sectors.includes(assignment.sector_code)) {
+          agentTerritories[agentId].sectors.push(assignment.sector_code);
+        }
+      } else {
+        // Full district assignment
+        if (!agentTerritories[agentId].postcodes.includes(assignment.postcode_code)) {
+          agentTerritories[agentId].postcodes.push(assignment.postcode_code);
+        }
+      }
+    }
+
+    // Collect all postcodes and sectors to look up counts
+    const allPostcodes = new Set<string>();
+    const allSectors = new Set<string>();
+
+    for (const territory of Object.values(agentTerritories)) {
+      territory.postcodes.forEach((p) => allPostcodes.add(p));
+      territory.sectors.forEach((s) => allSectors.add(s));
+    }
+
+    // Fetch cached property counts for districts
+    const postcodeCountMap: Record<string, number> = {};
+    if (allPostcodes.size > 0) {
+      const { data: postcodeCounts } = await supabase
+        .from('postcode_property_counts')
+        .select('postcode_code, residential_count')
+        .in('postcode_code', Array.from(allPostcodes));
+
+      (postcodeCounts || []).forEach((pc) => {
+        postcodeCountMap[pc.postcode_code] = pc.residential_count || 0;
+      });
+    }
+
+    // Fetch cached property counts for sectors
+    const sectorCountMap: Record<string, number> = {};
+    if (allSectors.size > 0) {
+      const { data: sectorCounts } = await supabase
+        .from('sector_property_counts')
+        .select('sector_code, residential_count')
+        .in('sector_code', Array.from(allSectors));
+
+      (sectorCounts || []).forEach((sc) => {
+        sectorCountMap[sc.sector_code] = sc.residential_count || 0;
+      });
+    }
+
+    // Convert to array and format for UI
+    const territories = Object.values(agentTerritories).map((territory, index) => {
+      // Build territory name from postcodes and sectors
+      const parts: string[] = [];
+      if (territory.postcodes.length > 0) {
+        parts.push(territory.postcodes.join(', '));
+      }
+      if (territory.sectors.length > 0) {
+        // Group sectors by district for cleaner display
+        const sectorsByDistrict: Record<string, string[]> = {};
+        for (const sector of territory.sectors) {
+          const match = sector.match(/^([A-Z]+\d+)/);
+          if (match) {
+            const district = match[1];
+            if (!sectorsByDistrict[district]) {
+              sectorsByDistrict[district] = [];
+            }
+            sectorsByDistrict[district].push(sector);
+          }
+        }
+        for (const [district, districtSectors] of Object.entries(sectorsByDistrict)) {
+          parts.push(`${district} (${districtSectors.length} sectors)`);
+        }
+      }
+
+      // Calculate total property count from cached values
+      let propertyCount = 0;
+      territory.postcodes.forEach((p) => {
+        propertyCount += postcodeCountMap[p] || 0;
+      });
+      territory.sectors.forEach((s) => {
+        propertyCount += sectorCountMap[s] || 0;
+      });
+
+      return {
+        id: territory.id,
+        name: parts.join(' + ') || 'No postcodes',
+        agent_id: territory.agent_id,
+        agent: territory.agent,
+        property_count: propertyCount,
+        created_at: territory.assigned_at,
+        color: getAgentColor(territory.agent_id, index),
+        // Additional data for the UI
+        postcodes: territory.postcodes,
+        sectors: territory.sectors,
+      };
+    });
+
+    return NextResponse.json({ data: territories });
   } catch (error: any) {
     console.error('GET /api/admin/territories error:', error);
     return NextResponse.json(

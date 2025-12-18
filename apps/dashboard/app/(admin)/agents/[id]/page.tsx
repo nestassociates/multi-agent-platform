@@ -56,7 +56,7 @@ export default async function AgentDetailPage({ params }: { params: { id: string
       .eq('status', 'completed')
       .order('completed_at', { ascending: false })
       .limit(1)
-      .single(),
+      .maybeSingle(),
     supabase
       .from('agent_onboarding_checklist')
       .select('*')

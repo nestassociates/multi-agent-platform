@@ -1,0 +1,30 @@
+---
+/**
+ * GA4 Analytics Component
+ * Loads Google Analytics gtag.js when measurement ID is configured
+ *
+ * Usage: Add <Analytics /> to the <head> section of BaseLayout.astro
+ */
+
+const measurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
+const isConfigured = measurementId && measurementId !== 'G-XXXXXXXXXX';
+---
+
+{isConfigured && (
+  <>
+    <!-- Google Analytics 4 -->
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}></script>
+    <script is:inline define:vars={{ measurementId }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', measurementId, {
+        send_page_view: true,
+        cookie_flags: 'SameSite=None;Secure'
+      });
+
+      // Make gtag available globally for custom events
+      window.gtag = gtag;
+    </script>
+  </>
+)}
