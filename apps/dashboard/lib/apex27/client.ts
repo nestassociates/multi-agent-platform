@@ -16,6 +16,45 @@ import type {
 
 const APEX27_API_URL = 'https://api.apex27.co.uk';
 
+// In-memory cache for image URLs to avoid rate limiting
+// Cache expires after 10 minutes
+const imageCache = new Map<string, { data: Apex27Image[]; expires: number }>();
+const IMAGE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+// Rate limiting - max 5 requests per second to Apex27
+let lastRequestTime = 0;
+const MIN_REQUEST_INTERVAL = 200; // 200ms between requests (5 req/sec)
+
+async function throttledFetch(url: string, options: RequestInit): Promise<Response> {
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastRequestTime;
+
+  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+    await new Promise(resolve => setTimeout(resolve, MIN_REQUEST_INTERVAL - timeSinceLastRequest));
+  }
+
+  lastRequestTime = Date.now();
+  return fetch(url, options);
+}
+
+function getCachedImages(listingId: string): Apex27Image[] | null {
+  const cached = imageCache.get(listingId);
+  if (cached && cached.expires > Date.now()) {
+    return cached.data;
+  }
+  if (cached) {
+    imageCache.delete(listingId); // Clean up expired entry
+  }
+  return null;
+}
+
+function setCachedImages(listingId: string, images: Apex27Image[]): void {
+  imageCache.set(listingId, {
+    data: images,
+    expires: Date.now() + IMAGE_CACHE_TTL,
+  });
+}
+
 function getApiKey(): string {
   const apiKey = process.env.APEX27_API_KEY;
   if (!apiKey) {
@@ -264,19 +303,30 @@ export interface Apex27Image {
   order: number;
   caption: string | null;
   url: string;
+  thumbnail?: string; // 320x240 thumbnail version
+  thumbnailUrl?: string; // Alternative field name used in some responses
   type?: string; // 'photo', 'floorplan', 'epc'
 }
 
 /**
  * Fetch images for a listing from Apex27 API
+ * Uses in-memory caching to avoid rate limiting (429 errors)
  * @param listingId - The Apex27 listing ID
  * @returns Array of image objects with URLs
  */
 export async function getListingImages(listingId: number | string): Promise<Apex27Image[]> {
+  const cacheKey = String(listingId);
+
+  // Check cache first
+  const cached = getCachedImages(cacheKey);
+  if (cached !== null) {
+    return cached;
+  }
+
   const url = `${APEX27_API_URL}/listings/${listingId}/images`;
 
   try {
-    const response = await fetch(url, {
+    const response = await throttledFetch(url, {
       method: 'GET',
       headers: {
         'X-Api-Key': getApiKey(),
@@ -285,11 +335,19 @@ export async function getListingImages(listingId: number | string): Promise<Apex
     });
 
     if (!response.ok) {
-      console.error(`Failed to fetch images for listing ${listingId}: ${response.status}`);
+      // Don't log 429 errors repeatedly - just return empty
+      if (response.status !== 429) {
+        console.error(`Failed to fetch images for listing ${listingId}: ${response.status}`);
+      }
       return [];
     }
 
-    return (await response.json()) as Apex27Image[];
+    const images = (await response.json()) as Apex27Image[];
+
+    // Cache successful responses
+    setCachedImages(cacheKey, images);
+
+    return images;
   } catch (error) {
     console.error(`Error fetching images for listing ${listingId}:`, error);
     return [];

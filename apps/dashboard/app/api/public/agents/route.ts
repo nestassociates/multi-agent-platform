@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
         `
         id,
         subdomain,
+        branch_name,
         bio,
         qualifications,
         social_media_links,
@@ -26,8 +27,7 @@ export async function GET(request: NextRequest) {
           email,
           phone,
           avatar_url
-        ),
-        territories(name)
+        )
       `
       )
       .eq('status', 'active')
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       avatar_url: agent.profile?.avatar_url,
       qualifications: agent.qualifications || [],
       social_media_links: agent.social_media_links || {},
-      territory: agent.territories?.[0]?.name || null,
+      territory: agent.branch_name || null,
       microsite_url: `https://${agent.subdomain}.nestassociates.co.uk`,
     }));
 

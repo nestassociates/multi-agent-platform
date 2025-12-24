@@ -1,0 +1,497 @@
+openapi: 3.1.0
+info:
+  title: Nest Associates Main Website API
+  description: Internal API for main website form handling and CMS data
+  version: 1.0.0
+  contact:
+    name: Nest Associates
+    url: https://nestassociates.co.uk
+
+servers:
+  - url: https://nestassociates.co.uk/api
+    description: Production
+  - url: http://localhost:3001/api
+    description: Development
+
+tags:
+  - name: Forms
+    description: Form submission endpoints (all route to Apex27 CRM)
+  - name: Content
+    description: CMS content endpoints (Payload)
+
+paths:
+  /forms/contact:
+    post:
+      summary: Submit general contact enquiry
+      description: Handles general enquiries from the Contact page. Creates contact and lead in Apex27.
+      tags:
+        - Forms
+      operationId: submitContactForm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactFormInput'
+      responses:
+        '200':
+          description: Form submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormSubmissionResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Server error (Apex27 API failure)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
+  /forms/valuation:
+    post:
+      summary: Submit valuation request (Sell/Landlords pages)
+      description: Handles valuation requests from sellers and landlords. Creates lead in Apex27 with requestValuation flag.
+      tags:
+        - Forms
+      operationId: submitValuationForm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValuationFormInput'
+      responses:
+        '200':
+          description: Form submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormSubmissionResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
+  /forms/register:
+    post:
+      summary: Submit buyer registration
+      description: Registers a buyer for property alerts. Creates contact and lead in Apex27 with preferences in notes.
+      tags:
+        - Forms
+      operationId: submitRegistrationForm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationFormInput'
+      responses:
+        '200':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormSubmissionResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
+  /forms/agent-contact:
+    post:
+      summary: Submit agent-specific contact form
+      description: Handles enquiries directed to specific agents. Routes to agent's branch in Apex27.
+      tags:
+        - Forms
+      operationId: submitAgentContactForm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentContactFormInput'
+      responses:
+        '200':
+          description: Form submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormSubmissionResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
+  /forms/join:
+    post:
+      summary: Submit agent recruitment application
+      description: Handles applications from prospective agents. Creates recruitment lead in Apex27.
+      tags:
+        - Forms
+      operationId: submitJoinForm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinFormInput'
+      responses:
+        '200':
+          description: Application submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormSubmissionResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
+  /sitemap.xml:
+    get:
+      summary: XML Sitemap
+      description: Auto-generated sitemap including properties, agents, posts
+      tags:
+        - Content
+      operationId: getSitemap
+      responses:
+        '200':
+          description: XML Sitemap
+          content:
+            application/xml:
+              schema:
+                type: string
+
+components:
+  schemas:
+    ContactFormInput:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - message
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: John
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Smith
+        email:
+          type: string
+          format: email
+          example: john.smith@example.com
+        phone:
+          type: string
+          maxLength: 20
+          example: '+44 7700 900000'
+        message:
+          type: string
+          minLength: 10
+          maxLength: 2000
+          example: I would like to enquire about your services...
+        subject:
+          type: string
+          maxLength: 200
+          example: General Enquiry
+
+    ValuationFormInput:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - propertyType
+        - propertyAddress
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          maxLength: 20
+        propertyType:
+          type: string
+          enum:
+            - sale
+            - rental
+          description: Whether selling or letting
+        propertyAddress:
+          type: object
+          required:
+            - line1
+            - city
+            - postcode
+          properties:
+            line1:
+              type: string
+              maxLength: 200
+            line2:
+              type: string
+              maxLength: 200
+            city:
+              type: string
+              maxLength: 100
+            postcode:
+              type: string
+              pattern: '^[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}$'
+        bedrooms:
+          type: integer
+          minimum: 0
+          maximum: 20
+        propertyTypeName:
+          type: string
+          description: House, Flat, Bungalow, etc.
+        message:
+          type: string
+          maxLength: 2000
+
+    RegistrationFormInput:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - transactionType
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          maxLength: 20
+        transactionType:
+          type: string
+          enum:
+            - buy
+            - rent
+          description: Looking to buy or rent
+        locations:
+          type: array
+          items:
+            type: string
+          description: Preferred areas/postcodes
+          maxItems: 10
+        minBudget:
+          type: number
+          minimum: 0
+        maxBudget:
+          type: number
+          minimum: 0
+        minBedrooms:
+          type: integer
+          minimum: 0
+          maximum: 20
+        maxBedrooms:
+          type: integer
+          minimum: 0
+          maximum: 20
+        propertyTypes:
+          type: array
+          items:
+            type: string
+          description: House, Flat, etc.
+        additionalRequirements:
+          type: string
+          maxLength: 1000
+
+    AgentContactFormInput:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - agentId
+        - message
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          maxLength: 20
+        agentId:
+          type: string
+          format: uuid
+          description: Dashboard agent ID
+        propertyId:
+          type: string
+          format: uuid
+          description: Optional - if enquiry relates to specific property
+        message:
+          type: string
+          minLength: 10
+          maxLength: 2000
+
+    JoinFormInput:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - phone
+        - currentRole
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          minLength: 5
+          maxLength: 20
+        currentRole:
+          type: string
+          maxLength: 200
+          description: Current job title/role
+        yearsExperience:
+          type: integer
+          minimum: 0
+          maximum: 50
+        preferredLocation:
+          type: string
+          maxLength: 200
+          description: Where they want to work
+        linkedIn:
+          type: string
+          format: uri
+        message:
+          type: string
+          maxLength: 2000
+          description: Cover letter / additional info
+
+    FormSubmissionResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Thank you for your enquiry. We will be in touch shortly.
+        referenceId:
+          type: string
+          description: Apex27 lead ID for reference
+          example: '12345'
+
+    ValidationError:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Invalid form data
+            fields:
+              type: object
+              additionalProperties:
+                type: string
+              example:
+                email: Invalid email format
+                phone: Phone number is required
+
+    ServerError:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: INTERNAL_ERROR
+            message:
+              type: string
+              example: An error occurred processing your request. Please try again.

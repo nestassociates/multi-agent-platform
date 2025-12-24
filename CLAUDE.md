@@ -13,6 +13,10 @@ Auto-generated from all feature plans. Last updated: 2025-10-29
 - Upstash Redis (rate limits), PostgreSQL/Supabase (existing data) (007-redis-ratelimit-openapi)
 - TypeScript 5.3+ / Next.js 14 (App Router) + @supabase/supabase-js, Mapbox GL JS, Zod, React Hook Form (008-postcode-sector-territories)
 - PostgreSQL (Supabase) with PostGIS extension (008-postcode-sector-territories)
+- TypeScript 5.3+ / Next.js 15 (App Router) + Payload CMS 3.0, React 19, Tailwind CSS 3.x, Zod, React Hook Form (009-main-website)
+- Supabase PostgreSQL (shared database, Payload uses `payload` schema) (009-main-website)
+- TypeScript 5.3+ / Next.js 15 (App Router) + React 19, Tailwind CSS 3.x, Zod, React Hook Form, Mapbox GL JS, Lucide Reac (010-property-detail-page)
+- Supabase PostgreSQL (via dashboard API) (010-property-detail-page)
 
 - TypeScript 5.3+ / JavaScript ES2023 (001-multi-agent-platform)
 
@@ -33,9 +37,9 @@ npm test && npm run lint
 TypeScript 5.3+ / JavaScript ES2023: Follow standard conventions
 
 ## Recent Changes
+- 010-property-detail-page: Added TypeScript 5.3+ / Next.js 15 (App Router) + React 19, Tailwind CSS 3.x, Zod, React Hook Form, Mapbox GL JS, Lucide Reac
+- 009-main-website: Added TypeScript 5.3+ / Next.js 15 (App Router) + Payload CMS 3.0, React 19, Tailwind CSS 3.x, Zod, React Hook Form
 - 008-postcode-sector-territories: Added TypeScript 5.3+ / Next.js 14 (App Router) + @supabase/supabase-js, Mapbox GL JS, Zod, React Hook Form
-- 007-redis-ratelimit-openapi: Added TypeScript 5.3+ / Next.js 14 (App Router) + @upstash/ratelimit, @upstash/redis, @asteasolutions/zod-to-openapi, swagger-ui-reac
-- 005-separate-reviews-fees: Added TypeScript 5.3+ / JavaScript ES2023 + Next.js 14 App Router, React 18, Supabase JS Client, Zod, React Hook Form
 
 
 <!-- MANUAL ADDITIONS START -->

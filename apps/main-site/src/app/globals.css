@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Nest Associates Brand Colors from Figma */
+    --background: 0 0% 100%;              /* #FFFFFF - White */
+    --foreground: 0 0% 0%;                /* #000000 - Black */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    /* Primary: Olive/Sage Green #54714B */
+    --primary: 105 21% 37%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Dark Brown #3D3935 */
+    --secondary: 20 8% 22%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted: Light backgrounds */
+    --muted: 0 0% 96%;
+    --muted-foreground: 20 8% 40%;
+
+    /* Accent: Blush Pink #EFCAD2 */
+    --accent: 349 52% 87%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border: Light Gray #D9D9D9 */
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 105 21% 37%;
+    --radius: 0;  /* Nest uses sharp corners */
+
+    --font-montserrat: 'Montserrat', system-ui, sans-serif;
+  }
+
+  /* Dark mode uses Nest olive green footer style */
+  .dark {
+    --background: 105 21% 30%;            /* Darker olive */
+    --foreground: 0 0% 100%;              /* White text */
+    --card: 105 21% 25%;
+    --card-foreground: 0 0% 100%;
+    --popover: 105 21% 25%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 349 52% 87%;               /* Pink as primary in dark */
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 105 21% 30%;
+    --muted: 105 21% 25%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 349 52% 87%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 105 21% 40%;
+    --input: 105 21% 40%;
+    --ring: 349 52% 87%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-montserrat);
+  }
+}
+
+/* Container utilities */
+@layer components {
+  .container-wide {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-narrow {
+    @apply mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8;
+  }
+}
+
+/* Typography */
+@layer components {
+  .prose-nest {
+    @apply prose prose-slate max-w-none;
+    @apply prose-headings:font-semibold prose-headings:tracking-tight;
+    @apply prose-a:text-primary prose-a:no-underline hover:prose-a:underline;
+    @apply prose-img:rounded-lg;
+  }
+}
+
+/* Property card image aspect ratio */
+@layer utilities {
+  .aspect-property {
+    aspect-ratio: 4 / 3;
+  }
+
+  /* Hide scrollbar for carousel */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Mobile menu animation */
+@keyframes menu-slide-down {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-menu-open {
+  animation: menu-slide-down 0.3s ease forwards;
+}

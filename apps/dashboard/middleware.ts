@@ -192,6 +192,7 @@ export async function middleware(request: NextRequest) {
     '/api/public',
     '/api/cron',
     '/api/webhooks',
+    '/api/admin/agents/sync-branch-names', // Secret-authenticated sync endpoint
     '/api-docs',
     '/api/openapi.json',
     '/api/agent-site', // Agent microsite data API

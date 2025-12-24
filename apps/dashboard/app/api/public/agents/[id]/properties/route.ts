@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { getListingImages } from '@/lib/apex27/client';
 
 /**
  * T013-T017: GET /api/public/agents/[id]/properties
@@ -68,23 +69,19 @@ export async function GET(
         id,
         apex27_id,
         title,
-        slug,
         description,
         transaction_type,
         price,
-        price_qualifier,
         bedrooms,
         bathrooms,
         property_type,
-        address_line1,
-        address_line2,
-        town,
-        county,
+        address,
         postcode,
         images,
         features,
         status,
         is_featured,
+        is_hidden,
         created_at
       `,
         { count: 'exact' }
@@ -139,6 +136,24 @@ export async function GET(
     const hasNextPage = (properties?.length || 0) > limit;
     const results = hasNextPage ? properties?.slice(0, limit) : properties;
 
+    // Fetch thumbnails from Apex27 in parallel for all properties
+    const imagePromises = (results || []).map(async (property: any) => {
+      if (!property.apex27_id) return { id: property.id, thumbnail: null };
+      try {
+        const images = await getListingImages(property.apex27_id);
+        const firstImage = images[0];
+        return {
+          id: property.id,
+          thumbnail: firstImage?.thumbnail || firstImage?.thumbnailUrl || firstImage?.url || null,
+        };
+      } catch {
+        return { id: property.id, thumbnail: null };
+      }
+    });
+
+    const imageResults = await Promise.all(imagePromises);
+    const imageMap = new Map(imageResults.map((r) => [r.id, r.thumbnail]));
+
     // Generate next cursor if there are more results
     let nextCursor: string | null = null;
     if (hasNextPage && results && results.length > 0) {
@@ -152,30 +167,35 @@ export async function GET(
     }
 
     // Format response
-    const formattedProperties = (results || []).map((property: any) => ({
-      id: property.id,
-      apex27Id: property.apex27_id,
-      marketingType: property.transaction_type === 'let' ? 'rent' : property.transaction_type,
-      price: property.price,
-      priceQualifier: property.price_qualifier || null,
-      address: {
-        line1: property.address_line1,
-        line2: property.address_line2 || null,
-        city: property.town,
-        postcode: property.postcode,
-      },
-      bedrooms: property.bedrooms,
-      bathrooms: property.bathrooms,
-      propertyType: property.property_type,
-      summary: property.description ? property.description.substring(0, 200) + '...' : null,
-      images: (property.images || []).map((img: any) => ({
-        url: typeof img === 'string' ? img : img.url,
-        caption: typeof img === 'object' ? img.caption || img.alt : null,
-      })),
-      features: property.features || [],
-      status: property.status,
-      createdAt: property.created_at,
-    }));
+    const formattedProperties = (results || []).map((property: any) => {
+      // Generate slug from title
+      const slug = property.title
+        ?.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') || property.id;
+
+      // Extract address from JSONB
+      const address = property.address || {};
+
+      return {
+        id: property.id,
+        apex27_id: property.apex27_id,
+        slug,
+        title: property.title,
+        transaction_type: property.transaction_type === 'let' ? 'rental' : property.transaction_type,
+        price: property.price,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        property_type: property.property_type,
+        status: property.status,
+        featured_image_url: imageMap.get(property.id) || null,
+        address: {
+          town: address.city || address.town || '',
+          postcode: property.postcode || address.postcode || '',
+        },
+        property_url: `/property/${slug}`,
+      };
+    });
 
     // T017: Create response with Cache-Control headers and ETag
     const responseData = {
