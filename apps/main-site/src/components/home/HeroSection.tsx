@@ -31,7 +31,7 @@ export function HeroSection() {
   }, [goToNext])
 
   return (
-    <section className="relative h-screen w-full overflow-hidden">
+    <section className="relative h-screen-stable w-full overflow-hidden">
       {/* Ken Burns container - continuous slow zoom, images fade on top */}
       <div className="absolute inset-0 animate-ken-burns">
         {/* Background Images - only opacity changes */}

@@ -133,6 +133,12 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Fixed viewport height that doesn't change when mobile nav bar hides */
+  .h-screen-stable {
+    height: 100vh;
+    height: 100svh; /* Small viewport height - fixed when browser UI is visible */
+  }
 }
 
 /* Mobile menu animation */
