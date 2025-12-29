@@ -27,37 +27,44 @@ export function AnimatedLogo({
     const lottie = lottieRef.current
     if (!lottie) return
 
-    let timeoutId: NodeJS.Timeout
+    // Get animation duration in ms (getDuration returns seconds)
+    const getAnimationDuration = () => {
+      const duration = lottie.getDuration()
+      return duration ? duration * 1000 : 2000 // fallback to 2s
+    }
+
+    let pauseTimeoutId: NodeJS.Timeout
+    let playTimeoutId: NodeJS.Timeout
     let isActive = true
 
     const runCycle = () => {
       if (!isActive) return
 
-      // Go to first frame and stop
+      // Immediately jump to first frame (resting bird position)
       lottie.goToAndStop(0, true)
 
-      // Wait, then play
-      timeoutId = setTimeout(() => {
+      // Wait pauseDuration, then play the animation
+      pauseTimeoutId = setTimeout(() => {
         if (!isActive) return
+
         lottie.play()
+
+        // After animation completes, start next cycle
+        const animDuration = getAnimationDuration()
+        playTimeoutId = setTimeout(() => {
+          if (!isActive) return
+          runCycle()
+        }, animDuration)
       }, pauseDuration)
     }
 
-    // Handle animation complete
-    const onComplete = () => {
-      runCycle()
-    }
-
-    // Subscribe to complete event
-    lottie.animationItem?.addEventListener('complete', onComplete)
-
-    // Start first cycle
+    // Start the cycle
     runCycle()
 
     return () => {
       isActive = false
-      clearTimeout(timeoutId)
-      lottie.animationItem?.removeEventListener('complete', onComplete)
+      clearTimeout(pauseTimeoutId)
+      clearTimeout(playTimeoutId)
     }
   }, [pauseDuration])
 
