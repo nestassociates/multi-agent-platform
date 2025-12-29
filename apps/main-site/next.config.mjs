@@ -14,7 +14,17 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'apex27.co.uk',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: '*.apex27.co.uk',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'apex27.co.uk',
         pathname: '/**',
       },
     ],
