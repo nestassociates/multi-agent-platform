@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import Lottie, { LottieRefCurrentProps } from 'lottie-react'
 import logoAnimation from '../../../public/animations/nest-logo.json'
 import logoAnimationWhite from '../../../public/animations/nest-logo-white.json'
@@ -21,45 +21,38 @@ export function AnimatedLogo({
   pauseDuration = 5000,
 }: AnimatedLogoProps) {
   const lottieRef = useRef<LottieRefCurrentProps>(null)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
   const animationData = variant === 'white' ? logoAnimationWhite : logoAnimation
 
-  useEffect(() => {
-    const lottie = lottieRef.current
-    if (!lottie) return
-
-    // Start paused at first frame
-    lottie.goToAndStop(0, true)
-
-    const startCycle = () => {
-      // Pause for 5 seconds on first frame
-      lottie.goToAndStop(0, true)
-
-      const pauseTimer = setTimeout(() => {
-        lottie.play()
-      }, pauseDuration)
-
-      return pauseTimer
+  const playAfterDelay = useCallback(() => {
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
     }
 
-    const pauseTimer = startCycle()
-
-    return () => {
-      clearTimeout(pauseTimer)
-    }
+    // Wait pauseDuration then play
+    timerRef.current = setTimeout(() => {
+      lottieRef.current?.play()
+    }, pauseDuration)
   }, [pauseDuration])
 
-  const handleComplete = () => {
-    const lottie = lottieRef.current
-    if (!lottie) return
+  const handleComplete = useCallback(() => {
+    // Go back to first frame
+    lottieRef.current?.goToAndStop(0, true)
+    // Schedule next play
+    playAfterDelay()
+  }, [playAfterDelay])
 
-    // Go back to first frame and pause
-    lottie.goToAndStop(0, true)
+  useEffect(() => {
+    // Start the first cycle after component mounts
+    playAfterDelay()
 
-    // Wait 5 seconds then play again
-    setTimeout(() => {
-      lottie.play()
-    }, pauseDuration)
-  }
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
+  }, [playAfterDelay])
 
   return (
     <Lottie
