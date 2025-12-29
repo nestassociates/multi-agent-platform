@@ -15,7 +15,6 @@ interface PropertyGalleryProps {
 export function PropertyGallery({ images, title }: PropertyGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]))
   const preloadedRef = useRef(false)
   const imageCache = useRef<Map<string, HTMLImageElement>>(new Map())
 
@@ -30,13 +29,10 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
     preloadedRef.current = true
 
     // Preload ALL images immediately in parallel
-    images.forEach((image, idx) => {
+    images.forEach((image) => {
       // Preload full-size image
       if (!imageCache.current.has(image.url)) {
         const img = new window.Image()
-        img.onload = () => {
-          setLoadedImages(prev => new Set([...prev, idx]))
-        }
         img.src = image.url
         imageCache.current.set(image.url, img)
       }
@@ -59,7 +55,6 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
       const url = images[normalizedIdx].url
       if (!imageCache.current.has(url)) {
         const img = new window.Image()
-        img.onload = () => setLoadedImages(prev => new Set([...prev, normalizedIdx]))
         img.src = url
         imageCache.current.set(url, img)
       }
@@ -162,7 +157,6 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
                 )}
                 priority={idx === 0 || distance <= 1}
                 sizes="(max-width: 768px) 100vw, 70vw"
-                onLoad={() => setLoadedImages(prev => new Set([...prev, idx]))}
               />
             )
           })}
