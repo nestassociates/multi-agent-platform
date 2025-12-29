@@ -15,11 +15,50 @@ interface PropertyGalleryProps {
 export function PropertyGallery({ images, title }: PropertyGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]))
+  const preloadedRef = useRef(false)
 
   // Touch swipe state
   const touchStartX = useRef<number>(0)
   const touchEndX = useRef<number>(0)
   const minSwipeDistance = 50 // Minimum distance to trigger swipe
+
+  // Background preload all images after page is interactive
+  useEffect(() => {
+    if (preloadedRef.current || !images?.length || images.length <= 1) return
+    preloadedRef.current = true
+
+    // Use requestIdleCallback to avoid blocking main thread
+    const preloadAll = () => {
+      images.forEach((image, idx) => {
+        if (idx === 0) return // Skip first image (already priority loaded)
+
+        const img = new window.Image()
+        img.onload = () => {
+          setLoadedImages(prev => new Set([...prev, idx]))
+        }
+        // Preload full-size image
+        img.src = image.url
+
+        // Also preload thumbnail if different
+        if (image.thumbnail && image.thumbnail !== image.url) {
+          const thumb = new window.Image()
+          thumb.src = image.thumbnail
+        }
+      })
+    }
+
+    // Start preloading after 500ms to let critical content load first
+    const timer = setTimeout(() => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(preloadAll, { timeout: 2000 })
+      } else {
+        preloadAll()
+      }
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [images])
 
   if (!images?.length) {
     return (
@@ -77,35 +116,8 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
 
   const thumbnailIndices = getThumbnailIndices()
 
-  // Get indices of images to preload (prev, next, and next+1)
-  const getPreloadIndices = useCallback(() => {
-    if (images.length <= 1) return []
-    const indices = new Set<number>()
-    // Previous
-    indices.add((currentIndex - 1 + images.length) % images.length)
-    // Next
-    indices.add((currentIndex + 1) % images.length)
-    // Next + 1 (for smoother scrolling)
-    indices.add((currentIndex + 2) % images.length)
-    // Remove current index
-    indices.delete(currentIndex)
-    return Array.from(indices)
-  }, [currentIndex, images.length])
-
-  const preloadIndices = getPreloadIndices()
-
-  // Preload images using native browser preloading for faster response
-  useEffect(() => {
-    preloadIndices.forEach((idx) => {
-      const link = document.createElement('link')
-      link.rel = 'preload'
-      link.as = 'image'
-      link.href = images[idx].url
-      document.head.appendChild(link)
-      // Clean up after a delay
-      setTimeout(() => link.remove(), 10000)
-    })
-  }, [preloadIndices, images])
+  // Check if an image is loaded
+  const isImageLoaded = (idx: number) => loadedImages.has(idx)
 
   return (
     <>
@@ -118,13 +130,21 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
+          {/* Loading shimmer - shows while image loads */}
+          {!isImageLoaded(currentIndex) && currentIndex !== 0 && (
+            <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-nest-gray via-nest-pink/30 to-nest-gray" />
+          )}
           <Image
             src={images[currentIndex].url}
             alt={images[currentIndex].alt || `${title} - Image ${currentIndex + 1}`}
             fill
-            className="object-cover"
-            priority
+            className={cn(
+              "object-cover transition-opacity duration-300",
+              isImageLoaded(currentIndex) || currentIndex === 0 ? "opacity-100" : "opacity-0"
+            )}
+            priority={currentIndex === 0}
             sizes="(max-width: 768px) 100vw, 70vw"
+            onLoad={() => setLoadedImages(prev => new Set([...prev, currentIndex]))}
           />
 
           {/* Navigation Arrows - visible on hover */}
@@ -229,21 +249,6 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
           ))}
         </div>
       )}
-
-      {/* Preload adjacent images for smoother navigation */}
-      <div className="hidden" aria-hidden="true">
-        {preloadIndices.map((idx) => (
-          <Image
-            key={`preload-${idx}`}
-            src={images[idx].url}
-            alt=""
-            width={1}
-            height={1}
-            priority={false}
-            loading="eager"
-          />
-        ))}
-      </div>
 
       {/* Lightbox - Click on backdrop to close */}
       {lightboxOpen && (
