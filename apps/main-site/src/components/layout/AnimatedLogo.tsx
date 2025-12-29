@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import Lottie, { LottieRefCurrentProps } from 'lottie-react'
 import logoAnimation from '../../../public/animations/nest-logo.json'
 import logoAnimationWhite from '../../../public/animations/nest-logo-white.json'
@@ -21,38 +21,45 @@ export function AnimatedLogo({
   pauseDuration = 5000,
 }: AnimatedLogoProps) {
   const lottieRef = useRef<LottieRefCurrentProps>(null)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
   const animationData = variant === 'white' ? logoAnimationWhite : logoAnimation
 
-  const playAfterDelay = useCallback(() => {
-    // Clear any existing timer
-    if (timerRef.current) {
-      clearTimeout(timerRef.current)
+  useEffect(() => {
+    const lottie = lottieRef.current
+    if (!lottie) return
+
+    let timeoutId: NodeJS.Timeout
+    let isActive = true
+
+    const runCycle = () => {
+      if (!isActive) return
+
+      // Go to first frame and stop
+      lottie.goToAndStop(0, true)
+
+      // Wait, then play
+      timeoutId = setTimeout(() => {
+        if (!isActive) return
+        lottie.play()
+      }, pauseDuration)
     }
 
-    // Wait pauseDuration then play
-    timerRef.current = setTimeout(() => {
-      lottieRef.current?.play()
-    }, pauseDuration)
-  }, [pauseDuration])
+    // Handle animation complete
+    const onComplete = () => {
+      runCycle()
+    }
 
-  const handleComplete = useCallback(() => {
-    // Go back to first frame
-    lottieRef.current?.goToAndStop(0, true)
-    // Schedule next play
-    playAfterDelay()
-  }, [playAfterDelay])
+    // Subscribe to complete event
+    lottie.animationItem?.addEventListener('complete', onComplete)
 
-  useEffect(() => {
-    // Start the first cycle after component mounts
-    playAfterDelay()
+    // Start first cycle
+    runCycle()
 
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
-      }
+      isActive = false
+      clearTimeout(timeoutId)
+      lottie.animationItem?.removeEventListener('complete', onComplete)
     }
-  }, [playAfterDelay])
+  }, [pauseDuration])
 
   return (
     <Lottie
@@ -60,7 +67,6 @@ export function AnimatedLogo({
       animationData={animationData}
       loop={false}
       autoplay={false}
-      onComplete={handleComplete}
       className={className}
       style={{
         width: width ? `${width}px` : undefined,
