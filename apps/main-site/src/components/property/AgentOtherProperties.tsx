@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PropertyCard } from './PropertyCard'
 import type { PropertyCard as PropertyCardType } from '@/lib/api/types'
@@ -22,6 +22,18 @@ export function AgentOtherProperties({
   const [isLoading, setIsLoading] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
   const carouselRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // Sync scroll position with currentIndex on mobile
+  const handleScroll = useCallback(() => {
+    if (!scrollContainerRef.current) return
+    const container = scrollContainerRef.current
+    const cardWidth = container.scrollWidth / properties.length
+    const newIndex = Math.round(container.scrollLeft / cardWidth)
+    if (newIndex !== currentIndex && newIndex >= 0 && newIndex < properties.length) {
+      setCurrentIndex(newIndex)
+    }
+  }, [currentIndex, properties.length])
 
   // Extract first name for title
   const firstName = agentName.split(' ')[0]
@@ -108,8 +120,8 @@ export function AgentOtherProperties({
               </>
             )}
 
-            {/* Carousel */}
-            <div ref={carouselRef} className="overflow-hidden">
+            {/* Carousel - native scroll on mobile, transform on desktop */}
+            <div ref={carouselRef} className="overflow-hidden md:block hidden">
               <div
                 className="flex gap-6 transition-transform duration-300"
                 style={{
@@ -125,6 +137,22 @@ export function AgentOtherProperties({
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Mobile swipeable carousel with native scroll */}
+            <div
+              ref={scrollContainerRef}
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide md:hidden -mx-4 px-4"
+              onScroll={handleScroll}
+            >
+              {properties.map((property) => (
+                <div
+                  key={property.id}
+                  className="w-[85%] shrink-0 snap-start"
+                >
+                  <PropertyCard property={property} />
+                </div>
+              ))}
             </div>
 
             {/* Mobile Dots Indicator */}
