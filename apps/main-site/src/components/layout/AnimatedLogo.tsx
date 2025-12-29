@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import Lottie, { LottieRefCurrentProps } from 'lottie-react'
 import logoAnimation from '../../../public/animations/nest-logo.json'
 import logoAnimationWhite from '../../../public/animations/nest-logo-white.json'
@@ -21,7 +21,6 @@ export function AnimatedLogo({
   pauseDuration = 5000,
 }: AnimatedLogoProps) {
   const lottieRef = useRef<LottieRefCurrentProps>(null)
-  const [isPaused, setIsPaused] = useState(true)
   const animationData = variant === 'white' ? logoAnimationWhite : logoAnimation
 
   useEffect(() => {
@@ -33,11 +32,9 @@ export function AnimatedLogo({
 
     const startCycle = () => {
       // Pause for 5 seconds on first frame
-      setIsPaused(true)
       lottie.goToAndStop(0, true)
 
       const pauseTimer = setTimeout(() => {
-        setIsPaused(false)
         lottie.play()
       }, pauseDuration)
 
@@ -57,11 +54,9 @@ export function AnimatedLogo({
 
     // Go back to first frame and pause
     lottie.goToAndStop(0, true)
-    setIsPaused(true)
 
     // Wait 5 seconds then play again
     setTimeout(() => {
-      setIsPaused(false)
       lottie.play()
     }, pauseDuration)
   }
