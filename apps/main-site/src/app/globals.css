@@ -136,7 +136,7 @@
 
   /* Fixed viewport height - px on mobile, vh on desktop */
   .h-screen-stable {
-    height: 600px; /* Fixed height on mobile to avoid resize when browser UI hides */
+    height: 750px; /* Fixed height on mobile to avoid resize when browser UI hides */
   }
   @media (min-width: 768px) {
     .h-screen-stable {
