@@ -134,10 +134,14 @@
     display: none;
   }
 
-  /* Fixed viewport height that doesn't change when mobile nav bar hides */
+  /* Fixed viewport height - px on mobile, vh on desktop */
   .h-screen-stable {
-    height: 100vh;
-    height: 100svh; /* Small viewport height - fixed when browser UI is visible */
+    height: 600px; /* Fixed height on mobile to avoid resize when browser UI hides */
+  }
+  @media (min-width: 768px) {
+    .h-screen-stable {
+      height: 100vh;
+    }
   }
 }
 

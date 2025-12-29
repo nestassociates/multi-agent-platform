@@ -86,15 +86,17 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
     <header
       className={cn(
         'relative z-50 w-full',
-        transparent ? 'absolute top-0 left-0 right-0 bg-transparent' : 'bg-nest-pink'
+        transparent ? 'absolute top-0 left-0 right-0' : 'bg-nest-pink'
       )}
+      style={transparent ? { backgroundColor: 'transparent' } : undefined}
     >
       {/* Mobile Header */}
       <nav
         className={cn(
           'relative z-50 flex h-[80px] items-center justify-between px-4 sm:px-6 lg:hidden',
-          mobileMenuOpen ? 'bg-nest-pink' : transparent ? 'bg-transparent' : 'bg-nest-pink'
+          mobileMenuOpen ? 'bg-nest-pink' : ''
         )}
+        style={!mobileMenuOpen && transparent ? { backgroundColor: 'transparent' } : undefined}
       >
         {/* Logo on left - constrained width */}
         <Link href="/" className="flex-shrink-0" style={{ width: '120px' }}>
