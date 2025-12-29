@@ -93,11 +93,11 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
       <nav
         className={cn(
           'relative z-50 flex h-[80px] items-center justify-between px-6 lg:hidden',
-          mobileMenuOpen && 'bg-nest-pink'
+          mobileMenuOpen ? 'bg-nest-pink' : transparent ? 'bg-transparent' : 'bg-nest-pink'
         )}
       >
-        {/* Logo on left */}
-        <Link href="/" className="flex items-center">
+        {/* Logo on left - explicitly left-aligned */}
+        <Link href="/" className="flex items-center justify-start shrink-0">
           <AnimatedLogo
             variant={logoVariant}
             height={58}
@@ -105,11 +105,15 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
           />
         </Link>
 
+        {/* Spacer to push hamburger to right */}
+        <div className="flex-1" />
+
         {/* Hamburger Menu - morphs into X when open */}
         <button
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          className="shrink-0"
         >
           <HamburgerIcon open={mobileMenuOpen} transparent={transparent} />
         </button>
