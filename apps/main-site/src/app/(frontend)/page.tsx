@@ -16,14 +16,14 @@ export const metadata = {
 
 export default async function HomePage() {
   // Fetch agents server-side with caching
-  const agents = await getAgents()
+  const agentsResponse = await getAgents()
 
   return (
     <>
       <OrganizationJsonLd />
       <HeroSection />
       <WelcomeSection />
-      <AgentCarousel agents={agents} />
+      <AgentCarousel agents={agentsResponse.data} />
       <JournalSection />
       <EarlyBirdSection />
     </>
