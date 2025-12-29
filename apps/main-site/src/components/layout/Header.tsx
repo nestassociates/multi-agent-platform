@@ -92,7 +92,7 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
       {/* Mobile Header */}
       <nav
         className={cn(
-          'relative z-50 flex h-[80px] items-center justify-between px-6 lg:hidden',
+          'relative z-50 flex h-[80px] items-center justify-between px-4 sm:px-6 lg:hidden',
           mobileMenuOpen ? 'bg-nest-pink' : transparent ? 'bg-transparent' : 'bg-nest-pink'
         )}
       >

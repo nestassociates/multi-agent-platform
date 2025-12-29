@@ -72,6 +72,30 @@
     @apply bg-background text-foreground;
     font-family: var(--font-montserrat);
   }
+
+  /* Prevent iOS zoom on input focus - requires 16px minimum font size */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 0 !important;
+  }
+
+  /* Remove iOS input shadows and rounded corners */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  input[type="password"],
+  textarea {
+    -webkit-border-radius: 0;
+    border-radius: 0 !important;
+    -webkit-appearance: none;
+  }
 }
 
 /* Container utilities */
