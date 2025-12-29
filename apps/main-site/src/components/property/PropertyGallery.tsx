@@ -161,13 +161,13 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
             )
           })}
 
-          {/* Navigation Arrows - visible on hover */}
+          {/* Navigation Arrows - visible on hover, always visible on mobile */}
           {images.length > 1 && (
             <>
               <Button
                 variant="secondary"
                 size="icon"
-                className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100 bg-white/80 hover:bg-white"
+                className="absolute left-2 top-1/2 z-20 -translate-y-1/2 opacity-100 lg:opacity-0 transition-opacity group-hover:opacity-100 bg-white/80 hover:bg-white"
                 onClick={goToPrevious}
                 aria-label="Previous image"
               >
@@ -176,7 +176,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
               <Button
                 variant="secondary"
                 size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100 bg-white/80 hover:bg-white"
+                className="absolute right-2 top-1/2 z-20 -translate-y-1/2 opacity-100 lg:opacity-0 transition-opacity group-hover:opacity-100 bg-white/80 hover:bg-white"
                 onClick={goToNext}
                 aria-label="Next image"
               >
@@ -186,7 +186,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
           )}
 
           {/* Expand Button - bottom right */}
-          <div className="absolute bottom-2 right-2 flex items-center gap-2">
+          <div className="absolute bottom-2 right-2 z-20 flex items-center gap-2">
             <Button
               variant="secondary"
               size="icon"
