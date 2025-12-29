@@ -17,48 +17,59 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]))
   const preloadedRef = useRef(false)
+  const imageCache = useRef<Map<string, HTMLImageElement>>(new Map())
 
   // Touch swipe state
   const touchStartX = useRef<number>(0)
   const touchEndX = useRef<number>(0)
   const minSwipeDistance = 50 // Minimum distance to trigger swipe
 
-  // Background preload all images after page is interactive
+  // AGGRESSIVE preload - start immediately, no delays
   useEffect(() => {
-    if (preloadedRef.current || !images?.length || images.length <= 1) return
+    if (preloadedRef.current || !images?.length) return
     preloadedRef.current = true
 
-    // Use requestIdleCallback to avoid blocking main thread
-    const preloadAll = () => {
-      images.forEach((image, idx) => {
-        if (idx === 0) return // Skip first image (already priority loaded)
-
+    // Preload ALL images immediately in parallel
+    images.forEach((image, idx) => {
+      // Preload full-size image
+      if (!imageCache.current.has(image.url)) {
         const img = new window.Image()
         img.onload = () => {
           setLoadedImages(prev => new Set([...prev, idx]))
         }
-        // Preload full-size image
         img.src = image.url
+        imageCache.current.set(image.url, img)
+      }
 
-        // Also preload thumbnail if different
-        if (image.thumbnail && image.thumbnail !== image.url) {
-          const thumb = new window.Image()
-          thumb.src = image.thumbnail
-        }
-      })
+      // Also preload thumbnail
+      if (image.thumbnail && image.thumbnail !== image.url && !imageCache.current.has(image.thumbnail)) {
+        const thumb = new window.Image()
+        thumb.src = image.thumbnail
+        imageCache.current.set(image.thumbnail, thumb)
+      }
+    })
+  }, [images])
+
+  // Preload adjacent images with highest priority when index changes
+  useEffect(() => {
+    if (!images?.length) return
+
+    const preloadIndex = (idx: number) => {
+      const normalizedIdx = ((idx % images.length) + images.length) % images.length
+      const url = images[normalizedIdx].url
+      if (!imageCache.current.has(url)) {
+        const img = new window.Image()
+        img.onload = () => setLoadedImages(prev => new Set([...prev, normalizedIdx]))
+        img.src = url
+        imageCache.current.set(url, img)
+      }
     }
 
-    // Start preloading after 500ms to let critical content load first
-    const timer = setTimeout(() => {
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(preloadAll, { timeout: 2000 })
-      } else {
-        preloadAll()
-      }
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [images])
+    // Preload next and previous images immediately
+    preloadIndex(currentIndex - 1)
+    preloadIndex(currentIndex + 1)
+    preloadIndex(currentIndex + 2)
+  }, [currentIndex, images])
 
   if (!images?.length) {
     return (
@@ -116,9 +127,6 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
 
   const thumbnailIndices = getThumbnailIndices()
 
-  // Check if an image is loaded
-  const isImageLoaded = (idx: number) => loadedImages.has(idx)
-
   return (
     <>
       {/* Bento Gallery Layout */}
@@ -130,22 +138,34 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Loading shimmer - shows while image loads */}
-          {!isImageLoaded(currentIndex) && currentIndex !== 0 && (
-            <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-nest-gray via-nest-pink/30 to-nest-gray" />
-          )}
-          <Image
-            src={images[currentIndex].url}
-            alt={images[currentIndex].alt || `${title} - Image ${currentIndex + 1}`}
-            fill
-            className={cn(
-              "object-cover transition-opacity duration-300",
-              isImageLoaded(currentIndex) || currentIndex === 0 ? "opacity-100" : "opacity-0"
-            )}
-            priority={currentIndex === 0}
-            sizes="(max-width: 768px) 100vw, 70vw"
-            onLoad={() => setLoadedImages(prev => new Set([...prev, currentIndex]))}
-          />
+          {/* Pre-render adjacent images (hidden) for instant switching */}
+          {images.map((image, idx) => {
+            // Only pre-render current, previous, and next 2 images
+            const distance = Math.min(
+              Math.abs(idx - currentIndex),
+              Math.abs(idx - currentIndex + images.length),
+              Math.abs(idx - currentIndex - images.length)
+            )
+            if (distance > 2) return null
+
+            const isCurrent = idx === currentIndex
+
+            return (
+              <Image
+                key={image.url}
+                src={image.url}
+                alt={image.alt || `${title} - Image ${idx + 1}`}
+                fill
+                className={cn(
+                  "object-cover transition-opacity duration-150",
+                  isCurrent ? "opacity-100 z-10" : "opacity-0 z-0"
+                )}
+                priority={idx === 0 || distance <= 1}
+                sizes="(max-width: 768px) 100vw, 70vw"
+                onLoad={() => setLoadedImages(prev => new Set([...prev, idx]))}
+              />
+            )
+          })}
 
           {/* Navigation Arrows - visible on hover */}
           {images.length > 1 && (
