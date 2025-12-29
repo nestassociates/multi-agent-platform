@@ -96,24 +96,22 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
           mobileMenuOpen ? 'bg-nest-pink' : transparent ? 'bg-transparent' : 'bg-nest-pink'
         )}
       >
-        {/* Logo on left - explicitly left-aligned */}
-        <Link href="/" className="flex items-center justify-start shrink-0">
+        {/* Logo on left - constrained width */}
+        <Link href="/" className="flex-shrink-0" style={{ width: '120px' }}>
           <AnimatedLogo
             variant={logoVariant}
             height={58}
-            className="h-[58px] w-auto"
+            width={120}
+            className="h-[58px]"
           />
         </Link>
 
-        {/* Spacer to push hamburger to right */}
-        <div className="flex-1" />
-
-        {/* Hamburger Menu - morphs into X when open */}
+        {/* Hamburger Menu on right */}
         <button
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-          className="shrink-0"
+          className="flex-shrink-0"
         >
           <HamburgerIcon open={mobileMenuOpen} transparent={transparent} />
         </button>
