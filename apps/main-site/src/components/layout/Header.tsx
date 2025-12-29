@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { AnimatedLogo } from './AnimatedLogo'
 
 const navigation = [
   { name: 'BUY', href: '/buy' },
@@ -79,7 +79,7 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
     }
   }, [mobileMenuOpen])
 
-  const logoSrc = transparent && !mobileMenuOpen ? '/images/nest-logo-white.svg' : '/images/nest-logo.svg'
+  const logoVariant = transparent && !mobileMenuOpen ? 'white' : 'dark'
   const textColor = transparent && !mobileMenuOpen ? 'text-white' : 'text-black'
 
   return (
@@ -98,13 +98,10 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
       >
         {/* Logo on left */}
         <Link href="/" className="flex items-center">
-          <Image
-            src={logoSrc}
-            alt="Nest Associates"
-            width={100}
+          <AnimatedLogo
+            variant={logoVariant}
             height={58}
             className="h-[58px] w-auto"
-            priority
           />
         </Link>
 
@@ -122,13 +119,10 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
       <nav className="container-wide hidden h-[100px] items-center justify-between lg:flex">
         {/* Logo */}
         <Link href="/" className="flex items-center">
-          <Image
-            src={logoSrc}
-            alt="Nest Associates"
-            width={126}
+          <AnimatedLogo
+            variant={logoVariant}
             height={73}
             className="h-[73px] w-auto"
-            priority
           />
         </Link>
 
