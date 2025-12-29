@@ -18,13 +18,34 @@ const nextConfig = {
         pathname: '/**',
       },
       {
+        protocol: 'http',
+        hostname: 'apex27.co.uk',
+        pathname: '/**',
+      },
+      // Apex27 file storage subdomains
+      {
         protocol: 'https',
-        hostname: '*.apex27.co.uk',
+        hostname: 'fs-01.apex27.co.uk',
         pathname: '/**',
       },
       {
-        protocol: 'http',
-        hostname: 'apex27.co.uk',
+        protocol: 'https',
+        hostname: 'fs-02.apex27.co.uk',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'fs-03.apex27.co.uk',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'fs-04.apex27.co.uk',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'fs-05.apex27.co.uk',
         pathname: '/**',
       },
     ],
