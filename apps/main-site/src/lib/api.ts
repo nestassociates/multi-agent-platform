@@ -2,7 +2,7 @@
  * Server-side API utilities for fetching data from the dashboard
  */
 
-const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || 'http://localhost:3000'
+const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || 'http://localhost:3000'
 
 export interface Agent {
   id: string
