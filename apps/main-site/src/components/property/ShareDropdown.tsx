@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Share2, Link2, Facebook, Twitter, MessageCircle, Check } from 'lucide-react'
+import { Link2, Twitter, MessageCircle, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Icon } from '@/components/ui/icon'
 
 interface ShareDropdownProps {
   url: string
@@ -41,21 +42,25 @@ export function ShareDropdown({ url, title }: ShareDropdownProps) {
       label: 'Copy Link',
       icon: copied ? Check : Link2,
       onClick: handleCopyLink,
+      useLucide: true,
     },
     {
       label: 'Facebook',
-      icon: Facebook,
+      iconName: 'facebook' as const,
       href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+      useLucide: false,
     },
     {
       label: 'Twitter',
       icon: Twitter,
       href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
+      useLucide: true,
     },
     {
       label: 'WhatsApp',
       icon: MessageCircle,
       href: `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`,
+      useLucide: true,
     },
   ]
 
@@ -68,16 +73,20 @@ export function ShareDropdown({ url, title }: ShareDropdownProps) {
         aria-label="Share property"
         className="text-nest-brown hover:text-nest-olive"
       >
-        <Share2 className="h-5 w-5" />
+        <Icon name="share" size={20} />
       </Button>
 
       {isOpen && (
         <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-lg border border-nest-gray bg-white py-2 shadow-lg">
           {shareLinks.map((link) => {
-            const Icon = link.icon
+            const LucideIcon = link.icon
             const content = (
               <>
-                <Icon className={`h-4 w-4 ${copied && link.label === 'Copy Link' ? 'text-nest-olive' : ''}`} />
+                {link.useLucide && LucideIcon ? (
+                  <LucideIcon className={`h-4 w-4 ${copied && link.label === 'Copy Link' ? 'text-nest-olive' : ''}`} />
+                ) : (
+                  <Icon name={link.iconName!} size={16} />
+                )}
                 <span>{copied && link.label === 'Copy Link' ? 'Copied!' : link.label}</span>
               </>
             )

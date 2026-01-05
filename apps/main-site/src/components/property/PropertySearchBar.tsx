@@ -2,7 +2,8 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useCallback, useState, useEffect, useRef } from 'react'
-import { Search, SlidersHorizontal, ChevronDown, X, Check } from 'lucide-react'
+import { X, Check } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 
 interface PropertySearchBarProps {
   transactionType: 'sale' | 'rental'
@@ -232,7 +233,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
               className="flex h-[50px] w-[50px] items-center justify-center border border-white"
               aria-label="Search"
             >
-              <Search className="h-6 w-6 text-white" strokeWidth={1.5} />
+              <Icon name="search" size={24} className="text-white" />
             </button>
 
             {/* Filter Toggle Button */}
@@ -245,7 +246,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
               {showFilters ? (
                 <X className="h-6 w-6 text-white" strokeWidth={1.5} />
               ) : (
-                <SlidersHorizontal className="h-6 w-6 text-white" strokeWidth={1.5} />
+                <Icon name="filter" size={24} className="text-white" />
               )}
             </button>
           </div>
@@ -271,7 +272,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                  <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
                 </div>
                 <div className="relative">
                   <select value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className={selectClass}>
@@ -281,7 +282,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                  <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
                 </div>
                 <div className="relative">
                   <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className={selectClass}>
@@ -291,7 +292,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                  <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
                 </div>
                 <div className="relative">
                   <select value={radius} onChange={(e) => setRadius(e.target.value)} className={selectClass}>
@@ -301,7 +302,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                  <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
                 </div>
               </div>
 
@@ -315,7 +316,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                  <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
                 </div>
                 <div className="relative">
                   <select value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className={selectClass}>
@@ -325,7 +326,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                  <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
                 </div>
                 {transactionType === 'sale' ? (
                   <div className="relative">
@@ -336,7 +337,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                    <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
                   </div>
                 ) : (
                   <div />
@@ -371,7 +372,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
               </div>
               <div className="relative">
                 <select value={minBeds} onChange={(e) => setMinBeds(e.target.value)} className={selectClass}>
@@ -381,7 +382,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
               </div>
               <div className="relative">
                 <select value={maxBeds} onChange={(e) => setMaxBeds(e.target.value)} className={selectClass}>
@@ -391,7 +392,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
               </div>
               <div className="relative">
                 <select value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className={selectClass}>
@@ -401,7 +402,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
               </div>
               <div className="relative">
                 <select value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className={selectClass}>
@@ -411,7 +412,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
               </div>
               <div className="relative">
                 <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className={selectClass}>
@@ -421,7 +422,7 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white" />
+                <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
               </div>
               {transactionType === 'sale' && (
                 <label className="flex h-[50px] cursor-pointer items-center justify-between border border-white px-4">

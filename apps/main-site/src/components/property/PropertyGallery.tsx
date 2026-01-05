@@ -2,7 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, X, Expand } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { PropertyImage } from '@/lib/api/types'
@@ -194,7 +195,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
               onClick={() => setLightboxOpen(true)}
               aria-label="View fullscreen gallery"
             >
-              <Expand className="h-4 w-4" />
+              <Icon name="expand" size={16} />
             </Button>
           </div>
         </div>

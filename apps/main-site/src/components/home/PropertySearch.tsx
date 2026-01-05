@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search } from 'lucide-react'
+import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
 
 type SearchTab = 'buy' | 'rent' | 'agents'
@@ -59,7 +59,7 @@ export function PropertySearch() {
           className="bg-nest-brown px-6 flex items-center justify-center hover:bg-nest-brown/90 transition-colors"
           aria-label="Search"
         >
-          <Search className="h-6 w-6 text-white" />
+          <Icon name="search" size={24} className="text-white" />
         </button>
       </form>
     </div>

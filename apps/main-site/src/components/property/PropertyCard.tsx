@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { Home, BedDouble, Bath } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
+import { Icon } from '@/components/ui/icon'
 import type { Property, PropertyCard as PropertyCardType } from '@/lib/api/types'
 
 interface PropertyCardProps {
@@ -70,7 +70,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <Home className="h-12 w-12 text-nest-brown/30" />
+            <Icon name="property-type" size={48} className="opacity-30" />
           </div>
         )}
       </div>
@@ -95,13 +95,13 @@ export function PropertyCard({ property }: PropertyCardProps) {
           {/* Bedrooms */}
           <div className="flex items-center gap-1">
             <span className="text-[17px]">{property.bedrooms}</span>
-            <BedDouble className="h-5 w-5" strokeWidth={1.5} />
+            <Icon name="bedrooms" size={20} />
           </div>
 
           {/* Bathrooms */}
           <div className="flex items-center gap-1">
             <span className="text-[17px]">{property.bathrooms}</span>
-            <Bath className="h-5 w-5" strokeWidth={1.5} />
+            <Icon name="bathroom" size={20} />
           </div>
         </div>
       </div>
