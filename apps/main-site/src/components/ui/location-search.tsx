@@ -19,6 +19,7 @@ export interface LocationSearchProps {
   placeholder?: string
   placeholderMobile?: string
   className?: string
+  inputClassName?: string
   variant?: 'dark' | 'light'
 }
 
@@ -94,6 +95,7 @@ export function LocationSearch({
   placeholder = 'Search by address, postcode, town, area. etc',
   placeholderMobile = 'Location',
   className,
+  inputClassName,
   variant = 'light',
 }: LocationSearchProps) {
   const [open, setOpen] = React.useState(false)
@@ -226,7 +228,8 @@ export function LocationSearch({
               'h-[50px] w-full border-0 px-4 text-[14px] focus:outline-none',
               isDark
                 ? 'bg-transparent text-white placeholder:text-white/60'
-                : 'bg-white text-black placeholder:text-black/60'
+                : 'bg-white text-black placeholder:text-black/60',
+              inputClassName
             )}
           />
           {loading && (

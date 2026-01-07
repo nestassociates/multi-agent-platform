@@ -102,11 +102,12 @@ export function PropertySearch() {
                 placeholderMobile="Location"
                 variant="light"
                 className="h-full"
+                inputClassName="px-6 py-4 text-[15px] font-medium tracking-[0.1em] placeholder:text-black/50 placeholder:uppercase"
               />
             </div>
 
             {/* Radius dropdown */}
-            <div className="hidden sm:block w-[140px] border-l border-nest-gray/30">
+            <div className="hidden sm:block w-[140px] border-l-2 border-nest-brown">
               <Select
                 value={radius}
                 onValueChange={setRadius}
@@ -114,6 +115,7 @@ export function PropertySearch() {
                 options={radiusOptions}
                 variant="light"
                 className="h-full border-0 rounded-none"
+                triggerClassName="text-[15px] font-medium tracking-[0.1em] normal-case px-6"
               />
             </div>
           </>

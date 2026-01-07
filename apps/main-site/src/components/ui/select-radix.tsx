@@ -61,6 +61,7 @@ export interface SelectProps {
   options: SelectOption[]
   variant?: 'dark' | 'light'
   className?: string
+  triggerClassName?: string
   disabled?: boolean
   name?: string
 }
@@ -72,6 +73,7 @@ export function Select({
   options,
   variant = 'dark',
   className,
+  triggerClassName,
   disabled,
   name,
 }: SelectProps) {
@@ -90,7 +92,8 @@ export function Select({
           isDark
             ? 'border border-white bg-transparent text-white hover:bg-white/5 focus:bg-white/5'
             : 'border border-nest-gray bg-white text-black hover:border-black focus:border-black',
-          className
+          className,
+          triggerClassName
         )}
       >
         <SelectPrimitive.Value placeholder={placeholder} />
