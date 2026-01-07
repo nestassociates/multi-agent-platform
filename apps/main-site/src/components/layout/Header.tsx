@@ -61,6 +61,11 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
   const isHomepage = pathname === '/' || pathname === ''
   const transparent = transparentProp ?? isHomepage
 
+  // Close menu when pathname changes (after navigation completes)
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
+
   // Lock scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -91,7 +96,12 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
         )}
       >
         {/* Logo on left - negative margin to align with content */}
-        <Link href="/" className="-ml-4 flex-shrink-0" style={{ width: '120px' }}>
+        <Link
+          href="/"
+          className="-ml-4 flex-shrink-0"
+          style={{ width: '120px' }}
+          onClick={() => mobileMenuOpen && setMobileMenuOpen(false)}
+        >
           <AnimatedLogo
             variant={logoVariant}
             height={58}
@@ -152,7 +162,6 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
                     key={item.name}
                     href={item.href}
                     className="block text-[22px] font-normal uppercase tracking-[3px] text-black hover:opacity-70"
-                    onClick={() => setMobileMenuOpen(false)}
                   >
                     {item.name}
                   </Link>
