@@ -27,13 +27,13 @@ function HamburgerIcon({ open, transparent }: HamburgerIconProps) {
   const barColor = transparent && !open ? 'bg-white' : 'bg-black'
 
   return (
-    <div className="flex h-6 w-8 flex-col justify-center gap-[5px]">
+    <div className="flex h-6 w-8 flex-col items-center justify-center">
       {/* Top line */}
       <span
         className={cn(
           'h-[2px] w-full transition-all duration-300',
           barColor,
-          open && 'translate-y-[7px] rotate-45'
+          open ? 'translate-y-[7px] rotate-45' : 'mb-[5px]'
         )}
       />
       {/* Middle line */}
@@ -41,7 +41,7 @@ function HamburgerIcon({ open, transparent }: HamburgerIconProps) {
         className={cn(
           'h-[2px] w-full transition-all duration-300',
           barColor,
-          open && 'opacity-0'
+          open ? 'opacity-0' : 'mb-[5px]'
         )}
       />
       {/* Bottom line */}
@@ -131,7 +131,7 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="flex items-end gap-6 self-end pb-5">
+        <div className="flex items-end self-end pb-5 space-x-6">
           {navigation.map((item) => (
             <Link
               key={item.name}
@@ -170,7 +170,7 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
               {/* Divider and Social Icons */}
               <div>
                 <div className="mb-8 h-[2px] w-full max-w-[400px] bg-black/30" />
-                <div className="flex gap-3">
+                <div className="flex space-x-3">
                   {/* TikTok */}
                   <a
                     href="https://tiktok.com"
