@@ -274,7 +274,7 @@ export function LocationSearch({
                               e.preventDefault()
                               handleSelect(suggestion)
                             }}
-                            className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-gray-50 data-[selected]:bg-gray-100"
+                            className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-gray-100 data-[selected]:bg-gray-200"
                           >
                             <PostcodeIcon className="h-4 w-4 shrink-0 text-black/40" />
                             <span className="flex-1 text-[14px] text-black">{suggestion.label}</span>
@@ -306,7 +306,7 @@ export function LocationSearch({
                               e.preventDefault()
                               handleSelect(suggestion)
                             }}
-                            className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-gray-50 data-[selected]:bg-gray-100"
+                            className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-gray-100 data-[selected]:bg-gray-200"
                           >
                             <LocationIcon className="h-4 w-4 shrink-0 text-black/40" />
                             <span className="flex-1 text-[14px] text-black">{suggestion.label}</span>
