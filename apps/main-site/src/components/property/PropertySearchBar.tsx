@@ -191,6 +191,9 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
       inc_sold: incSold,
     }
 
+    // Close filter panel after search
+    setShowFilters(false)
+
     router.push(pathname + '?' + createQueryString(updates), { scroll: false })
   }
 
