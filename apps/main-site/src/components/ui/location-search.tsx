@@ -210,7 +210,15 @@ export function LocationSearch({
             type="text"
             value={inputValue}
             onChange={(e) => handleInputChange(e.target.value)}
-            onFocus={() => inputValue.length >= 2 && setOpen(true)}
+            onFocus={() => {
+              if (inputValue.length >= 2) {
+                setOpen(true)
+                // Fetch suggestions for existing value if we don't have any
+                if (suggestions.length === 0) {
+                  fetchSuggestions(inputValue)
+                }
+              }
+            }}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             placeholder={currentPlaceholder}
