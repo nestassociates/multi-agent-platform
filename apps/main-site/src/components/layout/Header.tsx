@@ -27,21 +27,21 @@ function HamburgerIcon({ open, transparent }: HamburgerIconProps) {
   const barColor = transparent && !open ? 'bg-white' : 'bg-black'
 
   return (
-    <div className="flex h-5 w-8 flex-col items-center justify-center">
+    <div className="relative h-5 w-8">
       {/* Top line */}
       <span
         className={cn(
-          'h-[2px] w-full transition-all duration-300',
+          'absolute left-0 h-[2px] w-full transition-all duration-300',
           barColor,
-          open ? 'translate-y-[5px] rotate-45' : 'mb-[8px]'
+          open ? 'top-1/2 -translate-y-1/2 rotate-45' : 'top-[4px]'
         )}
       />
       {/* Bottom line */}
       <span
         className={cn(
-          'h-[2px] w-full transition-all duration-300',
+          'absolute left-0 h-[2px] w-full transition-all duration-300',
           barColor,
-          open && '-translate-y-[5px] -rotate-45'
+          open ? 'top-1/2 -translate-y-1/2 -rotate-45' : 'bottom-[4px]'
         )}
       />
     </div>
