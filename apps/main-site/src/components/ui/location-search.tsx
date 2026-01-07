@@ -262,6 +262,10 @@ export function LocationSearch({
                             key={`postcode-${suggestion.value}`}
                             value={suggestion.value}
                             onSelect={() => handleSelect(suggestion)}
+                            onMouseDown={(e) => {
+                              e.preventDefault()
+                              handleSelect(suggestion)
+                            }}
                             className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-gray-50 data-[selected]:bg-gray-100"
                           >
                             <PostcodeIcon className="h-4 w-4 shrink-0 text-black/40" />
@@ -290,6 +294,10 @@ export function LocationSearch({
                             key={`place-${suggestion.value}-${suggestion.lat}`}
                             value={`${suggestion.value}-${suggestion.lat}`}
                             onSelect={() => handleSelect(suggestion)}
+                            onMouseDown={(e) => {
+                              e.preventDefault()
+                              handleSelect(suggestion)
+                            }}
                             className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-gray-50 data-[selected]:bg-gray-100"
                           >
                             <LocationIcon className="h-4 w-4 shrink-0 text-black/40" />
