@@ -91,7 +91,7 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
         )}
       >
         {/* Logo on left - negative margin to align with content */}
-        <Link href="/" className="-ml-2 flex-shrink-0" style={{ width: '120px' }}>
+        <Link href="/" className="-ml-4 flex-shrink-0" style={{ width: '120px' }}>
           <AnimatedLogo
             variant={logoVariant}
             height={58}
