@@ -62,6 +62,7 @@ export interface SelectProps {
   variant?: 'dark' | 'light'
   className?: string
   triggerClassName?: string
+  itemClassName?: string
   disabled?: boolean
   name?: string
 }
@@ -74,6 +75,7 @@ export function Select({
   variant = 'dark',
   className,
   triggerClassName,
+  itemClassName,
   disabled,
   name,
 }: SelectProps) {
@@ -134,7 +136,8 @@ export function Select({
                   'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
                   isDark
                     ? 'focus:bg-white/10 data-[highlighted]:bg-white/15'
-                    : 'focus:bg-nest-gray/10 data-[highlighted]:bg-nest-gray/15'
+                    : 'focus:bg-nest-gray/10 data-[highlighted]:bg-nest-gray/15',
+                  itemClassName
                 )}
               >
                 <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>

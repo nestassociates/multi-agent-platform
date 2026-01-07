@@ -27,6 +27,15 @@ export function PropertySearch() {
   const [radius, setRadius] = useState('')
   const router = useRouter()
 
+  // Handle tab change - clear search state
+  const handleTabChange = (tab: SearchTab) => {
+    setActiveTab(tab)
+    setSearchQuery('')
+    setLocationLat('')
+    setLocationLng('')
+    setRadius('')
+  }
+
   // Handle location change from autocomplete
   const handleLocationChange = (value: string, coords?: { lat: number; lng: number }) => {
     setSearchQuery(value)
@@ -76,7 +85,7 @@ export function PropertySearch() {
         {(['buy', 'rent', 'agents'] as const).map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => handleTabChange(tab)}
             className={cn(
               'text-sm uppercase tracking-[0.15em] transition-all px-5 py-3',
               activeTab === tab
@@ -102,7 +111,7 @@ export function PropertySearch() {
                 placeholderMobile="Location"
                 variant="light"
                 className="h-full"
-                inputClassName="px-6 py-4 text-[15px] font-medium tracking-[0.1em] placeholder:text-black/50 placeholder:uppercase"
+                inputClassName="h-[54px] px-6 text-[15px] font-medium tracking-[0.1em] placeholder:text-black/50 placeholder:uppercase"
               />
             </div>
 
@@ -114,8 +123,9 @@ export function PropertySearch() {
                 placeholder="RADIUS"
                 options={radiusOptions}
                 variant="light"
-                className="h-full border-0 rounded-none"
-                triggerClassName="text-[15px] font-medium tracking-[0.1em] normal-case px-6"
+                className="h-[54px] border-0 rounded-none"
+                triggerClassName="h-[54px] text-[15px] font-medium tracking-[0.1em] normal-case px-6"
+                itemClassName="text-[15px] font-medium tracking-[0.1em] normal-case px-6"
               />
             </div>
           </>
@@ -126,7 +136,7 @@ export function PropertySearch() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="SEARCH FOR AN AGENT..."
-            className="flex-1 bg-white px-6 py-4 text-[15px] font-medium tracking-[0.1em] text-black placeholder:text-black/50 placeholder:uppercase focus:outline-none"
+            className="flex-1 bg-white h-[54px] px-6 text-[15px] font-medium tracking-[0.1em] text-black placeholder:text-black/50 placeholder:uppercase focus:outline-none"
           />
         )}
 
