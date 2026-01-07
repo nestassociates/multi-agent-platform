@@ -182,6 +182,27 @@ export interface PropertyFilters {
   page?: number
   limit?: number
   sort?: 'price_asc' | 'price_desc' | 'date_asc' | 'date_desc'
+  // Spatial search params
+  radius?: number // miles
+  lat?: number // latitude (optional pre-geocoded)
+  lng?: number // longitude (optional pre-geocoded)
+}
+
+// Search metadata returned when spatial search is used
+export interface SpatialSearchMeta {
+  type: 'spatial'
+  center: {
+    latitude: number
+    longitude: number
+  }
+  radius_miles: number
+  geocode_source: 'postcode' | 'mapbox' | 'provided'
+  geocode_display_name?: string
+}
+
+// Extended paginated response for properties (includes search metadata)
+export interface PropertySearchResponse extends PaginatedResponse<PropertyCard> {
+  search?: SpatialSearchMeta
 }
 
 export interface AgentFilters {

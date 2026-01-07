@@ -1,9 +1,11 @@
 'use client'
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { useCallback, useState, useEffect, useRef } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { X, Check } from 'lucide-react'
 import { Icon } from '@/components/ui/icon'
+import { LocationSearch } from '@/components/ui/location-search'
+import { Select } from '@/components/ui/select-radix'
 
 interface PropertySearchBarProps {
   transactionType: 'sale' | 'rental'
@@ -113,10 +115,11 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [showFilters, setShowFilters] = useState(false)
-  const locationInputRef = useRef<HTMLInputElement>(null)
 
   // Controlled state for all form fields (shared between desktop and mobile)
   const [location, setLocation] = useState(searchParams.get('location') || '')
+  const [locationLat, setLocationLat] = useState(searchParams.get('lat') || '')
+  const [locationLng, setLocationLng] = useState(searchParams.get('lng') || '')
   const [minPrice, setMinPrice] = useState(searchParams.get('min_price') || '')
   const [maxPrice, setMaxPrice] = useState(searchParams.get('max_price') || '')
   const [minBeds, setMinBeds] = useState(searchParams.get('min_bedrooms') || '')
@@ -128,6 +131,8 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
   // Sync state when URL changes (e.g., browser back/forward)
   useEffect(() => {
     setLocation(searchParams.get('location') || '')
+    setLocationLat(searchParams.get('lat') || '')
+    setLocationLng(searchParams.get('lng') || '')
     setMinPrice(searchParams.get('min_price') || '')
     setMaxPrice(searchParams.get('max_price') || '')
     setMinBeds(searchParams.get('min_bedrooms') || '')
@@ -137,21 +142,18 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
     setIncSold(searchParams.get('inc_sold') || '')
   }, [searchParams])
 
-  // Handle responsive placeholder
-  useEffect(() => {
-    const updatePlaceholder = () => {
-      if (locationInputRef.current) {
-        const isDesktop = window.matchMedia('(min-width: 768px)').matches
-        locationInputRef.current.placeholder = isDesktop
-          ? 'Search by address, postcode, town, area. etc'
-          : 'Location'
-      }
+  // Handle location change from autocomplete
+  const handleLocationChange = (value: string, coords?: { lat: number; lng: number }) => {
+    setLocation(value)
+    if (coords) {
+      setLocationLat(coords.lat.toString())
+      setLocationLng(coords.lng.toString())
+    } else {
+      // Clear coords if manual input (will geocode on server)
+      setLocationLat('')
+      setLocationLng('')
     }
-
-    updatePlaceholder()
-    window.addEventListener('resize', updatePlaceholder)
-    return () => window.removeEventListener('resize', updatePlaceholder)
-  }, [])
+  }
 
   const minPriceOptions = transactionType === 'sale' ? minPriceOptionsSale : minPriceOptionsRental
   const maxPriceOptions = transactionType === 'sale' ? maxPriceOptionsSale : maxPriceOptionsRental
@@ -178,6 +180,8 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
     // Use controlled state values directly instead of FormData
     const updates: Record<string, string> = {
       location,
+      lat: locationLat,
+      lng: locationLng,
       min_price: minPrice,
       max_price: maxPrice,
       min_bedrooms: minBeds,
@@ -193,6 +197,8 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
   const handleClear = () => {
     // Reset all state
     setLocation('')
+    setLocationLat('')
+    setLocationLng('')
     setMinPrice('')
     setMaxPrice('')
     setMinBeds('')
@@ -207,23 +213,18 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
   // Check if any filters are active
   const hasActiveFilters = location || minPrice || maxPrice || minBeds || maxBeds || propertyType || radius || incSold
 
-  const selectClass =
-    'h-[50px] w-full appearance-none border border-white bg-transparent px-4 pr-10 text-[14px] uppercase tracking-[1px] text-white focus:outline-none cursor-pointer'
-
   return (
     <div className="bg-[#5C5A58] mb-8">
       <form onSubmit={handleSubmit}>
         {/* Search Bar Row */}
         <div className="container-wide py-6">
           <div className="flex items-center gap-2">
-            {/* Search Input - single input with responsive placeholder */}
+            {/* Search Input - LocationSearch with autocomplete */}
             <div className="flex-1">
-              <input
-                ref={locationInputRef}
-                placeholder="Location"
+              <LocationSearch
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="h-[50px] w-full border-0 bg-white px-4 text-[14px] text-black placeholder:text-black/60 focus:outline-none"
+                onChange={handleLocationChange}
+                variant="light"
               />
             </div>
 
@@ -264,81 +265,60 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
             <div className="hidden md:block">
               {/* Row 1 */}
               <div className="mb-2 grid grid-cols-4 gap-2">
-                <div className="relative">
-                  <select value={minBeds} onChange={(e) => setMinBeds(e.target.value)} className={selectClass}>
-                    {minBedsOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-                </div>
-                <div className="relative">
-                  <select value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className={selectClass}>
-                    {minPriceOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-                </div>
-                <div className="relative">
-                  <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className={selectClass}>
-                    {propertyTypes.map((opt) => (
-                      <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-                </div>
-                <div className="relative">
-                  <select value={radius} onChange={(e) => setRadius(e.target.value)} className={selectClass}>
-                    {radiusOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-                </div>
+                <Select
+                  value={minBeds}
+                  onValueChange={setMinBeds}
+                  placeholder="MIN BEDS"
+                  options={minBedsOptions}
+                  variant="dark"
+                />
+                <Select
+                  value={minPrice}
+                  onValueChange={setMinPrice}
+                  placeholder="MIN PRICE"
+                  options={minPriceOptions}
+                  variant="dark"
+                />
+                <Select
+                  value={propertyType}
+                  onValueChange={setPropertyType}
+                  placeholder="PROPERTY TYPE"
+                  options={propertyTypes}
+                  variant="dark"
+                />
+                <Select
+                  value={radius}
+                  onValueChange={setRadius}
+                  placeholder="RADIUS"
+                  options={radiusOptions}
+                  variant="dark"
+                />
               </div>
 
               {/* Row 2 */}
               <div className="grid grid-cols-4 gap-2">
-                <div className="relative">
-                  <select value={maxBeds} onChange={(e) => setMaxBeds(e.target.value)} className={selectClass}>
-                    {maxBedsOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-                </div>
-                <div className="relative">
-                  <select value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className={selectClass}>
-                    {maxPriceOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-                </div>
+                <Select
+                  value={maxBeds}
+                  onValueChange={setMaxBeds}
+                  placeholder="MAX BEDS"
+                  options={maxBedsOptions}
+                  variant="dark"
+                />
+                <Select
+                  value={maxPrice}
+                  onValueChange={setMaxPrice}
+                  placeholder="MAX PRICE"
+                  options={maxPriceOptions}
+                  variant="dark"
+                />
                 {transactionType === 'sale' ? (
-                  <div className="relative">
-                    <select value={incSold} onChange={(e) => setIncSold(e.target.value)} className={selectClass}>
-                      {incSoldOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                    <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-                  </div>
+                  <Select
+                    value={incSold}
+                    onValueChange={setIncSold}
+                    placeholder="INC SOLD"
+                    options={incSoldOptions}
+                    variant="dark"
+                  />
                 ) : (
                   <div />
                 )}
@@ -364,66 +344,48 @@ export function PropertySearchBar({ transactionType }: PropertySearchBarProps) {
 
             {/* Mobile: Single column stack */}
             <div className="flex flex-col gap-2 md:hidden">
-              <div className="relative">
-                <select value={radius} onChange={(e) => setRadius(e.target.value)} className={selectClass}>
-                  {radiusOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-              </div>
-              <div className="relative">
-                <select value={minBeds} onChange={(e) => setMinBeds(e.target.value)} className={selectClass}>
-                  {minBedsOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-              </div>
-              <div className="relative">
-                <select value={maxBeds} onChange={(e) => setMaxBeds(e.target.value)} className={selectClass}>
-                  {maxBedsOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-              </div>
-              <div className="relative">
-                <select value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className={selectClass}>
-                  {minPriceOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-              </div>
-              <div className="relative">
-                <select value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className={selectClass}>
-                  {maxPriceOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-              </div>
-              <div className="relative">
-                <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className={selectClass}>
-                  {propertyTypes.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="bg-[#5C5A58] text-white">
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <Icon name="dropdown" size={12} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />
-              </div>
+              <Select
+                value={radius}
+                onValueChange={setRadius}
+                placeholder="RADIUS"
+                options={radiusOptions}
+                variant="dark"
+              />
+              <Select
+                value={minBeds}
+                onValueChange={setMinBeds}
+                placeholder="MIN BEDS"
+                options={minBedsOptions}
+                variant="dark"
+              />
+              <Select
+                value={maxBeds}
+                onValueChange={setMaxBeds}
+                placeholder="MAX BEDS"
+                options={maxBedsOptions}
+                variant="dark"
+              />
+              <Select
+                value={minPrice}
+                onValueChange={setMinPrice}
+                placeholder="MIN PRICE"
+                options={minPriceOptions}
+                variant="dark"
+              />
+              <Select
+                value={maxPrice}
+                onValueChange={setMaxPrice}
+                placeholder="MAX PRICE"
+                options={maxPriceOptions}
+                variant="dark"
+              />
+              <Select
+                value={propertyType}
+                onValueChange={setPropertyType}
+                placeholder="PROPERTY TYPE"
+                options={propertyTypes}
+                variant="dark"
+              />
               {transactionType === 'sale' && (
                 <label className="flex h-[50px] cursor-pointer items-center justify-between border border-white px-4">
                   <span className="text-[14px] uppercase tracking-[1px] text-white">INC SOLD</span>

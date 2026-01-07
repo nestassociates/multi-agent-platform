@@ -22,6 +22,8 @@ export const metadata: Metadata = {
 interface RentPageProps {
   searchParams: Promise<{
     location?: string
+    lat?: string
+    lng?: string
     min_price?: string
     max_price?: string
     min_bedrooms?: string
@@ -159,11 +161,16 @@ export default async function RentPage({ searchParams }: RentPageProps) {
     transaction_type: 'rental',
     status: 'available',
     location: params.location,
+    // Pass pre-geocoded coordinates if available (from autocomplete selection)
+    lat: params.lat ? parseFloat(params.lat) : undefined,
+    lng: params.lng ? parseFloat(params.lng) : undefined,
     min_price: params.min_price ? parseInt(params.min_price) : undefined,
     max_price: params.max_price ? parseInt(params.max_price) : undefined,
     min_bedrooms: params.min_bedrooms ? parseInt(params.min_bedrooms) : undefined,
     max_bedrooms: params.max_bedrooms ? parseInt(params.max_bedrooms) : undefined,
     property_type: params.property_type,
+    // Spatial search: pass radius when location is provided
+    radius: params.radius ? parseFloat(params.radius) : undefined,
     sort: params.sort as PropertyFiltersType['sort'],
     page,
     limit: 12,

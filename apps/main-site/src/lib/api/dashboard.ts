@@ -93,6 +93,16 @@ export async function getProperties(
   if (filters?.sort) {
     searchParams.set('sort', filters.sort)
   }
+  // Spatial search params
+  if (filters?.radius !== undefined) {
+    searchParams.set('radius', String(filters.radius))
+  }
+  if (filters?.lat !== undefined) {
+    searchParams.set('lat', String(filters.lat))
+  }
+  if (filters?.lng !== undefined) {
+    searchParams.set('lng', String(filters.lng))
+  }
 
   const url = `${DASHBOARD_API_URL}/api/public/properties?${searchParams}`
 
