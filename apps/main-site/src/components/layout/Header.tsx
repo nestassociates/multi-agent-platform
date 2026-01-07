@@ -27,21 +27,13 @@ function HamburgerIcon({ open, transparent }: HamburgerIconProps) {
   const barColor = transparent && !open ? 'bg-white' : 'bg-black'
 
   return (
-    <div className="flex h-6 w-8 flex-col items-center justify-center">
+    <div className="flex h-5 w-8 flex-col items-center justify-center">
       {/* Top line */}
       <span
         className={cn(
           'h-[2px] w-full transition-all duration-300',
           barColor,
-          open ? 'translate-y-[7px] rotate-45' : 'mb-[5px]'
-        )}
-      />
-      {/* Middle line */}
-      <span
-        className={cn(
-          'h-[2px] w-full transition-all duration-300',
-          barColor,
-          open ? 'opacity-0' : 'mb-[5px]'
+          open ? 'translate-y-[5px] rotate-45' : 'mb-[8px]'
         )}
       />
       {/* Bottom line */}
@@ -49,7 +41,7 @@ function HamburgerIcon({ open, transparent }: HamburgerIconProps) {
         className={cn(
           'h-[2px] w-full transition-all duration-300',
           barColor,
-          open && '-translate-y-[7px] -rotate-45'
+          open && '-translate-y-[5px] -rotate-45'
         )}
       />
     </div>
@@ -98,8 +90,8 @@ export function Header({ transparent: transparentProp }: HeaderProps) {
           mobileMenuOpen ? 'bg-nest-pink' : transparent ? 'bg-transparent' : 'bg-nest-pink'
         )}
       >
-        {/* Logo on left - constrained width */}
-        <Link href="/" className="flex-shrink-0" style={{ width: '120px' }}>
+        {/* Logo on left - negative margin to align with content */}
+        <Link href="/" className="-ml-2 flex-shrink-0" style={{ width: '120px' }}>
           <AnimatedLogo
             variant={logoVariant}
             height={58}
