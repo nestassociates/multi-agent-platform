@@ -109,6 +109,17 @@ async function PropertyResultsWithCTA({
 }) {
   const result = await getProperties(filters)
 
+  // Show search prompt if no location was provided
+  if (result.search?.error) {
+    return (
+      <NoResults
+        title="Enter a location to search"
+        message={result.search.error}
+        showResetButton={false}
+      />
+    )
+  }
+
   if (result.data.length === 0) {
     return <NoResults resetHref="/buy" />
   }

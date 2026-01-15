@@ -8,7 +8,7 @@ import { getUser } from '@/lib/auth';
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUser();
@@ -19,7 +19,7 @@ export async function PATCH(
       );
     }
 
-    const { id: territoryId } = params;
+    const { id: territoryId } = await params;
     const body = await request.json();
 
     const supabase = createServiceRoleClient();
@@ -64,7 +64,7 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUser();
@@ -75,7 +75,7 @@ export async function DELETE(
       );
     }
 
-    const { id: agentId } = params;
+    const { id: agentId } = await params;
     const supabase = createServiceRoleClient();
 
     // Delete all postcode assignments for this agent
@@ -108,7 +108,7 @@ export async function DELETE(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUser();
@@ -119,7 +119,7 @@ export async function POST(
       );
     }
 
-    const { id: territoryId } = params;
+    const { id: territoryId } = await params;
     const supabase = createServiceRoleClient();
 
     // Call PostGIS function to update property count

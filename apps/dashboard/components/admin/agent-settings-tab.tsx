@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Settings, Loader2, ExternalLink, Trash2, AlertTriangle, Key, Mail, Eye, EyeOff } from 'lucide-react';
+import { Settings, Loader2, ExternalLink, Trash2, AlertTriangle, Key, Mail, Eye, EyeOff, MapPin } from 'lucide-react';
 import { DeleteAgentDialog } from './delete-agent-dialog';
 
 interface AgentSettingsTabProps {
@@ -22,6 +22,7 @@ interface AgentSettingsTabProps {
     id: string;
     subdomain: string;
     status: string;
+    branch_name?: string | null;
     profile?: {
       first_name: string;
       last_name: string;
@@ -44,6 +45,10 @@ export function AgentSettingsTab({ agent, onUpdate }: AgentSettingsTabProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isSettingPassword, setIsSettingPassword] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
+
+  // Office location state
+  const [officeAddress, setOfficeAddress] = useState(agent.branch_name || '');
+  const [isSavingLocation, setIsSavingLocation] = useState(false);
 
   const handleStatusUpdate = async (newStatus: string) => {
     setError(null);
@@ -155,6 +160,35 @@ export function AgentSettingsTab({ agent, onUpdate }: AgentSettingsTabProps) {
       setError(err.message);
     } finally {
       setIsSendingReset(false);
+    }
+  };
+
+  const handleSaveOfficeLocation = async () => {
+    setError(null);
+    setSuccessMessage(null);
+    setIsSavingLocation(true);
+
+    try {
+      const response = await fetch(`/api/admin/agents/${agent.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ office_address: officeAddress }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error?.message || 'Failed to save office location');
+      }
+
+      setSuccessMessage('Office location saved successfully');
+      onUpdate?.();
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSavingLocation(false);
     }
   };
 
@@ -271,6 +305,54 @@ export function AgentSettingsTab({ agent, onUpdate }: AgentSettingsTabProps) {
             <p className="text-xs text-muted-foreground mt-2">
               Manually trigger a rebuild of this agent's microsite. Use this after updating
               content or settings.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Office Location */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Office Location
+          </CardTitle>
+          <CardDescription>
+            Set the agent's office/branch address for location-based search (30-mile radius)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="office-address">Office Address</Label>
+            <div className="flex gap-2">
+              <Input
+                id="office-address"
+                type="text"
+                placeholder="e.g., 123 High Street, Taunton, TA1 1AA"
+                value={officeAddress}
+                onChange={(e) => setOfficeAddress(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSaveOfficeLocation}
+                disabled={isSavingLocation}
+              >
+                {isSavingLocation ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="mr-2 h-4 w-4" />
+                    Save Location
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Enter a full UK address or postcode. This location will be used when users search
+              for agents in a specific area.
             </p>
           </div>
         </CardContent>

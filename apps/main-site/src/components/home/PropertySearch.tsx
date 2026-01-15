@@ -4,27 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Icon } from '@/components/ui/icon'
 import { LocationSearch } from '@/components/ui/location-search'
-import { Select } from '@/components/ui/select-radix'
 import { cn } from '@/lib/utils'
 
 type SearchTab = 'buy' | 'rent' | 'agents'
-
-const radiusOptions = [
-  { label: 'RADIUS', value: '' },
-  { label: '1 mile', value: '1' },
-  { label: '3 miles', value: '3' },
-  { label: '5 miles', value: '5' },
-  { label: '10 miles', value: '10' },
-  { label: '15 miles', value: '15' },
-  { label: '20 miles', value: '20' },
-]
 
 export function PropertySearch() {
   const [activeTab, setActiveTab] = useState<SearchTab>('buy')
   const [searchQuery, setSearchQuery] = useState('')
   const [locationLat, setLocationLat] = useState('')
   const [locationLng, setLocationLng] = useState('')
-  const [radius, setRadius] = useState('')
   const router = useRouter()
 
   // Handle tab change - clear search state
@@ -33,7 +21,6 @@ export function PropertySearch() {
     setSearchQuery('')
     setLocationLat('')
     setLocationLng('')
-    setRadius('')
   }
 
   // Handle location change from autocomplete
@@ -67,9 +54,8 @@ export function PropertySearch() {
         params.set('lat', locationLat)
         params.set('lng', locationLng)
       }
-      if (radius) {
-        params.set('radius', radius)
-      }
+      // Always use 5 mile radius as default
+      params.set('radius', '5')
 
       const queryString = params.toString()
       router.push(path + (queryString ? '?' + queryString : ''))
@@ -101,34 +87,18 @@ export function PropertySearch() {
       {/* Search Input with dark button - border only here */}
       <form onSubmit={handleSubmit} className="flex border-2 border-nest-brown">
         {isPropertySearch ? (
-          <>
-            {/* Location Search with autocomplete */}
-            <div className="flex-1 bg-white">
-              <LocationSearch
-                value={searchQuery}
-                onChange={handleLocationChange}
-                placeholder="WHERE WOULD YOU LIKE TO LIVE?"
-                placeholderMobile="Location"
-                variant="light"
-                className="h-full"
-                inputClassName="h-[54px] px-6 text-[15px] font-medium tracking-[0.1em] placeholder:text-black/50 placeholder:uppercase"
-              />
-            </div>
-
-            {/* Radius dropdown */}
-            <div className="hidden sm:block w-[140px] border-l-2 border-nest-brown">
-              <Select
-                value={radius}
-                onValueChange={setRadius}
-                placeholder="RADIUS"
-                options={radiusOptions}
-                variant="light"
-                className="h-[54px] border-0 rounded-none"
-                triggerClassName="h-[54px] text-[15px] font-medium tracking-[0.1em] normal-case px-6"
-                itemClassName="text-[15px] font-medium tracking-[0.1em] normal-case px-6"
-              />
-            </div>
-          </>
+          /* Location Search with autocomplete */
+          <div className="flex-1 bg-white">
+            <LocationSearch
+              value={searchQuery}
+              onChange={handleLocationChange}
+              placeholder="WHERE WOULD YOU LIKE TO LIVE?"
+              placeholderMobile="Location"
+              variant="light"
+              className="h-full"
+              inputClassName="h-[54px] px-6 text-[15px] font-medium tracking-[0.1em] placeholder:text-black/50 placeholder:uppercase"
+            />
+          </div>
         ) : (
           /* Agents tab - plain text input */
           <input

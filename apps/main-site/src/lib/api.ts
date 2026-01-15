@@ -30,7 +30,15 @@ export async function getAgents(): Promise<Agent[]> {
       return []
     }
 
-    return response.json()
+    const json = await response.json()
+
+    // Handle new response format { data: [...], search: {...} }
+    if (json && json.data && Array.isArray(json.data)) {
+      return json.data
+    }
+
+    // Fallback for legacy flat array response
+    return Array.isArray(json) ? json : []
   } catch (error) {
     console.error('Error fetching agents:', error)
     return []

@@ -6,14 +6,15 @@ import { postcodeAssignmentSchema, removePostcodeAssignmentSchema } from '@nest/
 
 /**
  * POST /api/admin/territories/postcode
- * Assign postcodes/sectors to an agent
+ * Assign sectors to an agent
  *
  * Feature: 008-postcode-sector-territories
+ * Simplified: Only sector-level assignments (no more "full district")
  *
  * Request body:
  * - agent_id: UUID of the agent
- * - postcode_code: District code (e.g., "TA1")
- * - sector_codes: Array of sector codes (e.g., ["TA1 1", "TA1 2"]) or null/empty for full district
+ * - sector_codes: Array of sector codes (e.g., ["TA1 1", "TA1 2"]) - REQUIRED
+ * - postcode_code: Optional district code for validation
  */
 export async function POST(request: NextRequest) {
   try {
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { agent_id, postcode_code, sector_codes } = validationResult.data;
+    const { agent_id, sector_codes, postcode_code } = validationResult.data;
 
     const supabase = createServiceRoleClient();
 
@@ -60,125 +61,86 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify district exists
-    const { data: district, error: districtError } = await supabase
-      .from('postcodes')
-      .select('code')
-      .eq('code', postcode_code)
-      .single();
+    // Verify all sector codes exist in the database
+    const { data: sectors, error: sectorsError } = await supabase
+      .from('postcode_sectors')
+      .select('code, district_code')
+      .in('code', sector_codes);
 
-    if (districtError || !district) {
+    if (sectorsError) {
+      console.error('Sectors lookup error:', sectorsError);
       return NextResponse.json(
-        { error: { code: 'NOT_FOUND', message: 'District not found' } },
-        { status: 404 }
+        { error: { code: 'QUERY_ERROR', message: sectorsError.message } },
+        { status: 500 }
       );
     }
 
-    const assignments: Array<{
-      postcode_code: string;
-      sector_code: string | null;
-      assigned_at: string;
-    }> = [];
+    const validSectorCodes = new Set(sectors?.map((s) => s.code) || []);
+    const invalidSectors = sector_codes.filter((s) => !validSectorCodes.has(s));
 
-    const isFullDistrict = !sector_codes || sector_codes.length === 0;
+    if (invalidSectors.length > 0) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Some sector codes are invalid',
+            details: { invalid_sectors: invalidSectors },
+          },
+        },
+        { status: 400 }
+      );
+    }
 
-    if (isFullDistrict) {
-      // Full district assignment
-      // First, remove any existing sector assignments for this district and agent
-      await supabase
-        .from('agent_postcodes')
-        .delete()
-        .eq('agent_id', agent_id)
-        .eq('postcode_code', postcode_code);
-
-      // Insert full district assignment (sector_code = null)
-      const { data: inserted, error: insertError } = await supabase
-        .from('agent_postcodes')
-        .insert({
-          agent_id,
-          postcode_code,
-          sector_code: null,
-        })
-        .select('postcode_code, sector_code, assigned_at')
-        .single();
-
-      if (insertError) {
-        console.error('Insert error:', insertError);
-        return NextResponse.json(
-          { error: { code: 'INSERT_ERROR', message: insertError.message } },
-          { status: 500 }
-        );
-      }
-
-      assignments.push(inserted);
-    } else {
-      // Sector-level assignments
-      // Verify all sector codes exist and belong to this district
-      const { data: sectors, error: sectorsError } = await supabase
-        .from('postcode_sectors')
-        .select('code')
-        .eq('district_code', postcode_code)
-        .in('code', sector_codes);
-
-      if (sectorsError) {
-        console.error('Sectors lookup error:', sectorsError);
-        return NextResponse.json(
-          { error: { code: 'QUERY_ERROR', message: sectorsError.message } },
-          { status: 500 }
-        );
-      }
-
-      const validSectorCodes = new Set(sectors?.map((s) => s.code) || []);
-      const invalidSectors = sector_codes.filter((s) => !validSectorCodes.has(s));
-
-      if (invalidSectors.length > 0) {
+    // If postcode_code was provided, verify sectors belong to it
+    if (postcode_code) {
+      const wrongDistrict = sectors?.filter((s) => s.district_code !== postcode_code) || [];
+      if (wrongDistrict.length > 0) {
         return NextResponse.json(
           {
             error: {
               code: 'VALIDATION_ERROR',
-              message: 'Some sector codes are invalid or do not belong to this district',
-              details: { invalid_sectors: invalidSectors },
+              message: 'Some sector codes do not belong to the specified district',
+              details: { wrong_district_sectors: wrongDistrict.map((s) => s.code) },
             },
           },
           { status: 400 }
         );
       }
+    }
 
-      // Remove any existing full district assignment for this agent
+    const assignments: Array<{
+      sector_code: string;
+      assigned_at: string;
+    }> = [];
+
+    // Insert each sector assignment (upsert pattern: delete then insert)
+    for (const sectorCode of sector_codes) {
+      // Delete existing assignment for this specific agent+sector combo
       await supabase
         .from('agent_postcodes')
         .delete()
         .eq('agent_id', agent_id)
-        .eq('postcode_code', postcode_code)
-        .is('sector_code', null);
+        .eq('sector_code', sectorCode);
 
-      // Insert each sector assignment (delete existing first to handle duplicates)
-      for (const sectorCode of sector_codes) {
-        // Delete existing assignment for this specific agent+postcode+sector combo
-        await supabase
-          .from('agent_postcodes')
-          .delete()
-          .eq('agent_id', agent_id)
-          .eq('postcode_code', postcode_code)
-          .eq('sector_code', sectorCode);
+      // Get the district code for this sector
+      const sector = sectors?.find((s) => s.code === sectorCode);
 
-        // Insert new assignment
-        const { data: inserted, error: insertError } = await supabase
-          .from('agent_postcodes')
-          .insert({
-            agent_id,
-            postcode_code,
-            sector_code: sectorCode,
-          })
-          .select('postcode_code, sector_code, assigned_at')
-          .single();
+      // Insert new assignment
+      const { data: inserted, error: insertError } = await supabase
+        .from('agent_postcodes')
+        .insert({
+          agent_id,
+          postcode_code: sector?.district_code || null,
+          sector_code: sectorCode,
+        })
+        .select('sector_code, assigned_at')
+        .single();
 
-        if (insertError) {
-          console.error('Insert error for sector:', sectorCode, insertError);
-          // Continue with other sectors
-        } else if (inserted) {
-          assignments.push(inserted);
-        }
+      if (insertError) {
+        console.error('Insert error for sector:', sectorCode, insertError);
+        // Continue with other sectors
+      } else if (inserted) {
+        assignments.push(inserted);
       }
     }
 
@@ -201,12 +163,13 @@ export async function POST(request: NextRequest) {
 
 /**
  * DELETE /api/admin/territories/postcode
- * Remove a postcode/sector assignment from an agent
+ * Remove a sector assignment from an agent
+ *
+ * Simplified: Only sector-level removal (no more "full district")
  *
  * Request body:
  * - agent_id: UUID of the agent
- * - postcode_code: District code
- * - sector_code: Sector code (optional - if null, removes full district assignment)
+ * - sector_code: Sector code to remove (REQUIRED)
  */
 export async function DELETE(request: NextRequest) {
   try {
@@ -235,23 +198,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { agent_id, postcode_code, sector_code } = validationResult.data;
+    const { agent_id, sector_code } = validationResult.data;
 
     const supabase = createServiceRoleClient();
 
-    let query = supabase
+    const { error: deleteError } = await supabase
       .from('agent_postcodes')
       .delete()
       .eq('agent_id', agent_id)
-      .eq('postcode_code', postcode_code);
-
-    if (sector_code) {
-      query = query.eq('sector_code', sector_code);
-    } else {
-      query = query.is('sector_code', null);
-    }
-
-    const { error: deleteError } = await query;
+      .eq('sector_code', sector_code);
 
     if (deleteError) {
       console.error('Delete error:', deleteError);
@@ -265,8 +220,7 @@ export async function DELETE(request: NextRequest) {
       success: true,
       removed: {
         agent_id,
-        postcode_code,
-        sector_code: sector_code || null,
+        sector_code,
       },
     });
   } catch (error: any) {

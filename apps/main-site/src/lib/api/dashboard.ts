@@ -133,6 +133,7 @@ export async function getProperties(
     return {
       data: data.data,
       pagination: data.pagination,
+      search: data.search, // Pass through search metadata
     }
   }
 
@@ -207,7 +208,37 @@ export async function getAgents(
     return emptyPaginatedResponse<Agent>()
   }
 
-  return response.json()
+  const data = await response.json()
+
+  // Handle new response format { data: [...], search: {...} }
+  if (data && data.data && Array.isArray(data.data)) {
+    return {
+      data: data.data,
+      pagination: data.pagination || {
+        page: filters?.page || 1,
+        limit: filters?.limit || 50,
+        total: data.data.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+      search: data.search,
+    }
+  }
+
+  // Fallback for legacy flat array response
+  const agents = Array.isArray(data) ? data : []
+  return {
+    data: agents,
+    pagination: {
+      page: filters?.page || 1,
+      limit: filters?.limit || 50,
+      total: agents.length,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPrevPage: false,
+    },
+  }
 }
 
 /**

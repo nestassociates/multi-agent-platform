@@ -5,15 +5,12 @@ import { getUser } from '@/lib/auth';
 
 /**
  * GET /api/admin/postcodes/list
- * Fetch postcodes filtered by area prefix
+ * Fetch SECTORS filtered by area prefix (simplified from districts)
  *
- * Returns postcodes with assignment status:
- * - assignment_status: 'unassigned' | 'full' | 'partial'
- * - sector_count: Total sectors in the district
- * - assigned_sector_count: Number of sectors assigned
- * - assigned_agent: Agent info if full assignment (sector_code IS NULL)
+ * Returns sectors with assignment status for the given area.
+ * Example: ?area=TA returns all sectors like TA1 1, TA1 2, TA2 1, etc.
  *
- * Feature: 008-postcode-sector-territories
+ * Simplified from Feature 008: Now returns sectors directly, no district layer
  */
 export async function GET(request: NextRequest) {
   try {
@@ -27,43 +24,44 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceRoleClient();
 
-    // Get area filter from query params (e.g., ?area=TA to load only TA postcodes)
+    // Get area filter from query params (e.g., ?area=TA to load only TA sectors)
     const { searchParams } = new URL(request.url);
     const area = searchParams.get('area');
 
-    let query = supabase
-      .from('postcodes')
-      .select('code, area_km2');
-
-    // Filter by area prefix if provided
-    if (area) {
-      query = query.ilike('code', `${area}%`);
+    if (!area) {
+      return NextResponse.json(
+        { error: 'Area parameter is required (e.g., ?area=TA)' },
+        { status: 400 }
+      );
     }
 
-    const { data: postcodesRaw, error } = await query.order('code').limit(100);
+    // Query sectors table filtered by area prefix
+    // This will return all sectors like TA1 1, TA1 2, TA2 1, etc. for area=TA
+    const { data: sectorsRaw, error } = await supabase
+      .from('postcode_sectors')
+      .select('code, district_code, area_km2')
+      .ilike('code', `${area}%`)
+      .order('code')
+      .limit(500); // Sectors can be numerous, set reasonable limit
 
     if (error) {
       throw new Error(error.message);
     }
 
-    const districtCodes = postcodesRaw?.map((pc) => pc.code) || [];
+    if (!sectorsRaw || sectorsRaw.length === 0) {
+      return NextResponse.json({
+        sectors: [],
+        area,
+        message: 'No sector data available for this area',
+      });
+    }
 
-    // Get sector counts for each district
-    const { data: sectorCounts } = await supabase
-      .from('postcode_sectors')
-      .select('district_code')
-      .in('district_code', districtCodes);
+    const sectorCodes = sectorsRaw.map((s) => s.code);
 
-    const sectorCountMap: Record<string, number> = {};
-    (sectorCounts || []).forEach((s) => {
-      sectorCountMap[s.district_code] = (sectorCountMap[s.district_code] || 0) + 1;
-    });
-
-    // Get all assignments for these districts (both full and sector-level)
+    // Get all assignments for these sectors
     const { data: assignments } = await supabase
       .from('agent_postcodes')
       .select(`
-        postcode_code,
         sector_code,
         agent_id,
         agents!inner (
@@ -75,70 +73,54 @@ export async function GET(request: NextRequest) {
           )
         )
       `)
-      .in('postcode_code', districtCodes);
+      .in('sector_code', sectorCodes);
 
-    // Build assignment maps per district
-    const districtAssignments: Record<string, {
-      fullAgent: any;
-      sectorAssignments: Set<string>;
+    // Build assignment lookup by sector code
+    const assignmentMap: Record<string, {
+      id: string;
+      subdomain: string;
+      first_name: string | null;
+      last_name: string | null;
     }> = {};
 
-    (assignments || []).forEach((a) => {
-      if (!districtAssignments[a.postcode_code]) {
-        districtAssignments[a.postcode_code] = {
-          fullAgent: null,
-          sectorAssignments: new Set(),
-        };
+    if (assignments) {
+      for (const a of assignments) {
+        if (a.sector_code && a.agents) {
+          assignmentMap[a.sector_code] = {
+            id: (a.agents as any).id,
+            subdomain: (a.agents as any).subdomain,
+            first_name: (a.agents as any).profiles?.first_name || null,
+            last_name: (a.agents as any).profiles?.last_name || null,
+          };
+        }
       }
+    }
 
-      if (a.sector_code === null) {
-        // Full district assignment
-        districtAssignments[a.postcode_code].fullAgent = {
-          id: a.agent_id,
-          subdomain: (a.agents as any)?.subdomain,
-          first_name: (a.agents as any)?.profiles?.first_name,
-          last_name: (a.agents as any)?.profiles?.last_name,
-        };
-      } else {
-        // Sector-level assignment
-        districtAssignments[a.postcode_code].sectorAssignments.add(a.sector_code);
-      }
-    });
+    // Get boundaries and combine with assignment info
+    const sectors = await Promise.all(sectorsRaw.map(async (sector) => {
+      const { data: geoData } = await supabase.rpc('get_sector_geojson', {
+        sector_code_param: sector.code,
+      });
 
-    // Get boundaries and calculate assignment status for each postcode
-    const postcodes = await Promise.all((postcodesRaw || []).map(async (pc) => {
-      const { data } = await supabase.rpc('get_postcode_geojson', { postcode_code: pc.code });
-
-      const assignment = districtAssignments[pc.code];
-      const sectorCount = sectorCountMap[pc.code] || 0;
-      const assignedSectorCount = assignment?.sectorAssignments?.size || 0;
-
-      let assignmentStatus: 'unassigned' | 'full' | 'partial' = 'unassigned';
-      let assignedAgent = null;
-
-      if (assignment?.fullAgent) {
-        // Full district assignment takes precedence
-        assignmentStatus = 'full';
-        assignedAgent = assignment.fullAgent;
-      } else if (assignedSectorCount > 0) {
-        // Some sectors assigned
-        assignmentStatus = 'partial';
-      }
+      const assignedAgent = assignmentMap[sector.code] || null;
 
       return {
-        code: pc.code,
-        area_km2: pc.area_km2,
-        boundary: data?.boundary || null,
-        assignment_status: assignmentStatus,
-        sector_count: sectorCount,
-        assigned_sector_count: assignedSectorCount,
+        code: sector.code,
+        district_code: sector.district_code,
+        area_km2: sector.area_km2,
+        boundary: geoData?.boundary || null,
+        center_point: geoData?.center_point || null,
         assigned_agent: assignedAgent,
       };
     }));
 
-    return NextResponse.json({ postcodes });
+    return NextResponse.json({
+      sectors,
+      area,
+      count: sectors.length,
+    });
   } catch (error: any) {
-    console.error('Error fetching postcodes:', error);
+    console.error('Error fetching sectors:', error);
     return NextResponse.json(
       { error: error.message },
       { status: 500 }

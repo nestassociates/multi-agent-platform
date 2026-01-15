@@ -76,6 +76,17 @@ async function PropertyResultsWithCTA({
 }) {
   const result = await getProperties(filters)
 
+  // Show search prompt if no location was provided
+  if (result.search?.error) {
+    return (
+      <NoResults
+        title="Enter a location to search"
+        message={result.search.error}
+        showResetButton={false}
+      />
+    )
+  }
+
   if (result.data.length === 0) {
     return <NoResults resetHref="/rent" />
   }
@@ -171,7 +182,8 @@ export default async function RentPage({ searchParams }: RentPageProps) {
     property_type: params.property_type,
     // Spatial search: pass radius when location is provided
     radius: params.radius ? parseFloat(params.radius) : undefined,
-    sort: params.sort as PropertyFiltersType['sort'],
+    // Default to highest price first
+    sort: (params.sort as PropertyFiltersType['sort']) || 'price_desc',
     page,
     limit: 12,
   }

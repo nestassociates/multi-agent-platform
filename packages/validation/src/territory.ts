@@ -99,16 +99,16 @@ export type SectorCountInput = z.infer<typeof sectorCountSchema>;
 
 /**
  * Postcode-based territory assignment request
- * POST /api/admin/territories (when using postcodes)
+ * POST /api/admin/territories/postcode
+ *
+ * Simplified: sector_codes is required (no more "full district" assignments)
  */
 export const postcodeAssignmentSchema = z.object({
   agent_id: z.string().uuid('Invalid agent ID'),
-  postcode_code: districtCodeSchema,
+  postcode_code: districtCodeSchema.optional().describe('Optional district code for validation'),
   sector_codes: z
     .array(sectorCodeSchema)
-    .optional()
-    .nullable()
-    .describe('Specific sectors to assign (null/empty = full district)'),
+    .min(1, 'At least one sector code is required'),
 });
 
 export type PostcodeAssignmentInput = z.infer<typeof postcodeAssignmentSchema>;
@@ -119,8 +119,7 @@ export type PostcodeAssignmentInput = z.infer<typeof postcodeAssignmentSchema>;
  */
 export const checkConflictsSchema = z.object({
   agent_id: z.string().uuid('Invalid agent ID'),
-  postcode_code: districtCodeSchema,
-  sector_codes: z.array(sectorCodeSchema).optional().nullable(),
+  sector_codes: z.array(sectorCodeSchema).min(1, 'At least one sector code is required'),
 });
 
 export type CheckConflictsInput = z.infer<typeof checkConflictsSchema>;
@@ -128,11 +127,12 @@ export type CheckConflictsInput = z.infer<typeof checkConflictsSchema>;
 /**
  * Remove assignment request schema
  * DELETE /api/admin/territories/postcode
+ *
+ * Simplified: sector_code is required (no more "full district" assignments)
  */
 export const removePostcodeAssignmentSchema = z.object({
   agent_id: z.string().uuid('Invalid agent ID'),
-  postcode_code: districtCodeSchema,
-  sector_code: sectorCodeSchema.optional().nullable(),
+  sector_code: sectorCodeSchema,
 });
 
 export type RemovePostcodeAssignmentInput = z.infer<typeof removePostcodeAssignmentSchema>;

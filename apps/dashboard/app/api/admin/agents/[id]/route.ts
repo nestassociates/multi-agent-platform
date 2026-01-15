@@ -3,12 +3,17 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getUser } from '@/lib/auth';
 import { z } from 'zod';
 import { addBuild } from '@nest/build-system';
+import { geocodeLocation } from '@/lib/geocoding';
 
 const updateAgentSchema = z.object({
   phone: z.string().optional(),
   bio: z.string().max(500).optional(),
   apex27_branch_id: z.string().optional(),
   status: z.enum(['active', 'inactive', 'suspended']).optional(),
+  // Office location for geo-search
+  office_address: z.string().max(500).optional(),
+  office_lat: z.number().min(-90).max(90).optional(),
+  office_lng: z.number().min(-180).max(180).optional(),
 });
 
 export async function GET(
@@ -107,6 +112,33 @@ export async function PATCH(
     if (validatedData.status !== undefined) agentUpdates.status = validatedData.status;
     if (validatedData.phone !== undefined) profileUpdates.phone = validatedData.phone || null;
 
+    // Handle office location update
+    let locationUpdated = false;
+    if (validatedData.office_address !== undefined) {
+      agentUpdates.branch_name = validatedData.office_address || null;
+
+      // If coordinates provided, use them directly
+      if (validatedData.office_lat !== undefined && validatedData.office_lng !== undefined) {
+        // Update location using PostGIS - will be done via raw SQL below
+        locationUpdated = true;
+      }
+      // Otherwise, geocode the address
+      else if (validatedData.office_address) {
+        const geocodeResult = await geocodeLocation(validatedData.office_address);
+        if (geocodeResult) {
+          validatedData.office_lat = geocodeResult.lat;
+          validatedData.office_lng = geocodeResult.lng;
+          locationUpdated = true;
+        }
+      }
+      // If address cleared, clear location too
+      else {
+        locationUpdated = true;
+        validatedData.office_lat = undefined;
+        validatedData.office_lng = undefined;
+      }
+    }
+
     // Update agent table
     if (Object.keys(agentUpdates).length > 0) {
       const { error: agentError } = await supabase
@@ -120,6 +152,33 @@ export async function PATCH(
           { error: { code: 'UPDATE_ERROR', message: agentError.message } },
           { status: 400 }
         );
+      }
+    }
+
+    // Update location separately using raw SQL for PostGIS
+    if (locationUpdated) {
+      if (validatedData.office_lat !== undefined && validatedData.office_lng !== undefined) {
+        // Set location point
+        const { error: locationError } = await supabase.rpc('update_agent_location', {
+          agent_id: params.id,
+          lat: validatedData.office_lat,
+          lng: validatedData.office_lng,
+        });
+
+        if (locationError) {
+          console.error('Error updating agent location:', locationError);
+          // Don't fail the whole request, just log the error
+        }
+      } else {
+        // Clear location
+        const { error: clearError } = await supabase
+          .from('agents')
+          .update({ location: null })
+          .eq('id', params.id);
+
+        if (clearError) {
+          console.error('Error clearing agent location:', clearError);
+        }
       }
     }
 

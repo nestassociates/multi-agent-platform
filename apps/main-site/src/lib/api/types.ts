@@ -167,6 +167,7 @@ export interface PaginatedResponse<T> {
     hasNextPage: boolean
     hasPrevPage: boolean
   }
+  search?: SpatialSearchMeta // Search metadata for spatial searches
 }
 
 export interface PropertyFilters {
@@ -191,13 +192,14 @@ export interface PropertyFilters {
 // Search metadata returned when spatial search is used
 export interface SpatialSearchMeta {
   type: 'spatial'
-  center: {
+  center?: {
     latitude: number
     longitude: number
   }
-  radius_miles: number
-  geocode_source: 'postcode' | 'mapbox' | 'provided'
-  geocode_display_name?: string
+  radius_miles?: number
+  geocode_source?: 'postcode' | 'mapbox' | 'provided' | null
+  geocode_display_name?: string | null
+  error?: string // Error message when search couldn't be performed (e.g. no location provided)
 }
 
 // Extended paginated response for properties (includes search metadata)

@@ -28,40 +28,54 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
     const sort = searchParams.get('sort'); // price_asc, price_desc, date_asc, date_desc
 
-    // Spatial search parameters
-    const radiusMiles = searchParams.get('radius') ? parseFloat(searchParams.get('radius')!) : null;
+    // Spatial search parameters - default to 5 mile radius
+    const radiusMiles = searchParams.get('radius') ? parseFloat(searchParams.get('radius')!) : 5;
     const providedLat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : null;
     const providedLng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : null;
 
     const supabase = createServiceRoleClient();
 
-    // Determine if we should use spatial search
-    let useSpatialSearch = false;
+    // Always use spatial search - geo-location based only
     let searchLat: number | null = null;
     let searchLng: number | null = null;
-    let searchRadiusMeters: number | null = null;
+    let searchRadiusMeters: number | null = milesToMeters(radiusMiles);
     let geocodeSource: string | null = null;
     let geocodeDisplayName: string | null = null;
 
     // If lat/lng provided, use directly
-    if (providedLat !== null && providedLng !== null && radiusMiles !== null) {
-      useSpatialSearch = true;
+    if (providedLat !== null && providedLng !== null) {
       searchLat = providedLat;
       searchLng = providedLng;
-      searchRadiusMeters = milesToMeters(radiusMiles);
       geocodeSource = 'provided';
     }
-    // Otherwise, try to geocode the location if radius is specified
-    else if (location && radiusMiles !== null) {
+    // Otherwise, geocode the location (required for geo-search)
+    else if (location) {
       const geocodeResult = await geocodeLocation(location);
       if (geocodeResult) {
-        useSpatialSearch = true;
         searchLat = geocodeResult.lat;
         searchLng = geocodeResult.lng;
-        searchRadiusMeters = milesToMeters(radiusMiles);
         geocodeSource = geocodeResult.source;
         geocodeDisplayName = geocodeResult.displayName || location;
       }
+    }
+
+    // If no valid coordinates, return empty results
+    if (searchLat === null || searchLng === null) {
+      return NextResponse.json({
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+        search: {
+          type: 'spatial',
+          error: location ? 'Could not find location. Please try a postcode or place name.' : 'Please enter a location to search.',
+        },
+      });
     }
 
     // Variables for results
@@ -69,8 +83,8 @@ export async function GET(request: NextRequest) {
     let queryError: any = null;
     let total = 0;
 
-    // Use spatial search if we have coordinates and radius
-    if (useSpatialSearch && searchLat !== null && searchLng !== null && searchRadiusMeters !== null) {
+    // Always use spatial search (geo-location based)
+    {
       // Map transaction type for RPC
       const mappedTransactionType = transactionType === 'rental' ? 'let' : transactionType;
 
@@ -153,159 +167,6 @@ export async function GET(request: NextRequest) {
       });
 
       total = countData || 0;
-    } else {
-      // Fall back to standard query (text-based search)
-
-      // Build query - only properties from active agents
-      let query = supabase
-        .from('properties')
-        .select(
-          `
-          id,
-          apex27_id,
-          title,
-          description,
-          transaction_type,
-          price,
-          bedrooms,
-          bathrooms,
-          property_type,
-          status,
-          is_featured,
-          address,
-          postcode,
-          location,
-          images,
-          features,
-          created_at,
-          updated_at,
-          agent:agents!inner(
-            id,
-            subdomain,
-            status,
-            profile:profiles!agents_user_id_fkey(
-              first_name,
-              last_name,
-              email,
-              phone
-            )
-          )
-        `
-        )
-        .eq('agent.status', 'active');
-
-      // Apply sorting
-      if (sort === 'price_asc') {
-        query = query.order('price', { ascending: true });
-      } else if (sort === 'price_desc') {
-        query = query.order('price', { ascending: false });
-      } else if (sort === 'date_asc') {
-        query = query.order('updated_at', { ascending: true });
-      } else {
-        // Default: date_desc (newest first)
-        query = query.order('updated_at', { ascending: false });
-      }
-
-      // Apply pagination
-      query = query.range(offset, offset + limit - 1);
-
-      // Filter by status (default to 'available' if not specified)
-      // Use 'all' to include all statuses (available, sold, under_offer, let, let_agreed)
-      if (status && status !== 'all') {
-        query = query.eq('status', status);
-      } else if (!status) {
-        // Default to available only
-        query = query.eq('status', 'available');
-      }
-      // If status === 'all', don't filter by status at all
-
-      // Apply filters
-      if (transactionType) {
-        // Map 'rental' to 'let' for backwards compatibility
-        const mappedType = transactionType === 'rental' ? 'let' : transactionType;
-        if (['sale', 'let'].includes(mappedType)) {
-          query = query.eq('transaction_type', mappedType);
-        }
-      }
-
-      if (minPrice) {
-        query = query.gte('price', parseFloat(minPrice));
-      }
-
-      if (maxPrice) {
-        query = query.lte('price', parseFloat(maxPrice));
-      }
-
-      // Bedrooms filter - support min/max range or exact match
-      if (minBedrooms) {
-        query = query.gte('bedrooms', parseInt(minBedrooms));
-      }
-      if (maxBedrooms) {
-        query = query.lte('bedrooms', parseInt(maxBedrooms));
-      }
-      if (bedrooms && !minBedrooms && !maxBedrooms) {
-        // Legacy single value filter
-        query = query.eq('bedrooms', parseInt(bedrooms));
-      }
-
-      // Property type filter (case-insensitive, partial match)
-      if (propertyType) {
-        query = query.ilike('property_type', `%${propertyType}%`);
-      }
-
-      if (postcode) {
-        query = query.ilike('postcode', `${postcode}%`);
-      }
-
-      if (location) {
-        // Search in title, postcode, or JSONB address fields
-        // Note: For JSONB, use address->key (single arrow returns JSONB, ->> returns text)
-        // PostgREST syntax requires escaping special characters
-        const searchTerm = `%${location}%`;
-        query = query.or(
-          `title.ilike.${searchTerm},postcode.ilike.${searchTerm},address->>city.ilike.${searchTerm},address->>town.ilike.${searchTerm},address->>county.ilike.${searchTerm}`
-        );
-      }
-
-      const { data, error } = await query;
-      properties = data;
-      queryError = error;
-
-      // Get total count for pagination (separate query without pagination)
-      let countQuery = supabase
-        .from('properties')
-        .select('id, agent:agents!inner(status)', { count: 'exact', head: true })
-        .eq('agent.status', 'active');
-
-      // Re-apply same filters for count
-      if (status && status !== 'all') {
-        countQuery = countQuery.eq('status', status);
-      } else if (!status) {
-        countQuery = countQuery.eq('status', 'available');
-      }
-      // If status === 'all', don't filter by status
-      if (transactionType) {
-        const mappedType = transactionType === 'rental' ? 'let' : transactionType;
-        if (['sale', 'let'].includes(mappedType)) {
-          countQuery = countQuery.eq('transaction_type', mappedType);
-        }
-      }
-      if (minPrice) countQuery = countQuery.gte('price', parseFloat(minPrice));
-      if (maxPrice) countQuery = countQuery.lte('price', parseFloat(maxPrice));
-      if (minBedrooms) countQuery = countQuery.gte('bedrooms', parseInt(minBedrooms));
-      if (maxBedrooms) countQuery = countQuery.lte('bedrooms', parseInt(maxBedrooms));
-      if (bedrooms && !minBedrooms && !maxBedrooms) countQuery = countQuery.eq('bedrooms', parseInt(bedrooms));
-      if (propertyType) countQuery = countQuery.ilike('property_type', `%${propertyType}%`);
-      if (postcode) countQuery = countQuery.ilike('postcode', `${postcode}%`);
-      if (location) {
-        const searchTerm = `%${location}%`;
-        countQuery = countQuery.or(
-          `title.ilike.${searchTerm},postcode.ilike.${searchTerm},address->>city.ilike.${searchTerm},address->>town.ilike.${searchTerm},address->>county.ilike.${searchTerm}`
-        );
-      }
-
-      const { count: totalCount } = await countQuery;
-      total = totalCount || 0;
     }
 
     const error = queryError;
@@ -398,13 +259,25 @@ export async function GET(request: NextRequest) {
         },
         property_url: `https://${property.agent?.subdomain}.nestassociates.co.uk/properties/${slug}`,
         updated_at: property.updated_at,
-        // Include distance when using spatial search
-        ...(useSpatialSearch && property.distance_meters !== undefined && {
+        // Always include distance for spatial search
+        ...(property.distance_meters !== undefined && {
           distance_miles: metersToMiles(property.distance_meters),
           distance_meters: property.distance_meters,
         }),
       };
     });
+
+    // Sort results by price (default: highest first)
+    if (sort === 'price_asc') {
+      formattedProperties.sort((a, b) => a.price - b.price);
+    } else if (sort === 'date_asc') {
+      formattedProperties.sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime());
+    } else if (sort === 'date_desc') {
+      formattedProperties.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    } else {
+      // Default: price_desc (most expensive first)
+      formattedProperties.sort((a, b) => b.price - a.price);
+    }
 
     // Build response object
     const responseData: any = {
@@ -419,19 +292,17 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // Add search metadata when using spatial search
-    if (useSpatialSearch && searchLat !== null && searchLng !== null && radiusMiles !== null) {
-      responseData.search = {
-        type: 'spatial',
-        center: {
-          latitude: searchLat,
-          longitude: searchLng,
-        },
-        radius_miles: radiusMiles,
-        geocode_source: geocodeSource,
-        geocode_display_name: geocodeDisplayName,
-      };
-    }
+    // Add search metadata (always spatial search now)
+    responseData.search = {
+      type: 'spatial',
+      center: {
+        latitude: searchLat,
+        longitude: searchLng,
+      },
+      radius_miles: radiusMiles,
+      geocode_source: geocodeSource,
+      geocode_display_name: geocodeDisplayName,
+    };
 
     // Create response with pagination info, CORS and caching headers
     const response = NextResponse.json(responseData);
